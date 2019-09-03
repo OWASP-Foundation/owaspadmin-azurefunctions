@@ -3,12 +3,19 @@ import os
 import azure.functions as func
 import requests
 import json
-
+from salesforce import *
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
-    sf_consumer_key = os.environ["SF_CONSUMER_KEY"]
-    sf_consumer_secret = os.environ["SF_CONSUMER_SECRET"]
+    sf = OWASPSalesforce()
+    r = sf.Login()
+    resString = "Usage: /chapter-lookup [Chapter Name]"
+    if not sf.TestResultCode(r.status_code):
+        return func.HttpResponse(
+            "Failed to login to Salesforce",
+            status_code = r.status_code
+        )
+
     name = req.params.get('name')
     if not name:
         try:
@@ -19,11 +26,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             name = req_body.get('name')
 
     if name:
-        session = requests.Session()
+        res = sf.FindChapter(name)
         
-        return func.HttpResponse("You requested info on " + name)
+        return func.HttpResponse(res)
     else:
         return func.HttpResponse(
-             "Usage: /chapter-lookup [Chapter Name]",
+             resString,
              status_code=400
         )
