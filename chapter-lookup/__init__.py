@@ -28,7 +28,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if name:
         res = sf.FindChapter(name)
         
-        return func.HttpResponse(res)
+        return func.HttpResponse(res, status_code=200)
     else:
         return func.HttpResponse(
              resString,
