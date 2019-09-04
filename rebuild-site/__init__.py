@@ -30,6 +30,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if resString.find("queued"):
         resString = "Build queued"
     return func.HttpResponse(
-            r.text,
+            resString,
             status_code=200
     )
