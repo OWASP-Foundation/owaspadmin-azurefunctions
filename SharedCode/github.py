@@ -86,3 +86,17 @@ class OWASPGitHub:
     def FormatRepoName(self, repoName):
         repoName = repoName.replace(" ", "-")
         return repoName
+
+    def RebuildSite(self):
+        headers = {"Authorization": "token " + self.apitoken,
+            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json"
+        }
+        repos = {"www--site-theme", "owasp.github.io", "www-project-zap"}
+        for repo in repos:
+            url = self.gh_endpoint + self.pages_fragment
+            url = url.replace(":repo",repo)
+            r = requests.post(url = url + "/builds", headers=headers)
+            if not self.TestResultCode(r.status_code):
+                break
+
+        return r

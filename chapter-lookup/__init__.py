@@ -3,11 +3,10 @@ import os
 import azure.functions as func
 import requests
 import json
-from salesforce import *
+from ..SharedCode import salesforce
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
-    sf = OWASPSalesforce()
+def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpResponse:
+    sf = salesforce.OWASPSalesforce()
     r = sf.Login()
     resString = "Usage: /chapter-lookup [Chapter Name]"
     if not sf.TestResultCode(r.status_code):
@@ -25,12 +24,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         else:
             name = req_body.get('name')
 
+
+    if not name:
+        name = req.params.get('text')
+    if not name:
+        body = req.get_body()
+        strbody = body.decode("utf-8")
+        names = dict(x.split('=') for x in strbody.split('&'))
+        name = names['text']
+
+
     if name:
+        msg.set(name)
         res = sf.FindChapter(name)
         
         return func.HttpResponse(res, status_code=200)
     else:
         return func.HttpResponse(
              resString,
-             status_code=400
+             status_code=200
         )

@@ -62,7 +62,8 @@ class OWASPSalesforce:
         
 
     def FindChapter(self, chapterName):
-        queryString = "SELECT Id,Name,Display_on_Membership_Application__c,City__c,Country__c FROM PagesApi__Community_Group__c WHERE Name Like '%Baltimore%'"
+        chapterName = chapterName.replace("+", " ")
+        queryString = "SELECT Id,Name,Display_on_Membership_Application__c,City__c,Country__c FROM PagesApi__Community_Group__c WHERE Name Like '%" + chapterName + "%'"
         records = self.Query(queryString)
         logging.info(records)
         res = ""
