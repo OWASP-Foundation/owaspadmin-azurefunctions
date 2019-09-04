@@ -26,7 +26,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # no parameters, just a simple rebuild-site
     gh = github.OWASPGitHub()
     r = gh.RebuildSite()
-
+    resString = r.text
+    if resString.find("queued"):
+        resString = "Build queued"
     return func.HttpResponse(
             r.text,
             status_code=200
