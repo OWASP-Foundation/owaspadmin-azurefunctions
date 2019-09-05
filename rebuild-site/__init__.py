@@ -1,5 +1,9 @@
 import logging
 import os
+import requests
+import json
+from threading import Thread
+
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import spotchk
@@ -23,13 +27,25 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code = 200
         )
 
+    respond_url = names['response_url']
+
+    thread = Thread(target=DelayedResponse, args = (respond_url,))
+    thread.start()
+    return func.HttpResponse(
+            "Working on it...",
+            status_code=200
+    )
+
+
+def DelayedResponse(args):
     # no parameters, just a simple rebuild-site
     gh = github.OWASPGitHub()
     r = gh.RebuildSite()
     resString = r.text
-    if resString.find("queued"):
-        resString = "Build queued"
-    return func.HttpResponse(
-            resString,
-            status_code=200
-    )
+    headers = {"Accept":"application/json"}
+    data = {
+        "response_type":"ephemeral",
+        "text": resString
+    }
+    r = requests.post(url = args, headers=headers, data=json.dumps(data))
+    logging.info(r.text)
