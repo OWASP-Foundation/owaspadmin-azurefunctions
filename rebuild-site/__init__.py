@@ -10,7 +10,10 @@ from ..SharedCode import spotchk
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
-
+    
+    remote = req.params.get('remote')
+    
+    # first check for a valid call
     body = req.get_body()
     strbody = body.decode("utf-8")
     if len(strbody) < 10 or strbody.find('&') < 0 or strbody.find('=') < 0:
@@ -27,25 +30,33 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code = 200
         )
 
-    respond_url = names['response_url']
+    # Workaround for not supported threaded operation
+    # When first called, remote will not exist and this func will make another rebuild-site call to finish the job
+    if not remote or remote == "true":
+        try:
+            requests.post("https://owaspadmin.azurewebsites.net/api/rebuild-site?remote=false",timeout=0.0000000001, data=body)
+        except requests.exceptions.ReadTimeout: 
+            pass
 
-    thread = Thread(target=DelayedResponse, args = (respond_url,))
-    thread.start()
-    return func.HttpResponse(
+        return func.HttpResponse(
             "Working on it...",
-            status_code=200
-    )
-
-
-def DelayedResponse(args):
-    # no parameters, just a simple rebuild-site
+            status_code = 200
+        )
+    # Do the work that may take more than the timeout....
     gh = github.OWASPGitHub()
     r = gh.RebuildSite()
     resString = r.text
-    headers = {"Accept":"application/json"}
+    headers = {"content-type":"application/json"}
     data = {
-        "response_type":"ephemeral",
-        "text": resString
-    }
-    r = requests.post(url = args, headers=headers, data=json.dumps(data))
-    logging.info(r.text)
+         "response_type":"ephemeral",
+         "text": resString
+     }
+
+    respond_url = names["response_url"]
+    # respond to caller...
+    r = requests.post(url = respond_url, headers=headers, data=json.dumps(data))
+    
+    return func.HttpResponse(
+            "This string is going to a caller who isn't listening...",
+            status_code=200
+    )
