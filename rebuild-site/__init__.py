@@ -2,7 +2,7 @@ import logging
 import os
 import requests
 import json
-from threading import Thread
+from urllib.parse import unquote_plus
 
 import azure.functions as func
 from ..SharedCode import github
@@ -11,11 +11,10 @@ from ..SharedCode import spotchk
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
     
-    remote = req.params.get('remote')
-    
     # first check for a valid call
     body = req.get_body()
-    strbody = body.decode("utf-8")
+    
+    strbody = unquote_plus(body.decode("utf-8"))
     if len(strbody) < 10 or strbody.find('&') < 0 or strbody.find('=') < 0:
         return func.HttpResponse(
             'Rebuild site delayed 200ms',
@@ -29,36 +28,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             'Rebuild site delayed 200ms',
             status_code = 200
         )
-
-    # Workaround for not supported threaded operation
-    # When first called, remote will not exist and this func will make another rebuild-site call to finish the job
-    if not remote or remote == 'true':
-        try:
-            requests.post(url='https://owaspadmin.azurewebsites.net/api/rebuild-site?remote=false',timeout=0.0000000001, data=body)
-        except requests.exceptions.ReadTimeout: 
-            pass
-
-        return func.HttpResponse(
-            'Working on it...',
-            status_code = 200
-        )
+    
+    logging.info('Requesting rebuild from Github...')
     # Do the work that may take more than the timeout....
     gh = github.OWASPGitHub()
     r = gh.RebuildSite()
-    resString = r.text
+    if gh.TestResultCode(r.status_code):
+        resString = "Build queued..."
+    else
+        resString = r.text
+
     headers = {'content-type':'application/json'}
     data = {
          'response_type':'ephemeral',
-         'text': resString,
-         'token': names['token']
+         'text': resString
      }
 
-    respond_url = names["response_url"]
-    logging.info(respond_url)
+    respond_url = names['response_url']
     # respond to caller...
-    r = requests.post(url = respond_url, headers=headers, json=json.dumps(data))
-    
-    return func.HttpResponse(
-            "This string is going to a caller who isn't listening...",
-            status_code=200
-    )
+    msg = json.dumps(data)
+    r = requests.post(url = respond_url, headers=headers, data=msg)
+     
+
+    return func.HttpResponse()
