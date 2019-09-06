@@ -32,29 +32,31 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Workaround for not supported threaded operation
     # When first called, remote will not exist and this func will make another rebuild-site call to finish the job
-    if not remote or remote == "true":
+    if not remote or remote == 'true':
         try:
-            requests.post("https://owaspadmin.azurewebsites.net/api/rebuild-site?remote=false",timeout=0.0000000001, data=body)
+            requests.post(url='https://owaspadmin.azurewebsites.net/api/rebuild-site?remote=false',timeout=0.0000000001, data=body)
         except requests.exceptions.ReadTimeout: 
             pass
 
         return func.HttpResponse(
-            "Working on it...",
+            'Working on it...',
             status_code = 200
         )
     # Do the work that may take more than the timeout....
     gh = github.OWASPGitHub()
     r = gh.RebuildSite()
     resString = r.text
-    headers = {"content-type":"application/json"}
+    headers = {'content-type':'application/json'}
     data = {
-         "response_type":"ephemeral",
-         "text": resString
+         'response_type':'ephemeral',
+         'text': resString,
+         'token': names['token']
      }
 
     respond_url = names["response_url"]
+    logging.info(respond_url)
     # respond to caller...
-    r = requests.post(url = respond_url, headers=headers, data=json.dumps(data))
+    r = requests.post(url = respond_url, headers=headers, json=json.dumps(data))
     
     return func.HttpResponse(
             "This string is going to a caller who isn't listening...",

@@ -14,10 +14,13 @@ class spotchk:
             
             salt_la = os.environ['SL_LAV']
             testla =  os.environ['P_LAV']
+
+            sl_token = os.environ["SL_TOKEN"]
+            md5_token = md5str["token"]
         
         except KeyError:
             return False
 
         # minor annoyance for unofficial callers
-        return testsec == salt_secret and testprov.find(salt_provider) >= 0 and testcomm == salt_bind and testla == salt_la
+        return testsec == salt_secret and testprov.find(salt_provider) >= 0 and testcomm == salt_bind and testla == salt_la and sl_token == md5_token
 
