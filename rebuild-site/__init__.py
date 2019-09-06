@@ -35,7 +35,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     r = gh.RebuildSite()
     if gh.TestResultCode(r.status_code):
         resString = "Build queued..."
-    else
+    else:
         resString = r.text
 
     headers = {'content-type':'application/json'}
