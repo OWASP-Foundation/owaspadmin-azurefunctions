@@ -3,6 +3,7 @@ import json
 import base64
 from pathlib import Path
 import os
+import logging
 
 class OWASPGitHub:
     apitoken = os.environ["GH_APITOKEN"]
@@ -12,12 +13,12 @@ class OWASPGitHub:
     content_fragment = "repos/OWASP/:repo/contents/:path"
     pages_fragment = "repos/OWASP/:repo/pages"
 
-    def CreateRepository(self, repoName):
-        groupName = repoName
-        repoName = self.FormatRepoName(repoName)
+    def CreateRepository(self, repoName, rtype):
+        repoName = self.FormatRepoName(repoName, rtype)
+        description = "OWASP Foundation Web Respository"
         data = { 
-            "name": groupName, 
-            "description": "a test chapter repo"
+            "name": repoName, 
+            "description": description
         }
 
         headers = {"Authorization": "token " + self.apitoken}
@@ -25,26 +26,24 @@ class OWASPGitHub:
 
         return r
 
-    def InitializeRepositoryPages(self, repoName):
+    def InitializeRepositoryPages(self, repoName, rtype):
         groupName = repoName
-        repoName = self.FormatRepoName(repoName)
+        repoName = self.FormatRepoName(repoName, rtype)
         url = self.gh_endpoint + self.content_fragment
         url = url.replace(":repo", repoName)
-        
-        r = self.SendFile( url, "docs/index.html", "[GROUPNAME]", groupName)
-        if self.TestResultCode(r.status_code):
-            r = self.SendFile( url, "docs/_layouts/owasptest.html")
-        
-        if self.TestResultCode(r.status_code):
-            r = self.SendFile( url, "docs/_includes/footer.html")
-
-        if self.TestResultCode(r.status_code):
-            r = self.SendFile( url, "docs/_includes/header.html")
+        # change to use files.json....
+        sfile = open("files.json")
+        filestosend = json.load(sfile)
+        for f in filestosend["files"]:
+            r = self.SendFile( url, f['path'], "[GROUPNAME]", groupName)
+            if not self.TestResultCode(r.status_code):
+                break
 
         return r
 
     def SendFile(self, url, filename, replacetag = None, replacestr = None):
-        url = url.replace(":path", filename)
+        pathname = filename.replace("docs/", "")
+        url = url.replace(":path", pathname)
         sfile = open(filename)
         filecstr = sfile.read()
         if replacetag and replacestr:
@@ -64,15 +63,15 @@ class OWASPGitHub:
         r = requests.put(url = url, headers=headers, data=json.dumps(data))
         return r
 
-    def EnablePages(self, repoName):
+    def EnablePages(self, repoName, rtype):
         headers = {"Authorization": "token " + self.apitoken,
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json"
         }
-        repoName = self.FormatRepoName(repoName)
+        repoName = self.FormatRepoName(repoName, rtype)
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(":repo", repoName)
 
-        data = { "source" : { "branch" : "master", "path": "/docs"}}
+        data = { "source" : { "branch" : "master" }}
         r = requests.post(url = url, headers=headers, data=json.dumps(data))
 
         return r
@@ -83,20 +82,49 @@ class OWASPGitHub:
 
         return False
 
-    def FormatRepoName(self, repoName):
-        repoName = repoName.replace(" ", "-")
-        return repoName
+    def FormatRepoName(self, repoName, rtype):
+        
+        resName = ""
+        if rtype == 0:
+            resName = "www-project-"
+        else:
+            resName = "www-chapter-"
+    
+        return resName + repoName.replace(" ", "-").lower()
+
 
     def RebuildSite(self):
         headers = {"Authorization": "token " + self.apitoken,
-            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json"
+            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
         }
-        repos = {"www--site-theme", "owasp.github.io", "www-project-zap"}
-        for repo in repos:
-            url = self.gh_endpoint + self.pages_fragment
-            url = url.replace(":repo",repo)
-            r = requests.post(url = url + "/builds", headers=headers)
-            if not self.TestResultCode(r.status_code):
-                break
+        
+        done = False
+        pageno = 1
+        pageend = -1
+        
+        while not done:
+            pagestr = "?page=%d" % pageno
+            url = self.gh_endpoint + self.org_fragment + pagestr
+            r = requests.get(url=url, headers = headers)
+            
+            if self.TestResultCode(r.status_code):
+                repos = json.loads(r.text)
+                if pageend == -1:
+                    endlink = r.links["last"]["url"]
+                    pageend = int(endlink[endlink.find("?page=") + 6:])
+                
+                if pageno == pageend:
+                    done = True
+                
+                pageno = pageno + 1
+                #repos = {"www--site-theme", "owasp.github.io", "www-project-zap"}
+                for repo in repos:
+                    repoName = repo["name"].lower()
+                    istemplate = repo["is_template"]
+                    if not istemplate and (repoName.startswith("www-project") or repoName.startswith("www-chapter") or repoName.startswith("www--") or repoName.startswith("owasp.github")):
+                        logging.info("rebuilding " + repoName + "\n")
+                        url = self.gh_endpoint + self.pages_fragment
+                        url = url.replace(":repo",repoName)
+                        r = requests.post(url = url + "/builds", headers=headers)
 
         return r

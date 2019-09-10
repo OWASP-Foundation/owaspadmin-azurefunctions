@@ -31,6 +31,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     logging.info('Requesting rebuild from Github...')
     # Do the work that may take more than the timeout....
+    respond_url = names['response_url']
+    
+    headers = {'content-type':'application/json'}
+    data = {
+         'response_type':'ephemeral',
+         'text': 'Iterating through repositories...ignore timeouts'
+     }
+
+    # respond to caller...
+    msg = json.dumps(data)
+    r = requests.post(url = respond_url, headers=headers, data=msg)
+    
+
     gh = github.OWASPGitHub()
     r = gh.RebuildSite()
     if gh.TestResultCode(r.status_code):
@@ -44,7 +57,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
          'text': resString
      }
 
-    respond_url = names['response_url']
     # respond to caller...
     msg = json.dumps(data)
     r = requests.post(url = respond_url, headers=headers, data=msg)
