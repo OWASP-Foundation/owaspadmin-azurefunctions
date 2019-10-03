@@ -3,9 +3,9 @@ import os
 import azure.functions as func
 import requests
 import json
-from urllib.parse import unquote_plus
 from ..SharedCode import salesforce
 from ..SharedCode import spotchk
+from urllib.parse import unquote_plus
 
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpResponse:
 
@@ -15,7 +15,7 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpRe
     strbody = unquote_plus(body.decode("utf-8"))
     if len(strbody) < 10 or strbody.find('&') < 0 or strbody.find('=') < 0:
         return func.HttpResponse(
-            'Chapter not found (100)',
+            'Contact not found (100)',
             status_code = 200
         )
 
@@ -23,13 +23,13 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpRe
     
     if not spotchk.spotchk().validate_query(names):
         return func.HttpResponse(
-            'Chapter not found (101)',
+            'Contact not found (101)',
             status_code = 200
         )
 
     sf = salesforce.OWASPSalesforce()
     r = sf.Login()
-    resString = "Usage: /chapter-lookup [Chapter Name]"
+    resString = "Usage: /contact-lookup [Contact Name]"
     if not sf.TestResultCode(r.status_code):
         return func.HttpResponse(
             "Failed to login to Salesforce",
@@ -58,7 +58,7 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpRe
     if name:
         logging.info("adding parameter to queue")
         msg.set(name)
-        res = sf.FindChapter(name)
+        res = sf.FindContact(name)
         
         return func.HttpResponse(res, status_code=200)
     else:

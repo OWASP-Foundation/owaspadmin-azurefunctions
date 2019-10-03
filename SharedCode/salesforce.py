@@ -84,3 +84,20 @@ class OWASPSalesforce:
             res = "No chapter with name " + chapterName + " found"
 
         return res
+
+
+    def FindContact(self, contactName):
+        contactName = contactName.replace("+", " ")
+        queryString = "SELECT Id,Name,Email FROM Contact  WHERE Name Like '%" + contactName + "%'"
+        records = self.Query(queryString)
+        logging.info(records)
+        res = ""
+        for record in records:
+            res += "Contact: " + record["Name"]
+            res += "\n\tEmail: %s" % record["Email"]
+            res += "\n"
+        
+        if(len(records) <= 0):
+            res = "No contact with name " + contactName + " found"
+
+        return res
