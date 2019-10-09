@@ -1,0 +1,190 @@
+{
+    "type": "modal",
+    "title": {
+        "type": "plain_text",
+        "text": "admin_af_app",
+        "emoji": true
+    },
+    "submit": {
+        "type": "plain_text",
+        "text": "Submit",
+        "emoji": true
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+    },
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "The following information is required to create a chapter:"
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "input",
+            "block_id": "cname-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "cname-value"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Chapter Name",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "leadernames-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "leadernames-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Chapter Leader Names (one per line)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "emails-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "emails-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Chapter Leader Emails (one per line)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "city-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "city-value"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "City",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "country-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "country-value"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Country",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "region-id",
+            "element": {
+                "type": "static_select",
+                "action_id": "region-value",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a region",
+                    "emoji": true
+                },
+                "options": [
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "United States",
+                            "emoji": true
+                        },
+                        "value": "United States"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Africa",
+                            "emoji": true
+                        },
+                        "value": "Africa"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Asia/Pacific",
+                            "emoji": true
+                        },
+                        "value": "Asia/Pacific"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Canada",
+                            "emoji": true
+                        },
+                        "value": "Canada"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Caribbean",
+                            "emoji": true
+                        },
+                        "value": "Caribbean"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Europe",
+                            "emoji": true
+                        },
+                        "value": "Europe"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Latin America",
+                            "emoji": true
+                        },
+                        "value": "Latin America"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Middle East",
+                            "emoji": true
+                        },
+                        "value": "Middle East"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Virtual",
+                            "emoji": true
+                        },
+                        "value": "Virtual"
+                    }
+                    
+                ]
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Region",
+                "emoji": true
+            }
+        }
+    ]
+}

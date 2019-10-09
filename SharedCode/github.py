@@ -126,5 +126,7 @@ class OWASPGitHub:
                         url = self.gh_endpoint + self.pages_fragment
                         url = url.replace(":repo",repoName)
                         r = requests.post(url = url + "/builds", headers=headers)
+                        if not self.TestResultCode(r.status_code):
+                            logging.warn(repoName + " not rebuilt: " + r.text)
 
         return r
