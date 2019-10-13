@@ -12,6 +12,8 @@ class OWASPGitHub:
     org_fragment = "orgs/OWASP/repos"
     content_fragment = "repos/OWASP/:repo/contents/:path"
     pages_fragment = "repos/OWASP/:repo/pages"
+    GH_REPOTYPE_PROJECT = 0
+    GH_REPOTYPE_CHAPTER = 1
 
     def CreateRepository(self, repoName, rtype):
         repoName = self.FormatRepoName(repoName, rtype)
@@ -26,23 +28,31 @@ class OWASPGitHub:
 
         return r
 
-    def InitializeRepositoryPages(self, repoName, rtype):
+    def InitializeRepositoryPages(self, repoName, rtype, basedir = ""):
+        if basedir and not basedir.endswith('/'):
+            basedir = basedir + '/'
+
         groupName = repoName
         repoName = self.FormatRepoName(repoName, rtype)
         url = self.gh_endpoint + self.content_fragment
         url = url.replace(":repo", repoName)
         # change to use files.json....
-        sfile = open("files.json")
+        sfile = open(basedir + "files.json")
         filestosend = json.load(sfile)
         for f in filestosend["files"]:
-            r = self.SendFile( url, f['path'], "[GROUPNAME]", groupName)
+            fpath = basedir + f['path']
+            
+            r = self.SendFile( url, fpath, "[GROUPNAME]", groupName)
             if not self.TestResultCode(r.status_code):
                 break
 
         return r
 
     def SendFile(self, url, filename, replacetag = None, replacestr = None):
-        pathname = filename.replace("docs/", "")
+        pathname = filename[filename.find("docs/") + 5:]
+        if pathname == "gitignore":
+            pathname = "." + pathname
+            
         url = url.replace(":path", pathname)
         sfile = open(filename)
         filecstr = sfile.read()

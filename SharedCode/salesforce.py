@@ -15,6 +15,9 @@ class OWASPSalesforce:
     sf_login_url = "https://login.salesforce.com/services/oauth2/token"
     sf_instance_url = "https://na131.salesforce.com"
     sf_api_url = "/services/data/v46.0/"
+    sf_community_group_url = "sobjects/PagesApi__Community_Group__c"
+    sf_contact_url = "sobjects/Contact"
+    sf_community_group_member_url = "sobjects/PagesApi__Community_Group_Member__c"
     sf_token_id = ""
     sf_query_url = sf_instance_url + sf_api_url + "query"
 
@@ -101,3 +104,72 @@ class OWASPSalesforce:
             res = "No contact with name " + contactName + " found"
 
         return res
+
+    def CreateContact(self, contactName, contactEmail):
+        firstname = contactName[:contactName.find(" ")]
+        lastname = contactName[contactName.find(" ") + 1:]
+        if firstname and lastname:
+            jsonContact = '{ "FirstName":"' + firstname + '", "LastName":"' + lastname + '", "Email":"' + contactEmail + '" }'
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_contact_url
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.post(url=obj_url, headers=headers, data=jsonContact)
+            if not self.TestResultCode(r.status_code):
+                logging.error(r.text)
+
+            return r
+        else:
+            return requests.Response("Contact creation failed: No first or last name.")
+    
+    def CreateCommunityGroupMember(self, leader, chapter):
+        
+        jsonCGM = '{ "PagesApi__Contact__c":"' + leader + '", "PagesApi__Role__c":"Chapter Leader", "PagesApi__Community_Group__c":"' + chapter + '" }'
+        obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_member_url
+        headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+        r = requests.post(url=obj_url, headers=headers, data=jsonCGM)
+        if not self.TestResultCode(r.status_code):
+            logging.error(f"Failed to create community group member: {r.text}")
+
+        return r
+        
+    def CreateChapter(self, chapter_name, leader_names, leader_emails, city, country, region):
+        queryString = "SELECT Id,Name,Display_on_Membership_Application__c,City__c,Country__c FROM PagesApi__Community_Group__c WHERE Name = '" + chapter_name + "'"
+        records = self.Query(queryString)
+        if len(records) > 0: # chapter exists already, update the chapter
+            #do some things
+            logging.info("Chapter exists, no need to create")
+            return requests.Response("Chapter existed")
+        else:
+            #create a whole new chapter
+            jsonChapter = '{ "Name":"' + chapter_name + '", "PagesApi__Type__c":"Chapter", "City__c":"' + city + '", "Country__c":"' + country + '", "Region__c":"' + region + '", "Display_on_Membership_Application__c":"true" }'
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.post(url=obj_url, headers=headers, data=jsonChapter)
+            if not self.TestResultCode(r.status_code):
+                logging.error(r.text)
+
+            return r
+
+        return requests.Response("Self, how did I get here?")
+
+    def AddChapterLeader(self, leader, email, chapter_id):
+        # Add stuff here
+        # first do a contact lookup
+        # if no contact, create contact else select contact
+        # Add contact to Community Group Members as Leader type
+        queryString = "SELECT Id,Name,Email FROM Contact  WHERE Name Like '%" + leader + "%'"
+        records = self.Query(queryString)
+        contact_id = ""
+        if len(records) <= 0:
+            r = self.CreateContact(leader, email)
+            if not self.TestResultCode(r.status_code):
+                logging.error(f"Failed to create contact: {r.text}")
+                return r
+            else:
+                contact_json = json.loads(r.text)
+                contact_id = contact_json["id"]
+        else:
+            contact_id = records[0]["Id"]
+
+        r = self.CreateCommunityGroupMember(contact_id, chapter_id)
+        return r
+        
