@@ -48,6 +48,16 @@ class OWASPGitHub:
 
         return r
 
+    def GetFile(self, repo, filepath):
+        url = self.gh_endpoint + self.content_fragment
+        url = url.replace(":repo", repo)
+        url = url.replace(":path", filepath)
+        
+        #bytestosend = base64.b64encode(filecstr.encode())   
+        headers = {"Authorization": "token " + self.apitoken}
+        r = requests.get(url = url, headers=headers)
+        return r
+
     def SendFile(self, url, filename, replacetag = None, replacestr = None):
         pathname = filename[filename.find("docs/") + 5:]
         if pathname == "gitignore":
