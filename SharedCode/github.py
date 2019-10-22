@@ -150,3 +150,79 @@ class OWASPGitHub:
                             logging.warn(repoName + " not rebuilt: " + r.text)
 
         return r
+
+    def UpdateFile(self, repo, filepath, contents, sha):
+        url = self.gh_endpoint + self.content_fragment
+        url = url.replace(":repo", repo)
+        url = url.replace(":path", filepath)
+
+        bytestosend = base64.b64encode(contents.encode())   
+        committer = {
+            "name" : "OWASP Foundation",
+            "email" : "owasp.foundation@owasp.org"
+        }
+        data = {
+            "message" : "remote update file",
+            "committer" : committer,
+            "content" : bytestosend.decode(),
+            "sha" : sha
+        }
+        headers = {"Authorization": "token " + self.apitoken}
+        r = requests.put(url = url, headers=headers, data=json.dumps(data))
+        return r
+
+    def GetPublicRepositories(self, matching=""):
+        headers = {"Authorization": "token " + self.apitoken,
+            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
+        }
+        
+        done = False
+        pageno = 1
+        pageend = -1
+        
+        results = []
+        while not done:
+            pagestr = "?page=%d" % pageno
+            url = self.gh_endpoint + self.org_fragment + pagestr
+            r = requests.get(url=url, headers = headers)
+            
+            if self.TestResultCode(r.status_code):
+                repos = json.loads(r.text)
+                if pageend == -1:
+                    endlink = r.links['last']['url']
+                    pageend = int(endlink[endlink.find('?page=') + 6:])
+                
+                if pageno == pageend:
+                    done = True
+                
+                pageno = pageno + 1
+                
+                for repo in repos:
+                    repoName = repo['name'].lower()
+                    istemplate = repo['is_template']
+                    haspages = repo['has_pages']
+                    if not istemplate and haspages:
+                        if not matching or matching in repoName:
+                            addrepo = {}
+                            addrepo['name'] = repoName
+                            r = self.GetFile(repoName, 'index.md')
+                            if self.TestResultCode(r.status_code):
+                                doc = json.loads(r.text)
+                                content = base64.b64decode(doc['content']).decode()
+                                ndx = content.find('level:') + 6
+                                eol = content.find("\n", ndx)
+                                if ndx < 0 or content.find("This is an example of a Project") >= 0:
+                                    level = "-1"
+                                else:
+                                    level = content[ndx:eol]
+                                addrepo['level'] = level.strip() 
+                                ndx = content.find('type:') + 5
+                                eol = content.find("\n", ndx)
+                                gtype = content[ndx:eol]
+                                addrepo['type'] = gtype.strip()
+                                results.append(addrepo)
+
+
+
+        return results
+

@@ -6,6 +6,21 @@ from ..SharedCode import github
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('get-repo-file triggered')
     
+    origin = req.headers.get("Origin")
+    if req.method == "OPTIONS": # just return the headers
+        response = func.HttpResponse(status_code=200)
+
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
+        response.headers["Access-Control-Max-Age"] = "86400"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        
+        return response
+        
+    if not origin:
+        origin = "http://localhost"
+        
     fpath = req.params.get('filepath')
     repo = req.params.get('repo')
     if not fpath or repo:
@@ -20,8 +35,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if fpath and repo:
         gh = github.OWASPGitHub()
         r = gh.GetFile(repo, fpath)
+        response = func.HttpResponse(status_code=200, body=r.text)
+
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
+        response.headers["Access-Control-Max-Age"] = "86400"
+        response.headers["Access-Control-Allow-Headers"] = "*"
         
-        return func.HttpResponse(r.text)
+        return response
     else:
         return func.HttpResponse(
              "File request failed for repo",
