@@ -221,6 +221,10 @@ class OWASPGitHub:
                                 eol = content.find("\n", ndx)
                                 gtype = content[ndx:eol]
                                 addrepo['type'] = gtype.strip()
+                                ndx = content.find('region:') + 5
+                                eol = content.find("\n", ndx)
+                                gtype = content[ndx:eol]
+                                addrepo['region'] = gtype.strip()
                                 results.append(addrepo)
 
 
