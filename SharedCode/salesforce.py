@@ -109,8 +109,9 @@ class OWASPSalesforce:
     def CreateContact(self, contactName, contactEmail):
         firstname = contactName[:contactName.find(" ")]
         lastname = contactName[contactName.find(" ") + 1:]
+        
         if firstname and lastname:
-            jsonContact = '{ "FirstName":"' + firstname + '", "LastName":"' + lastname + '", "Email":"' + contactEmail + '", "Account":"Unknown Ltd." }'
+            jsonContact = '{ "FirstName":"' + firstname + '", "LastName":"' + lastname + '", "Email":"' + contactEmail + '", "AccountId":"0010B00001lbESTQA2" }'
             obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_contact_url
             headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
             r = requests.post(url=obj_url, headers=headers, data=jsonContact)
