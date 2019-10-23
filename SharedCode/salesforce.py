@@ -141,7 +141,7 @@ class OWASPSalesforce:
             return requests.Response("Chapter existed")
         else:
             #create a whole new chapter
-            jsonChapter = '{ "Name":"' + chapter_name + '", "PagesApi__Type__c":"Chapter", "City__c":"' + city + '", "Country__c":"' + country + '", "Region__c":"' + region + '", "Display_on_Membership_Application__c":"true", "Inception_Date__c":' + date.today() + '" }'
+            jsonChapter = '{ "Name":"' + chapter_name + '", "PagesApi__Type__c":"Chapter", "City__c":"' + city + '", "Country__c":"' + country + '", "Region__c":"' + region + '", "Display_on_Membership_Application__c":"true" }'
             obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url
             headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
             r = requests.post(url=obj_url, headers=headers, data=jsonChapter)
