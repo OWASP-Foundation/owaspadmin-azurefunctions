@@ -235,3 +235,20 @@ class OWASPGitHub:
 
         return results
 
+    def GetFilesMatching(self, repo, path, matching=''):
+        rfiles = []
+        url = self.gh_endpoint + self.content_fragment
+        url = url.replace(":repo", repo)
+        url = url.replace(":path", path)   
+        headers = {"Authorization": "token " + self.apitoken}
+        r = requests.get(url = url, headers=headers)
+        if self.TestResultCode(r.status_code):
+            contents = json.loads(r.text)
+            for item in contents:
+                if item['type'] == 'file':
+                    if matching and item['name'].find(matching) > -1:
+                        rfiles.append(item['name'])
+                    elif not matching:
+                        rfiles.append(item['name'])
+    
+        return r, rfiles
