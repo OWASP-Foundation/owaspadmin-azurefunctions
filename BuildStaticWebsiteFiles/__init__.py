@@ -180,15 +180,15 @@ def get_project_milestones(content, pname):
 
     milestr = content[sndx:endx]
     milestr = milestr.replace('\n','')
-    if milestr.startswith('*'):
-        milestr = milestr.replace('[ ]','')
-        milestr = milestr.replace('[x]', '')
-    else:
-        milestr = milestr.replace('[ ]', '*')
-        milestr = milestr.replace('[x]', '*')
+    if not milestr.startswith('*'):
+        milestr = milestr.replace('[ ]', '* [ ]')
+        milestr = milestr.replace('[x]', '* [x]')
 
     mls = milestr.split('*')
     for ms in mls:
+        if '[x]' in ms:
+            continue
+        ms = ms.replace('[ ]', '')
         date, owner, desc = get_milestone_parts(ms)
         if date:
             milestone = Milestone(date)
@@ -206,7 +206,7 @@ def build_staff_milestone_json(projects):
         for milestone in project.milestones:
             milestones.append(milestone)
 
-    milestones.sort(key=lambda x: x.milestone_date, reverse=True)
+    milestones.sort(key=lambda x: x.milestone_date)
     contents = json.dumps(milestones, default=lambda x: x.__dict__, indent=4)
     r = gh.GetFile('www-staff', '_data/milestones.json')
     sha = ''
