@@ -16,6 +16,7 @@ DATE_CREATED_FIELD = 'DateCreated'
 #8bdef88baad8843
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    return HttpResponse('Nothing to see here' status_code=400)
     logging.info('Student Membership webhook called')
 
     name = req.params.get('name')

@@ -180,6 +180,8 @@ def get_project_milestones(content, pname):
 
     milestr = content[sndx:endx]
     milestr = milestr.replace('\n','')
+    milestr = milestr.replace('- [', '* [')
+    
     if not milestr.startswith('*'):
         milestr = milestr.replace('[ ]', '* [ ]')
         milestr = milestr.replace('[x]', '* [x]')
