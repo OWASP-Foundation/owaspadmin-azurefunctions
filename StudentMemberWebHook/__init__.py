@@ -1,37 +1,65 @@
 import logging
+import os
 
 import azure.functions as func
-
-FIRST_NAME_FIELD = 'Field148'
-LAST_NAME_FIELD = 'Field149'
-EMAIL_FIELD = 'Field10'
-MEMBERSHIP_TYPE_FIELD = 'Field260'
-COUNTRY_FIELD = 'Field13'
-POSTAL_CODE_FIELD = 'Field11'
-UNIVERSITY_FIELD = 'Field262'
-GRADUATION_DATE_FIELD = 'Field264'
-FAVORITE_CLASS_FIELD = 'Field265'
-DATE_CREATED_FIELD = 'DateCreated'
+from urllib.parse import unquote_plus
+from ..SharedCode import wufoo
+from ..SharedCode import salesforce
 
 #8bdef88baad8843
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
-    return HttpResponse('Nothing to see here' status_code=400)
+def main(req: func.HttpRequest, outputQueueItem: func.Out[func.QueueMessage]) -> func.HttpResponse:
+    #return func.HttpResponse('Nothing to see here', status_code=400)
     logging.info('Student Membership webhook called')
 
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
+    # determine information from passed in data
+    # determine if/when 'paid' is marked
 
-    if name:
-        return func.HttpResponse(f"Hello {name}!")
+    # TODO replicate steps from zapier:
+    # if paid, do the following:
+    # Find or Create Salesforce Account based on University
+    # Find or Create Contact in Salesforce based on email
+    # Create Badge in Salesforce
+    # Create Subscription in Salesforce
+    # Consideration: Create Sales Item and Sales Line Item, etc as needed
+
+    firstname = lastname = email = member_type = country = postal_code = university = graduation_date = favorite_class = date_created = handshake = ''
+    req_body = req.get_body()
+    strbody = unquote_plus(req_body.decode("utf-8"))
+    names = dict(x.split('=') for x in strbody.split('&'))
+    
+    wf = wufoo.OWASPWufoo()
+    handshake = names.get(wf.HANDSHAKE_KEY_FIELD)
+    if os.environ["WF_HANDSHAKE"] != handshake:
+        return func.HttpResponse('Failed handshake', status_code = 400)
+    
+    
+    firstname = names.get(wf.FIRST_NAME_FIELD)
+    lastname = names.get(wf.LAST_NAME_FIELD)
+    email = names.get(wf.EMAIL_FIELD)
+    member_type = names.get(wf.MEMBERSHIP_TYPE_FIELD)
+    country = names.get(wf.COUNTRY_FIELD)
+    postal_code = names.get(wf.POSTAL_CODE_FIELD)
+    university = names.get(wf.UNIVERSITY_FIELD)
+    graduation_date = names.get(wf.GRADUATION_DATE_FIELD)
+    favorite_class = names.get(wf.FAVORITE_CLASS_FIELD)
+    date_created = names.get(wf.DATE_CREATED_FIELD)
+
+    if firstname:
+        
+        #paid = wf.GetPaidField(os.environ['WF_STUDENT_FORM'], email, date_created)
+        #if 'Completed' in paid:
+        #    sf = salesforce.OWASPSalesforce()
+            # do something cool with SF...
+        #else: 
+
+        # Just put it on a queue ... webhook is called BEFORE payment anyway...
+        outputQueueItem.set(req.get_body())
+            # put this on a queue to be looked at by timer function set for 5 minutes?  15 minutes?
+
+        return func.HttpResponse("Ok")
     else:
         return func.HttpResponse(
-             "Please pass a name on the query string or in the request body",
+             f"Invalid parameters in the request body: {req_body}",
              status_code=400
         )

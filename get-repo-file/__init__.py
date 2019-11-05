@@ -7,6 +7,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('get-repo-file triggered')
     
     origin = req.headers.get("Origin")
+    if not origin:
+        origin = "http://localhost"
+        
     if req.method == "OPTIONS": # just return the headers
         response = func.HttpResponse(status_code=200)
 
@@ -17,9 +20,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         response.headers["Access-Control-Allow-Headers"] = "*"
         
         return response
-        
-    if not origin:
-        origin = "http://localhost"
         
     fpath = req.params.get('filepath')
     repo = req.params.get('repo')

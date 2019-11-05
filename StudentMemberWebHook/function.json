@@ -7,7 +7,6 @@
       "direction": "in",
       "name": "req",
       "methods": [
-        "get",
         "post"
       ]
     },
@@ -15,6 +14,13 @@
       "type": "http",
       "direction": "out",
       "name": "$return"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "outputQueueItem",
+      "queueName": "student-membership-queue",
+      "connection": "owaspadmin941c_STORAGE"
     }
   ]
 }
