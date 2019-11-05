@@ -6,7 +6,6 @@ from urllib.parse import unquote_plus
 from ..SharedCode import wufoo
 from ..SharedCode import salesforce
 
-#8bdef88baad8843
 
 def main(req: func.HttpRequest, outputQueueItem: func.Out[func.QueueMessage]) -> func.HttpResponse:
     #return func.HttpResponse('Nothing to see here', status_code=400)
