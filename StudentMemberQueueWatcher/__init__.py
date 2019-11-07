@@ -42,11 +42,12 @@ def main(mytimer: func.TimerRequest) -> None:
         lastname = names[wf.LAST_NAME_FIELD]
         university = names[wf.UNIVERSITY_FIELD]
         datecreated = names[wf.DATE_CREATED_FIELD]
-        transaction_id = names[wf.TRANSACTION_FIELD]
-        merchant_type = names[wf.MERCHANT_TYPE_FIELD]
         status = wf.GetPaidField(os.environ['WF_STUDENT_FORM'], email, datecreated)
         if 'Paid' in status:
-            if sf.GenerateStudentSubscription(firstname, lastname, email, university, transaction_id, merchant_type):
-               queue.delete_message(message.id, message.pop_receipt)
+            if wf.TRANSACTION_FIELD in names.keys():
+                transaction_id = names[wf.TRANSACTION_FIELD]
+                merchant_type = names[wf.MERCHANT_TYPE_FIELD]
+                if sf.GenerateStudentSubscription(firstname, lastname, email, university, transaction_id, merchant_type):
+                   queue.delete_message(message.id, message.pop_receipt)
             
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
