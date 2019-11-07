@@ -227,8 +227,16 @@ class OWASPGitHub:
                                     gtype = content[ndx:eol]
                                 else: 
                                     gtype = 'Unknown'
-                                    
                                 addrepo['region'] = gtype.strip()
+
+                                ndx = content.find('pitch:') + 6
+                                if ndx > 5: # -1 + 6
+                                    eol = content.find('\n', ndx)
+                                    gtype = content[ndx:eol]
+                                else
+                                    gtype = 'More info soon...' 
+                                addrepo['pitch'] = gtype.strip()
+
                                 results.append(addrepo)
 
 

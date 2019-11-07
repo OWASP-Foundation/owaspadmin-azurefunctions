@@ -13,7 +13,7 @@ def build_project_json():
     #write json file out to github.owasp.io _data folder
     gh = github.OWASPGitHub()
     repos = gh.GetPublicRepositories('www-project')
-    
+
     for repo in repos:
         repo['name'] = repo['name'].replace('www-project-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
