@@ -5,7 +5,7 @@ from urllib.parse import unquote_plus
 import json
 import base64
 import azure.functions as func
-from azure.storage.queue import QueueServiceClient, QueueClient, QueueMessage
+from azure.storage.queue import QueueClient, QueueMessage
 
 from ..SharedCode import salesforce
 from ..SharedCode import wufoo

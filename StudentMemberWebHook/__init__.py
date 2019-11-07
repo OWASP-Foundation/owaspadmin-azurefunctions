@@ -1,6 +1,5 @@
 import logging
 import os
-from azure.storage.queue import QueueServiceClient, QueueClient, QueueMessage
 
 import azure.functions as func
 from urllib.parse import unquote_plus
