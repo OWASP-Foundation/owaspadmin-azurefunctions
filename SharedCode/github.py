@@ -172,7 +172,7 @@ class OWASPGitHub:
         return r
 
     def GetPublicRepositories(self, matching=""):
-        headers = {"Authorization": "token " + self.apitoken,
+        headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
         }
         

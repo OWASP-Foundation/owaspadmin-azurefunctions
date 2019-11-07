@@ -1,11 +1,12 @@
 import logging
 import os
+from azure.storage.queue import QueueServiceClient, QueueClient, QueueMessage
 
 import azure.functions as func
 from urllib.parse import unquote_plus
 from ..SharedCode import wufoo
 from ..SharedCode import salesforce
-
+import base64
 
 def main(req: func.HttpRequest, outputQueueItem: func.Out[func.QueueMessage]) -> func.HttpResponse:
     #return func.HttpResponse('Nothing to see here', status_code=400)
@@ -13,14 +14,6 @@ def main(req: func.HttpRequest, outputQueueItem: func.Out[func.QueueMessage]) ->
 
     # determine information from passed in data
     # determine if/when 'paid' is marked
-
-    # TODO replicate steps from zapier:
-    # if paid, do the following:
-    # Find or Create Salesforce Account based on University
-    # Find or Create Contact in Salesforce based on email
-    # Create Badge in Salesforce
-    # Create Subscription in Salesforce
-    # Consideration: Create Sales Item and Sales Line Item, etc as needed
 
     firstname = lastname = email = member_type = country = postal_code = university = graduation_date = favorite_class = date_created = handshake = ''
     req_body = req.get_body()

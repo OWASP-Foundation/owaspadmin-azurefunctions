@@ -34,6 +34,8 @@ class OWASPWufoo:
     DATE_CREATED_FIELD = 'DateCreated'
     HANDSHAKE_KEY_FIELD = 'HandshakeKey'
     STATUS_FIELD = "Status"
+    TRANSACTION_FIELD = 'TransactionId'
+    MERCHANT_TYPE_FIELD = 'MerchantType'
 
     def GetFieldFromFormEntry(self, form, fieldid, operator, param):
         #https://owasp.wufoo.com/api/v3/forms/join-owasp-as-a-student/entries.xml?Filter1=EntryId+Is_equal_to+3

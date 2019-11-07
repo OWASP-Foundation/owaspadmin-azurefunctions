@@ -170,6 +170,18 @@ def get_milestone_parts(milestone):
 
     return date, owner, desc
 
+def get_milestone_status(date):
+    status = 'on-time'
+    d = datetime.date(*(int(s) for s in date.split('-')))
+    td = datetime.date.today()
+    delta = d - td
+    if delta.days <= -5:
+        status = 'overdue'
+    elif delta.days > 30:
+        status = 'future'
+
+
+    return status
 
 def get_project_milestones(content, pname):
     milestones = []
@@ -197,6 +209,7 @@ def get_project_milestones(content, pname):
             milestone.owner = owner
             milestone.description = desc
             milestone.project_name = pname
+            milestone.status = get_milestone_status(date)
             milestones.append(milestone)
                     
     return milestones
