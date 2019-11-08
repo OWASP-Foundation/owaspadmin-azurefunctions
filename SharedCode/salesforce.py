@@ -289,12 +289,16 @@ class OWASPSalesforce:
         else:
             return requests.Response("Subscription creation failed: No contact.", 400)
 
-    def CreateCommunityGroupMember(self, leader, chapter):
-        
-        jsonCGM = '{ "PagesApi__Contact__c":"' + leader + '", "PagesApi__Role__c":"Chapter Leader", "PagesApi__Community_Group__c":"' + chapter + '" }'
+    def CreateCommunityGroupMember(self, leader, group, role):
+        jsonCGM = {}
+        jsonCGM['PagesApi__Contact__c'] = leader
+        jsonCGM['PagesApi__Role__c'] = role
+        jsonCGM['PagesApi__Community_Group__c'] = group
+        jsonString = json.dumps(jsonCGM)
+
         obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_member_url
         headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
-        r = requests.post(url=obj_url, headers=headers, data=jsonCGM)
+        r = requests.post(url=obj_url, headers=headers, data=jsonString)
         if not r.ok:
             logging.error(f"Failed to create community group member: {r.text}")
 
@@ -339,10 +343,59 @@ class OWASPSalesforce:
         else:
             contact_id = records[0]["Id"]
 
-        r = self.CreateCommunityGroupMember(contact_id, chapter_id)
+        r = self.CreateCommunityGroupMember(contact_id, chapter_id, 'Chapter Leader')
     
         return r
-        
+    
+    def CreateProject(self, project_name, leader_names, leader_emails):
+        project_name = 'OWASP ' + project_name
+        queryString = "SELECT Id,Name,Display_on_Membership_Application__c,City__c,Country__c FROM PagesApi__Community_Group__c WHERE Name = '" + project_name + "'"
+        records = self.Query(queryString)
+        if len(records) > 0: # chapter exists already, update the chapter
+            #do some things
+            logging.info("Project exists, no need to create")
+            return requests.Response("Project existed", 400)
+        else:
+            #create a whole new chapter
+            jsonProject = {}
+            jsonProject['Name'] = project_name
+            jsonProject['PagesApi__Type__c'] = 'Project'
+            jsonProject['Display_on_Membership_Application__c'] = 1
+            jsonString = json.dumps(jsonProject)
+
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.post(url=obj_url, headers=headers, data=jsonString)
+            if not r.ok:
+                logging.error(r.text)
+
+            return r
+
+        return requests.Response("Self, how did I get here?", 400)
+
+    def AddProjectLeader(self, leader, email, project_id):
+        # Add stuff here
+        # first do a contact lookup
+        # if no contact, create contact else select contact
+        # Add contact to Community Group Members as Leader type
+        queryString = "SELECT Id,Name,Email FROM Contact  WHERE Name Like '%" + leader + "%'"
+        records = self.Query(queryString)
+        contact_id = ""
+        if len(records) <= 0:
+            r = self.CreateContact(leader, email)
+            if not r.ok:
+                logging.error(f"Failed to create contact: {r.text}")
+                return r
+            else:
+                contact_json = json.loads(r.text)
+                contact_id = contact_json["id"]
+        else:
+            contact_id = records[0]["Id"]
+
+        r = self.CreateCommunityGroupMember(contact_id, project_id, 'Project Leader')
+    
+        return r
+
     def GenerateSubscription(self, firstname, lastname, email, account, transaction_id, amount, merchant_type, type_id, plan_id, line_desc):
         # so many things here....
         # find a subscription of the same type and plan

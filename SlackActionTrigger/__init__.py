@@ -3,7 +3,7 @@ import azure.functions as func
 import json
 from urllib.parse import unquote_plus
 
-def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpResponse:
+def main(req: func.HttpRequest, chmsg: func.Out[func.QueueMessage], prmsg: func.Out[func.QueueMessage]) -> func.HttpResponse:
     logging.info('Slack Action Trigger')
     body = req.get_body()
     strbody = unquote_plus(body.decode("utf-8"))
@@ -12,10 +12,13 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpRe
 
     resp = '{"response_action": "update","view": {"type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     #resp += strbody
-    resp += 'Working on chapter, please wait..."} }]} }' 
+    resp += 'Working on it, please wait..."} }]} }' 
     
     #add this to the queue, it will be picked up by the chapter-process function
-    msg.set(jsonstr)
+    if 'Chapter' in jsonstr:
+        chmsg.set(jsonstr)
+    elif 'Project' in jsonstr:
+        prmsg.set(jsonstr)
 
     headers = {"Content-Type":"application/json;charset=utf-8"}
     

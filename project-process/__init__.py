@@ -20,25 +20,22 @@ def main(msg: func.QueueMessage, context: func.Context) -> None:
 
 
 def process_form(values, view_id, function_directory):
-    chapter_name = values["cname-id"]["cname-value"]["value"]
+    project_name = values["cname-id"]["cname-value"]["value"]
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
-    city = values["city-id"]["city-value"]["value"]
-    country = values["country-id"]["country-value"]["value"]
-    region = values["region-id"]["region-value"]["selected_option"]["value"]
     
     logging.info("Logging into Salesforce...")
     sf = salesforce.OWASPSalesforce()
     r = sf.Login()
 
-    resString = " Chapter created"
+    resString = " Project created"
     if not r.ok:
         resString = "Failed to login to salesforce"
     else:
-        logging.info("Creating chapter...")
-        r = sf.CreateChapter(chapter_name, leader_names, leader_emails, city, country, region)    
+        logging.info("Creating project...")
+        r = sf.CreateProject(project_name, leader_names, leader_emails)    
         if not r.ok:
-            resString = f"Failed to Create Chapter {r.status_code}"
+            resString = f"Failed to Create Project {r.status_code}"
         else:
             cg_json = json.loads(r.text)
             # create the leaders here....
@@ -49,8 +46,8 @@ def process_form(values, view_id, function_directory):
                 for leader in leaders:
                     email = emails[count]
                     count = count + 1
-                    logging.info("Adding chapter leader...")
-                    r = sf.AddChapterLeader(leader, email, cg_json["id"])
+                    logging.info("Adding project leader...")
+                    r = sf.AddProjectLeader(leader, email, cg_json["id"])
                     if not r.ok:
                         resString = f"Failed to add leader { leader } with email { email }."
                         break
@@ -59,11 +56,11 @@ def process_form(values, view_id, function_directory):
 
             if resString.find("Failed") < 0:
                 logging.info("Creating github repository")
-                resString = CreateGithubStructure(chapter_name, function_directory)
+                resString = CreateGithubStructure(project_name, function_directory)
 
 
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
-    resp += chapter_name
+    resp += project_name
     resp += ' ' 
     resp += resString
     resp += '"} }]} }' 
@@ -75,24 +72,24 @@ def process_form(values, view_id, function_directory):
     logging.info(r.text)
 
 
-def CreateGithubStructure(chapter_name, func_dir):
+def CreateGithubStructure(project_name, func_dir):
     gh = github.OWASPGitHub()
-    r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
-    resString = "Chapter created."
+    r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
+    resString = "Project created."
     if not gh.TestResultCode(r.status_code):
-        resString = f"Failed to create repository for {chapter_name}."
+        resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
     
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(chapter_name, gh.GH_REPOTYPE_CHAPTER, basedir = func_dir)
+        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir)
         if not gh.TestResultCode(r.status_code):
-            resString = f"Failed to send initial files for {chapter_name}."
+            resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
     if resString.find("Failed") < 0:
-        r = gh.EnablePages(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+        r = gh.EnablePages(project_name, gh.GH_REPOTYPE_PROJECT)
         if not gh.TestResultCode(r.status_code):
-            resString = f"Failed to enable pages for {chapter_name}."
+            resString = f"Failed to enable pages for {project_name}."
             logging.error(resString + " : " + r.text)
 
     return resString

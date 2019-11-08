@@ -233,7 +233,7 @@ class OWASPGitHub:
                                 if ndx > 5: # -1 + 6
                                     eol = content.find('\n', ndx)
                                     gtype = content[ndx:eol]
-                                else
+                                else:
                                     gtype = 'More info soon...' 
                                 addrepo['pitch'] = gtype.strip()
 

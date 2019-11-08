@@ -19,8 +19,15 @@
     {
       "type": "queue",
       "direction": "out",
-      "name": "msg",
+      "name": "chmsg",
       "queueName": "chapterqueue",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "prmsg",
+      "queueName": "projectqueue",
       "connection": "AzureWebJobsStorage"
     }
   ]

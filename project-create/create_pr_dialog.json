@@ -1,0 +1,71 @@
+{
+    "type": "modal",
+    "title": {
+        "type": "plain_text",
+        "text": "admin_af_app",
+        "emoji": true
+    },
+    "submit": {
+        "type": "plain_text",
+        "text": "Submit",
+        "emoji": true
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+    },
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "The following information is required to create a project:"
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "input",
+            "block_id": "cname-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "cname-value"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Project Name",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "leadernames-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "leadernames-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Project Leader Names (one per line, first name last name format)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "emails-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "emails-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Project Leader Emails (one per line)",
+                "emoji": true
+            }
+        }
+    ]
+}

@@ -30,7 +30,7 @@ def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpRe
     sf = salesforce.OWASPSalesforce()
     r = sf.Login()
     resString = "Usage: /contact-lookup [Contact Name]"
-    if not sf.TestResultCode(r.status_code):
+    if not r.ok:
         return func.HttpResponse(
             "Failed to login to Salesforce",
             status_code = r.status_code

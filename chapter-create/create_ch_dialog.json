@@ -188,26 +188,3 @@
         }
     ]
 }
-
-
-
-
-
-"state":{"values":
-        {"cname-id":
-        {"cname-value":
-            {"type":"plain_text_input","value":"Hodor"}},
-        "leadernames-id":
-        {"leadernames-value":
-            {"type":"plain_text_input","value":"Hodor"}},
-        "emails-id":{"emails-value":
-            {"type":"plain_text_input","value":"Hodor"}},
-        "city-id":{"city-value":
-            {"type":"plain_text_input","value":"Hodor"}},
-        "country-id":{"country-value":
-            {"type":"plain_text_input","value":"Hodor"}},
-        "region-id":{"region-value":
-            {"type":"static_select",
-        "selected_option":
-                {"text":{"type":"plain_text","text":"United States","emoji":true},
-                 "value":"United States"}}}}}
