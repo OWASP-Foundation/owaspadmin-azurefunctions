@@ -36,7 +36,23 @@ def main(mytimer: func.TimerRequest) -> None:
     for message in messages:
         content = base64.b64decode(message.content)
         strbody = unquote_plus(content.decode('utf-8'))
-        names = dict(x.split('=') for x in strbody.split('&'))
+        parts = strbody.split('&')
+        prev_part = None
+        cnt = 0
+        for part in parts:
+            if prev_part:
+                if '=' not in part:
+                    parts[cnt - 1] = f'{parts[cnt - 1]}&{part}' 
+                    parts[cnt] = None
+            cnt = cnt + 1        
+            prev_part = part
+        
+        names = {}
+        for x in parts:
+            if x:
+                vals = x.split('=')
+                names[vals[0]] = vals[1]
+                
         email = names[wf.EMAIL_FIELD]
         firstname = names[wf.FIRST_NAME_FIELD]
         lastname = names[wf.LAST_NAME_FIELD]
