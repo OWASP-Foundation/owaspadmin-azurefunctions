@@ -43,7 +43,7 @@ def main(mytimer: func.TimerRequest) -> None:
         university = names[wf.UNIVERSITY_FIELD]
         datecreated = names[wf.DATE_CREATED_FIELD]
         status = wf.GetPaidField(os.environ['WF_STUDENT_FORM'], email, datecreated)
-        if 'Paid' in status:
+        if 'Paid' in status or 'Completed' in status:
             if wf.TRANSACTION_FIELD in names.keys():
                 transaction_id = names[wf.TRANSACTION_FIELD]
                 merchant_type = names[wf.MERCHANT_TYPE_FIELD]
