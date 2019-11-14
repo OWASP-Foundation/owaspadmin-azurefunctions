@@ -296,7 +296,7 @@ class OWASPSalesforce:
         jsonCGM['PagesApi__Community_Group__c'] = group
         jsonString = json.dumps(jsonCGM)
         
-        records = self.Query(f"SELECT Id, Name WHERE PagesApi__Contact__c='{leader}' AND PagesApi__Role__c='{role}' AND PagesApi__Community_Group__c='{group}'")
+        records = self.Query(f"SELECT Id,Name From PagesApi__Community_Group_Member__c WHERE PagesApi__Contact__c='{leader}' AND PagesApi__Role__c='{role}' AND PagesApi__Community_Group__c='{group}'")
         if len(records) > 0:
             cgmem_id = records[0]['Id']
             obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_member_url + '/' + cgmem_id
