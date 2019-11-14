@@ -50,7 +50,14 @@ def process_form(values, view_id, function_directory):
                     email = emails[count]
                     count = count + 1
                     logging.info("Adding chapter leader...")
-                    r = sf.AddChapterLeader(leader, email, cg_json["id"])
+                    cg_id = ''
+                    
+                    if 'id' in cg_json.keys:
+                        cg_id = cg_json['id']
+                    else:
+                        cg_id = cg_json['Id']
+
+                    r = sf.AddChapterLeader(leader, email, cg_id)   
                     if not r.ok:
                         resString = f"Failed to add leader { leader } with email { email }."
                         break

@@ -356,7 +356,11 @@ class OWASPSalesforce:
                 return r
             else:
                 contact_json = json.loads(r.text)
-                contact_id = contact_json["id"]
+                if 'id' in contact_json.keys:
+                    contact_id = contact_json['id']
+                else:
+                    contact_id = contact_json['Id']
+                
         else:
             contact_id = records[0]["Id"]
 
@@ -506,3 +510,25 @@ class OWASPSalesforce:
     def GenerateStudentSubscription(self, firstname, lastname, email, university, transaction_id, merchant_type):
         return self.GenerateSubscription(firstname, lastname, email, university, transaction_id, 20.00, merchant_type, self.STUDENT_MEMBERSHIP, self.ONE_YEAR_MEMBERSHIP, 'Student Membership')
             
+    def GetChapter(self, chapter_name):
+        queryString = "SELECT Id,Name,Display_on_Membership_Application__c,City__c,Country__c FROM PagesApi__Community_Group__c WHERE Name = '" + chapter_name + "'"
+        records = self.Query(queryString)
+        if len(records) > 0: # chapter exists already, update the chapter
+            #do some things
+            logging.info("Chapter exists, no need to create")
+            ch_id = records[0]['Id']
+            # need to query chapter record from API....
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url + '/' + ch_id
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.get(url=obj_url, headers=headers)
+            if not r.ok:
+                logging.error(r.text)
+
+            return r    
+        else:
+            the_response = requests.Response()
+            the_response.code = "does not exist"
+            the_response.error_type = "does not exist"
+            the_response.status_code = 400
+            the_response._content = b'{ "key" : "a" }'
+            return the_response

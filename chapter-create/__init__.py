@@ -12,6 +12,11 @@ import pathlib
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('chapter-create request')
     
+    # sf = salesforce.OWASPSalesforce()
+    # sf.Login()
+    # r = sf.GetChapter('Colombo')
+    # cg_json = json.loads(r.text)
+
     body = req.get_body()
     
     # validate the call...
