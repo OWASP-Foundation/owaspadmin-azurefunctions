@@ -356,7 +356,7 @@ class OWASPSalesforce:
                 return r
             else:
                 contact_json = json.loads(r.text)
-                if 'id' in contact_json.keys:
+                if 'id' in contact_json.keys():
                     contact_id = contact_json['id']
                 else:
                     contact_id = contact_json['Id']

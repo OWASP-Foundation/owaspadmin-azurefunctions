@@ -52,7 +52,7 @@ def process_form(values, view_id, function_directory):
                     logging.info("Adding chapter leader...")
                     cg_id = ''
                     
-                    if 'id' in cg_json.keys:
+                    if 'id' in cg_json.keys():
                         cg_id = cg_json['id']
                     else:
                         cg_id = cg_json['Id']
