@@ -35,7 +35,7 @@ def process_form(values, view_id, function_directory):
     if not r.ok:
         resString = "Failed to login to salesforce"
     else:
-        logging.info("Creating chapter...")
+        logging.info(f'Creating chapter...{chapter_name}')
         r = sf.CreateChapter(chapter_name, leader_names, leader_emails, city, country, region)    
         if not r.ok:
             resString = f"Failed to Create Chapter {r.status_code}"
@@ -80,7 +80,7 @@ def CreateGithubStructure(chapter_name, func_dir):
     r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
     resString = "Chapter created."
     if not gh.TestResultCode(r.status_code):
-        resString = f"Failed to create repository for {chapter_name}."
+        resString = f"Failed to create repository for {chapter_name}. Does it already exist?"
         logging.error(resString + " : " + r.text)
     
     if resString.find("Failed") < 0:

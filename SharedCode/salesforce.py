@@ -295,12 +295,21 @@ class OWASPSalesforce:
         jsonCGM['PagesApi__Role__c'] = role
         jsonCGM['PagesApi__Community_Group__c'] = group
         jsonString = json.dumps(jsonCGM)
-
-        obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_member_url
-        headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
-        r = requests.post(url=obj_url, headers=headers, data=jsonString)
-        if not r.ok:
-            logging.error(f"Failed to create community group member: {r.text}")
+        
+        records = self.Query(f'SELECT Id, Name WHERE PagesApi__Contact__c="{leader}" AND PagesApi__Role__c="{role}" AND PagesApi__Community_Group__c="{group}"')
+        if len(records) > 0:
+            cgmem_id = records[0]['Id']
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_member_url + '/' + cgmem_id
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.get(url=obj_url, headers=headers, data=jsonString)
+            if not r.ok:
+                logging.error(f"Failed to create community group member: {r.text}")
+        else:
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_member_url
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.post(url=obj_url, headers=headers, data=jsonString)
+            if not r.ok:
+                logging.error(f"Failed to create community group member: {r.text}")
 
         return r
         
@@ -310,7 +319,15 @@ class OWASPSalesforce:
         if len(records) > 0: # chapter exists already, update the chapter
             #do some things
             logging.info("Chapter exists, no need to create")
-            return requests.Response("Chapter existed", 400)
+            ch_id = records[0]['Id']
+            # need to query chapter record from API....
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url + '/' + ch_id
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.get(url=obj_url, headers=headers)
+            if not r.ok:
+                logging.error(r.text)
+
+            return r    
         else:
             #create a whole new chapter
             jsonChapter = '{ "Name":"' + chapter_name + '", "PagesApi__Type__c":"Chapter", "City__c":"' + city + '", "Country__c":"' + country + '", "Region__c":"' + region + '", "Display_on_Membership_Application__c":"true" }'
