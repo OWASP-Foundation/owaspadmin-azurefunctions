@@ -175,7 +175,7 @@ def get_milestone_status(date):
     d = datetime.date(*(int(s) for s in date.split('-')))
     td = datetime.date.today()
     delta = d - td
-    if delta.days <= -5:
+    if delta.days <= -1:
         status = 'overdue'
     elif delta.days > 30:
         status = 'future'

@@ -212,7 +212,8 @@ class OWASPGitHub:
                                 content = base64.b64decode(doc['content']).decode()
                                 ndx = content.find('level:') + 6
                                 eol = content.find("\n", ndx)
-                                if ndx < 0 or content.find("This is an example of a Project") >= 0:
+                                not_updated = (content.find("This is an example of a Project") >= 0)
+                                if ndx < 0 or not_updated:
                                     level = "-1"
                                 else:
                                     level = content[ndx:eol]
@@ -222,11 +223,15 @@ class OWASPGitHub:
                                 gtype = content[ndx:eol]
                                 addrepo['type'] = gtype.strip()
                                 ndx = content.find('region:') + 7
-                                if ndx > 6: # -1 + 7
+                                
+                                if not_updated:
+                                    gtype = 'Needs Website Update'
+                                elif ndx > 6: # -1 + 7
                                     eol = content.find("\n", ndx)
                                     gtype = content[ndx:eol]
                                 else: 
                                     gtype = 'Unknown'
+                                    
                                 addrepo['region'] = gtype.strip()
 
                                 ndx = content.find('pitch:') + 6
