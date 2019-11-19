@@ -330,10 +330,18 @@ class OWASPSalesforce:
             return r    
         else:
             #create a whole new chapter
-            jsonChapter = '{ "Name":"' + chapter_name + '", "PagesApi__Type__c":"Chapter", "City__c":"' + city + '", "Country__c":"' + country + '", "Region__c":"' + region + '", "Display_on_Membership_Application__c":"true" }'
+            jsonChapter = {}
+            jsonChapter['Name'] = chapter_name
+            jsonChapter['PagesApi__Type__c'] = 'Chapter'
+            jsonChapter['Display_on_Membership_Application__c'] = 'true'
+            jsonChapter['Country__c'] = country
+            jsonChapter['Region__c'] = region
+
+            jsonString = json.dumps(jsonChapter)
+            
             obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url
             headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
-            r = requests.post(url=obj_url, headers=headers, data=jsonChapter)
+            r = requests.post(url=obj_url, headers=headers, data=jsonString)
             if not r.ok:
                 logging.error(r.text)
 
@@ -389,13 +397,13 @@ class OWASPSalesforce:
             jsonProject = {}
             jsonProject['Name'] = project_name
             jsonProject['PagesApi__Type__c'] = 'Project'
-            jsonProject['Display_on_Membership_Application__c'] = 1
+            jsonProject['Display_on_Membership_Application__c'] = 'true'
             jsonProject['License__c'] = license
             jsonProject['Summary__c'] = summary
             jsonProject['PagesApi__Description__c'] = description
             jsonProject['Roadmap__c'] = roadmap
             jsonProject['Project_Type__c'] = proj_type
-            
+
             jsonString = json.dumps(jsonProject)
 
             obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url
