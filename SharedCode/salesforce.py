@@ -368,20 +368,34 @@ class OWASPSalesforce:
     
         return r
     
-    def CreateProject(self, project_name, leader_names, leader_emails):
+    def CreateProject(self, project_name, leader_names, leader_emails, summary, description, roadmap, license, proj_type):
         project_name = 'OWASP ' + project_name
         queryString = "SELECT Id,Name,Display_on_Membership_Application__c,City__c,Country__c FROM PagesApi__Community_Group__c WHERE Name = '" + project_name + "'"
         records = self.Query(queryString)
-        if len(records) > 0: # chapter exists already, update the chapter
+        if len(records) > 0: # project exists already, update the project
             #do some things
             logging.info("Project exists, no need to create")
-            return requests.Response("Project existed", 400)
+            ch_id = records[0]['Id']
+            # need to query chapter record from API....
+            obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url + '/' + ch_id
+            headers = {"Content-Type":"application/json", "Authorization":"Bearer " + self.sf_token_id, "X-PrettyPrint":"1" }
+            r = requests.get(url=obj_url, headers=headers)
+            if not r.ok:
+                logging.error(r.text)
+
+            return r
         else:
             #create a whole new chapter
             jsonProject = {}
             jsonProject['Name'] = project_name
             jsonProject['PagesApi__Type__c'] = 'Project'
             jsonProject['Display_on_Membership_Application__c'] = 1
+            jsonProject['License__c'] = license
+            jsonProject['Summary__c'] = summary
+            jsonProject['PagesApi__Description__c'] = description
+            jsonProject['Roadmap__c'] = roadmap
+            jsonProject['Project_Type__c'] = proj_type
+            
             jsonString = json.dumps(jsonProject)
 
             obj_url =    self.sf_instance_url + self.sf_api_url + self.sf_community_group_url
@@ -409,7 +423,10 @@ class OWASPSalesforce:
                 return r
             else:
                 contact_json = json.loads(r.text)
-                contact_id = contact_json["id"]
+                if 'id' in contact_json.keys():
+                    contact_id = contact_json['id']
+                else:
+                    contact_id = contact_json['Id']
         else:
             contact_id = records[0]["Id"]
 

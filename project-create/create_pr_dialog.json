@@ -66,6 +66,200 @@
                 "text": "Project Leader Emails (one per line)",
                 "emoji": true
             }
+        },
+        {
+            "type": "input",
+            "block_id": "summary-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "summary-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Short Summary",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "desc-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "desc-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Description",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "roadmap-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "roadmap-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Project Roadmap",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "project-type-id",
+            "element": {
+                "type": "static_select",
+                "action_id": "project-type-value",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a project type",
+                    "emoji": true
+                },
+                "options": [
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Documentation",
+                            "emoji": true
+                        },
+                        "value": "Documentation Project"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Tool",
+                            "emoji": true
+                        },
+                        "value": "Tool Project"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Code",
+                            "emoji": true
+                        },
+                        "value": "Code Project"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Other",
+                            "emoji": true
+                        },
+                        "value": "Unknown"
+                    }
+                ]
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Project Type",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "license-id",
+            "element": {
+                "type": "static_select",
+                "action_id": "license-value",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select an open source license",
+                    "emoji": true
+                },
+                "options": [
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Apache License 2.0",
+                            "emoji": true
+                        },
+                        "value": "Apache License 2.0"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "BSD 3-Clause (New or Revised)",
+                            "emoji": true
+                        },
+                        "value": "BSD 3-Clause"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "BSD 2-Clause (FreeBSD or Simplified)",
+                            "emoji": true
+                        },
+                        "value": "BSD 2-Clause"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Common Development and Distribution License",
+                            "emoji": true
+                        },
+                        "value": "Common Development and Distribution License"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Eclipse Public License",
+                            "emoji": true
+                        },
+                        "value": "Eclipse Public License"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "GNU General Public License (GPL)",
+                            "emoji": true
+                        },
+                        "value": "GNU General Public License"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "GNU Library (or Lesser) General Public License (LGPL)",
+                            "emoji": true
+                        },
+                        "value": "GNU Library General Public License"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "MIT License",
+                            "emoji": true
+                        },
+                        "value": "MIT License"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Mozilla Public License 2.0",
+                            "emoji": true
+                        },
+                        "value": "Mozilla Public License 2.0"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Other",
+                            "emoji": true
+                        },
+                        "value": "Other"
+                    }
+                ]
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "License",
+                "emoji": true
+            }
         }
     ]
 }

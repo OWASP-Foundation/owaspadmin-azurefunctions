@@ -23,7 +23,12 @@ def process_form(values, view_id, function_directory):
     project_name = values["cname-id"]["cname-value"]["value"]
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
-    
+    summary = values["summary-id"]["summary-value"]["value"]
+    description = values["desc-id"]["desc-value"]["value"]
+    roadmap = values["roadmap-id"]["roadmap-value"]["value"]
+    license = values["license-id"]["license-value"]["selected_option"]["value"]
+    proj_type = values["project-type-id"]["project-type-value"]["selected_option"]["value"]   
+
     logging.info("Logging into Salesforce...")
     sf = salesforce.OWASPSalesforce()
     r = sf.Login()
@@ -33,7 +38,7 @@ def process_form(values, view_id, function_directory):
         resString = "Failed to login to salesforce"
     else:
         logging.info("Creating project...")
-        r = sf.CreateProject(project_name, leader_names, leader_emails)    
+        r = sf.CreateProject(project_name, leader_names, leader_emails, summary, description, roadmap, license, proj_type)    
         if not r.ok:
             resString = f"Failed to Create Project {r.status_code}"
         else:
