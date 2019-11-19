@@ -44,6 +44,7 @@ def process_form(values, view_id, function_directory):
             # create the leaders here....
             leaders = leader_names.splitlines()
             emails = leader_emails.splitlines()
+            emaillinks = []
             if len(leaders) == len(emails):
                 count = 0
                 for leader in leaders:
@@ -57,6 +58,7 @@ def process_form(values, view_id, function_directory):
                     else:
                         cg_id = cg_json['Id']
 
+                    emaillinks.append(f'[{leader}](mailto:{email})')
                     r = sf.AddChapterLeader(leader, email, cg_id)   
                     if not r.ok:
                         resString = f"Failed to add leader { leader } with email { email }."
@@ -66,7 +68,7 @@ def process_form(values, view_id, function_directory):
 
             if resString.find("Failed") < 0:
                 logging.info("Creating github repository")
-                resString = CreateGithubStructure(chapter_name, function_directory)
+                resString = CreateGithubStructure(chapter_name, function_directory, emaillinks)
 
 
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
@@ -82,7 +84,7 @@ def process_form(values, view_id, function_directory):
     logging.info(r.text)
 
 
-def CreateGithubStructure(chapter_name, func_dir):
+def CreateGithubStructure(chapter_name, func_dir, emaillinks):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
     resString = "Chapter created."
@@ -95,6 +97,19 @@ def CreateGithubStructure(chapter_name, func_dir):
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {chapter_name}."
             logging.error(resString + " : " + r.text)
+
+    if resString.find("Failed") < 0:
+        repoName = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+        r = gh.GetFile(repoName, 'leaders.md')
+        if r.ok:
+            doc = json.loads(r.text)
+            sha = doc['sha']
+            contents = '### Leaders\n'
+            for link in emaillinks:
+                contents += f'* {link}'
+            r = gh.UpdateFile(repoName, 'leaders.md', contents, sha)
+            if not r.ok:
+                resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
         r = gh.EnablePages(chapter_name, gh.GH_REPOTYPE_CHAPTER)
