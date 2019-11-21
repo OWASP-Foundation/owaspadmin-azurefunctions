@@ -281,6 +281,17 @@ def build_staff_project_json():
     else:
         logging.error(f"Failed to update www-staff/_data/projects.json: {r.text}")
 
+def update_chapter_admin_team():
+    gh = github.OWASPGitHub()
+    team_id = gh.GetTeamId('chapter-administration')
+    if team_id:
+        repos = gh.GetPublicRepositories('www-chapter')
+        for repo in repos:
+            repoName = repo['name']
+            r = gh.AddRepoToTeam(str(team_id), repoName)
+            if not r.ok:
+                logging.info(f'Failed to add repo: {r.text}')
+
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
@@ -296,6 +307,9 @@ def main(mytimer: func.TimerRequest) -> None:
     
     logging.info("Building staff projects and milestones json files")
     build_staff_project_json()
+
+    logging.info('Updating Chapter Administration Team repositories')
+    update_chapter_admin_team()
 
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 

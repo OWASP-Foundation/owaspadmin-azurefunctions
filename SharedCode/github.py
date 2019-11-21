@@ -12,6 +12,9 @@ class OWASPGitHub:
     org_fragment = "orgs/OWASP/repos"
     content_fragment = "repos/OWASP/:repo/contents/:path"
     pages_fragment = "repos/OWASP/:repo/pages"
+    team_addrepo_fragment = "teams/:team_id/repos/OWASP/:repo"
+    team_getbyname_fragment = "orgs/OWASP/teams/:team_slug"
+
     GH_REPOTYPE_PROJECT = 0
     GH_REPOTYPE_CHAPTER = 1
 
@@ -265,3 +268,32 @@ class OWASPGitHub:
                         rfiles.append(item['name'])
     
         return r, rfiles
+
+    def GetTeamId(self, team_name):
+        getTeamUrl = self.team_getbyname_fragment.replace(':team_slug', team)
+        headers = {"Authorization": "token " + self.apitoken,
+            "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
+        }
+        url = self.gh_endpoint + getTeamUrl
+        r = requests.get(url = url, headers=headers)
+        team_id = None
+        if r.ok:
+            jsonTeam = json.loads(r.text)
+            team_id = jsonTeam['id']
+
+        return team_id
+
+    def AddRepoToTeam(self, team_id, repo):
+        repofrag = self.team_addrepo_fragment.replace(':team_id', team_id)
+        repofrag = repofrag.replace(':repo', repo)
+        headers = {"Authorization": "token " + self.apitoken,
+            "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
+        }
+
+        url = self.gh_endpoint + repofrag
+
+        data = { "permission" : "admin"}
+        jsonData = json.dumps(data)
+        r = requests.put(url = url, headers=headers, data=jsonData)
+
+        return r
