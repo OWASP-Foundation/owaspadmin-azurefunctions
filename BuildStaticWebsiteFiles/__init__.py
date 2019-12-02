@@ -292,6 +292,30 @@ def update_chapter_admin_team():
             if not r.ok:
                 logging.info(f'Failed to add repo: {r.text}')
 
+def update_corp_members():
+    # file from _data/corp_members.yml just needs to go in assets/sitedata/
+    gh = github.OWASPGitHub()
+    r = gh.GetFile('owasp.github.io', '_data/corp_members.yml')
+
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+
+    contents = doc['content']
+
+    gh = github.OWASPGitHub()
+    r = gh.GetFile('owasp.github.io', 'assets/sitedata/corp_members.yml')
+
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    r = gh.UpdateFile('owasp.github.io', 'assets/sitedata/corp_members.yml', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated assets/sitedata/corp_members.yml successfully')
+    else:
+        logging.error(f"Failed to update assets/sitedata/corp_members.yml: {r.text}")
+
+
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
@@ -310,6 +334,9 @@ def main(mytimer: func.TimerRequest) -> None:
 
     logging.info('Updating Chapter Administration Team repositories')
     update_chapter_admin_team()
+
+    logging.info('Updating corp_members.yml sitedata from site.data')
+    update_corp_members()
 
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
