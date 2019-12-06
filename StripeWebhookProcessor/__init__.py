@@ -44,8 +44,6 @@ def handle_checkout_session_completed(event: Dict):
     if payment_intent is not None:
         payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
         metadata = payment_intent.get('metadata', {})
-        mailing_list = metadata.get('mailing_list', 'False')
-
         purchase_type = metadata.get('purchase_type', 'donation')
         
         if purchase_type == 'membership':
@@ -54,11 +52,9 @@ def handle_checkout_session_completed(event: Dict):
     if subscription is not None:
         subscription = stripe.Subscription.retrieve(subscription)
         metadata = subscription.get('metadata', {})
-        mailing_list = metadata.get('mailing_list', 'False')
         subscription_data = get_subscription_data(payment_intent, subscription)
 
-    if mailing_list == 'True':
-        add_to_mailing_list(customer_email, metadata, subscription_data)
+    add_to_mailing_list(customer_email, metadata, subscription_data)
 
 
 def get_subscription_data_from_event(event):
@@ -95,22 +91,35 @@ def get_subscription_data(subscription):
 def add_to_mailing_list(email, metadata, subscription_data):
     subscriber_hash = get_mailchimp_subscriber_hash(email)
 
-    try:
-        list_member = mailchimp.lists.members.get(os.environ["MAILCHIMP_LIST_ID"], subscriber_hash)
-    except MailChimpError as err:
-        add_new_user_to_mailchimp(email, metadata, subscription_data)
-
-
-def add_new_user_to_mailchimp(email, metadata, subscription_data):
     request_data = {
         "email_address": email,
+        "status_if_new": "subscribed",
         "status": "subscribed",
         "merge_fields": get_merge_fields(metadata, subscription_data),
-        "interests": get_interests(metadata)
+        "interests": get_interests(metadata),
+        "marketing_permissions": get_marketing_permissions(metadata)
     }
-    list_member = mailchimp.lists.members.create(os.environ["MAILCHIMP_LIST_ID"], request_data)
+
+    list_member = mailchimp.lists.members.create_or_update(os.environ["MAILCHIMP_LIST_ID"], subscriber_hash, request_data)
 
     return list_member
+
+
+def get_marketing_permissions(metadata):
+    if metadata.get('mailing_list', 'False') == 'True':
+        return [
+            {
+                "marketing_permission_id": os.environ["MAILCHIMP_MKTG_PERMISSIONS_ID"],
+                "enabled": True
+            }
+        ]
+    else:
+        return [
+            {
+                "marketing_permission_id": os.environ["MAILCHIMP_MKTG_PERMISSIONS_ID"],
+                "enabled": False
+            }
+        ]
 
 
 def get_interests(metadata):
