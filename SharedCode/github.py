@@ -270,7 +270,7 @@ class OWASPGitHub:
         return r, rfiles
 
     def GetTeamId(self, team_name):
-        getTeamUrl = self.team_getbyname_fragment.replace(':team_slug', team)
+        getTeamUrl = self.team_getbyname_fragment.replace(':team_slug', team_name)
         headers = {"Authorization": "token " + self.apitoken,
             "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
         }
