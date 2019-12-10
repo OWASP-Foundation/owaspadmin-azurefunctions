@@ -110,11 +110,11 @@ class OWASPSalesforce:
         for record in records:
             res += "Contact: " + record["Name"]
             res += "\n\tEmail: %s" % record["Email"]
-            today = datetime.date.today().strftime('YYYY-MM-DD')
-            queryString = f"Select Id,  OrderApi__Contact__r.Name, OrderApi__Item__r.Name  from OrderApi__Subscription__c Where OrderApi__Contact__r.Name = {record['Name']} and OrderApi__Current_Term_End_Date__c > {today}"
+            today = datetime.date.today().strftime('%Y-%m-%d')
+            queryString = "Select Id,  OrderApi__Contact__r.Name, OrderApi__Item__r.Name  from OrderApi__Subscription__c Where OrderApi__Contact__r.Name = '" + record['Name'].strip() + f"' and OrderApi__Current_Term_End_Date__c > {today}"
             crecords = self.Query(queryString)
             if len(crecords) == 1:
-                res += "\n\tMembership: %s" % crecords[0]['OrderApi__Item__r.Name']
+                res += "\n\tMembership: %s" % crecords[0]['OrderApi__Item__r']['Name']
             else:
                 res += "\n\tMembership: Not found"
             res += "\n"
