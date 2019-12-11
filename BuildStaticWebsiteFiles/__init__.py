@@ -300,7 +300,7 @@ def update_corp_members():
     if gh.TestResultCode(r.status_code):
         doc = json.loads(r.text)
 
-    contents = doc['content']
+    contents = base64.b64decode(doc['content']).decode()
 
     gh = github.OWASPGitHub()
     r = gh.GetFile('owasp.github.io', 'assets/sitedata/corp_members.yml')
