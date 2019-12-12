@@ -39,22 +39,39 @@ def handle_checkout_session_completed(event: Dict):
     subscription = event.get('subscription', None)
     customer_id = event.get('customer', None)
     customer_email = event.get('customer_email', None)
+    setup_intent = event.get('setup_intent', None)
     subscription_data = {}
 
-    if payment_intent is not None:
-        payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
-        metadata = payment_intent.get('metadata', {})
-        purchase_type = metadata.get('purchase_type', 'donation')
-        
-        if purchase_type == 'membership':
-            subscription_data = get_subscription_data_from_event(event)
+    if setup_intent is not None:
+        setup_intent = stripe.SetupIntent.retrieve(setup_intent)
+        metadata = setup_intent.get('metadata', {})
+        customer_id = metadata.get('customer_id', None)
+        subscription_id = metadata.get('subscription_id', None)
+        payment_method = setup_intent.get('payment_method', None)
+        stripe.PaymentMethod.attach(
+            payment_method,
+            customer=customer_id
+        )
+        stripe.Subscription.modify(
+            subscription_id,
+            default_payment_method=payment_method
+        )
 
-    if subscription is not None:
-        subscription = stripe.Subscription.retrieve(subscription)
-        metadata = subscription.get('metadata', {})
-        subscription_data = get_subscription_data(payment_intent, subscription)
+    else:
+        if payment_intent is not None:
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
+            metadata = payment_intent.get('metadata', {})
+            purchase_type = metadata.get('purchase_type', 'donation')
+            
+            if purchase_type == 'membership':
+                subscription_data = get_subscription_data_from_event(event)
 
-    add_to_mailing_list(customer_email, metadata, subscription_data)
+        if subscription is not None:
+            subscription = stripe.Subscription.retrieve(subscription)
+            metadata = subscription.get('metadata', {})
+            subscription_data = get_subscription_data(payment_intent, subscription)
+
+        add_to_mailing_list(customer_email, metadata, subscription_data)
 
 
 def get_subscription_data_from_event(event):

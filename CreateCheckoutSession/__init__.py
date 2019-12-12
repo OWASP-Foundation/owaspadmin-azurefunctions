@@ -4,11 +4,15 @@ import azure.functions as func
 
 import os
 import json
+import pathlib
 from typing import Dict
 
 import stripe
 stripe.api_key = os.environ["STRIPE_SECRET"]
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import From
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     request = req.get_json()
@@ -19,8 +23,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         if checkout_type == 'donation':
             response = start_donation_session(request)
-        else:
+        elif checkout_type == 'membership':
             response = start_membership_session(request)
+        elif checkout_type == 'manage_membership':
+            response = start_manage_membership_session(request)
 
         return return_response(response, True)
     else:
@@ -50,8 +56,11 @@ def validate_request(request: Dict) -> Dict:
                 errors['email'] = ['email is required']
             if request.get('membership_type') is None:
                 errors['membership_type'] = ['membership type is required']
+    elif checkout_type and checkout_type in ['manage_membership', 'manage_donation']:
+        if request.get('email') is None:
+            errors['email'] = ['email is required']
     else:
-        errors['checkout_type'] = ['checkout_type is required and must be either donation or membership']
+        errors['checkout_type'] = ['checkout_type is required and must be either donation, manage_membership, or manage_donation']
 
     return errors
 
@@ -76,6 +85,59 @@ def start_membership_session(request: Dict) -> Dict:
     }
 
     return response
+
+
+def start_manage_membership_session(request: Dict) -> Dict:
+    member_email = request.get('email')
+
+    customers = stripe.Customer.list(email=member_email)
+    if len(customers) > 0:
+        for customer in customers:
+            if customer.email == member_email:
+                subscriptions = stripe.Subscription.list(status='active', customer=customer.id)
+                if len(subscriptions.data) > 0:
+                    subscription_id = subscriptions.data[0].id
+                    send_subscription_management_email(member_email, customer.id, subscription_id)
+                break
+
+    return {}
+
+
+def send_subscription_management_email(member_email, customer_id, subscription_id):
+    session = stripe.checkout.Session.create(
+      payment_method_types=['card'],
+      mode='setup',
+      customer_email=member_email,
+      setup_intent_data={
+	'metadata': {
+	  'customer_id': customer_id,
+	  'subscription_id': subscription_id,
+	},
+      },
+      success_url='https://www2.owasp.org/membership-update-success',
+      cancel_url='https://www2.owasp.org/membership-update-cancel',
+    )
+
+    with open(pathlib.Path(__file__).parent / 'email-template.html') as dfile:
+        email_contents = dfile.read()
+
+    message_contents = 'Someone, hopefully you, just requested a link to update the payment information for your OWASP membership. In order to update your payment information, please click the link below. The link will be vaild for 24 hours, but you can request a new one at any time. Thanks for being a member of OWASP!'
+
+    message_link = 'https://www2.owasp.org/manage-membership?token=' + session.id
+
+    email_contents = email_contents.replace("{{ message_contents }}", message_contents)
+    email_contents = email_contents.replace("{{ action_link }}", message_link)
+
+    message = Mail(
+        from_email=From('noreply@owasp.org', 'OWASP'),
+        to_emails=member_email,
+        subject='Manage Your OWASP Membership',
+        html_content=email_contents)
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        logging.info(str(e))
 
 
 def make_donation_api_request(request: Dict) -> Dict:
@@ -210,8 +272,6 @@ def make_subscription_api_request(request: Dict) -> Dict:
         ]
 
     return api_request
-
-
 
 
 def return_response(response, success):
