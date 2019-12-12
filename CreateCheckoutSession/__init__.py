@@ -159,24 +159,38 @@ def make_donation_api_request(request: Dict) -> Dict:
     if attribution is None:
         attribution = False
 
+    metadata = {
+        "recurring": recurring,
+        "mailing_list": mailing_list,
+        "repo_name": repo_name,
+        "project_title": project_title,
+        "attribution": attribution,
+        "name": name,
+        "source": source,
+        "purchase_type": "donation"
+    }
+
     api_request = {
         "success_url": "https://www2.owasp.org/donation-success",
         "cancel_url": "https://www2.owasp.org/donation-error",
         "payment_method_types": ["card"],
-        "customer_email": email,
-        "payment_intent_data": {
-            "metadata": {
-                "recurring": recurring,
-                "mailing_list": mailing_list,
-                "repo_name": repo_name,
-                "project_title": project_title,
-                "attribution": attribution,
-                "name": name,
-                "source": source,
-                "purchase_type": "donation"
-            }
-        },
-        "line_items": [
+        "customer_email": email
+    }
+
+    if recurring is True:
+        plan_id = get_recurring_donation_plan_id(amount, currency)
+        api_request['subscription_data'] = {
+	    'items': [{
+	      'plan': plan_id,
+	    }],
+            'metadata': metadata
+        }
+
+    else:
+        api_request['payment_intent_data'] = {
+            "metadata": metadata        
+        }
+        api_request['line_items'] = [
             {
                 "name": "OWASP Donation",
                 "amount": amount,
@@ -184,7 +198,6 @@ def make_donation_api_request(request: Dict) -> Dict:
                 "quantity": 1
             }
         ]
-    }
 
     return api_request
 
@@ -272,6 +285,29 @@ def make_subscription_api_request(request: Dict) -> Dict:
         ]
 
     return api_request
+
+
+def get_recurring_donation_plan_id(amount, currency):
+    plan_id = None
+    plans = stripe.Plan.list(
+        limit=100,
+        product=os.environ["STRIPE_RECURRING_DONATION"]
+    )
+    for plan in plans.auto_paging_iter():
+        if plan.get('active', False) and plan.get('amount') == amount and plan.get('currency') == currency:
+            plan_id = plan.id
+            break
+
+    if plan_id is None:
+        new_plan = stripe.Plan.create(
+              amount=amount,
+              currency=currency,
+              interval="month",
+              product=os.environ["STRIPE_RECURRING_DONATION"],
+        )
+        plan_id = new_plan.get('id')
+
+    return plan_id
 
 
 def return_response(response, success):

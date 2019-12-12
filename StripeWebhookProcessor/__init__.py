@@ -5,9 +5,12 @@ import azure.functions as func
 import os
 import json
 import hashlib
+import base64
 from datetime import datetime
 from datetime import timedelta
 from typing import Dict
+
+from ..SharedCode import github
 
 import stripe
 stripe.api_key = os.environ["STRIPE_SECRET"]
@@ -72,6 +75,10 @@ def handle_checkout_session_completed(event: Dict):
             subscription_data = get_subscription_data(payment_intent, subscription)
 
         add_to_mailing_list(customer_email, metadata, subscription_data)
+
+        attribution = metadata.get('attribution', 'False')
+        if attribution == 'True':
+            attribute_donation(metadata)
 
 
 def get_subscription_data_from_event(event):
@@ -186,6 +193,30 @@ def get_merge_fields(metadata, subscription_data):
             merge_fields['POSTALCODE'] = postal_code
 
     return merge_fields
+
+
+def attribute_donation(metadata):
+    repo_name = metadata.get('repo_name', None)
+    donor_name = metadata.get('name', None)
+    donor_file = '_data/ow_attributions.json'
+
+    if repo_name is not None and donor_name is not None and repo_name.startswith('www'):
+        gh = github.OWASPGitHub()
+        existing_file = gh.GetFile(repo_name, donor_file)
+
+        sha = ''
+
+        if not gh.TestResultCode(existing_file.status_code):
+            donors = [donor_name]
+        else:
+            donors = json.loads(existing_file.text)
+            sha = donors['sha']
+            file_text = base64.b64decode(donors['content']).decode('utf-8')
+            donors = json.loads(file_text)
+            donors.append(donor_name)
+
+        file_contents = json.dumps(donors)
+        gh.UpdateFile(repo_name, donor_file, file_contents, sha)
 
 
 def get_mailchimp_subscriber_hash(email):
