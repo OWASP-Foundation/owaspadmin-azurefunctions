@@ -72,7 +72,10 @@ def handle_checkout_session_completed(event: Dict):
         if subscription is not None:
             subscription = stripe.Subscription.retrieve(subscription)
             metadata = subscription.get('metadata', {})
-            subscription_data = get_subscription_data(payment_intent, subscription)
+            purchase_type = metadata.get('purchase_type', 'donation')
+
+            if purchase_type == 'membership':
+                subscription_data = get_subscription_data(payment_intent, subscription)
 
         add_to_mailing_list(customer_email, metadata, subscription_data)
 
