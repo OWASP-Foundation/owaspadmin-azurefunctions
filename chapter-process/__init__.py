@@ -106,7 +106,7 @@ def CreateGithubStructure(chapter_name, func_dir, emaillinks):
             sha = doc['sha']
             contents = '### Leaders\n'
             for link in emaillinks:
-                contents += f'* {link}'
+                contents += f'* {link}\n'
             r = gh.UpdateFile(repoName, 'leaders.md', contents, sha)
             if not r.ok:
                 resString = f'Failed to update leaders.md file: {r.text}'
