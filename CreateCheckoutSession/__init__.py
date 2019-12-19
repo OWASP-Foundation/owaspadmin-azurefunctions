@@ -213,6 +213,8 @@ def make_subscription_api_request(request: Dict) -> Dict:
     name = request.get('name')
     email = request.get('email')
     company = request.get('company')
+    student = request.get('student')
+    university = request.get('university')
     mailing_list = request.get('mailing_list')
     source = request.get('source')
 
@@ -226,6 +228,10 @@ def make_subscription_api_request(request: Dict) -> Dict:
         mailing_list = False
     if company is None:
         company = ''
+    if university is None:
+        university = ''
+    if student is None:
+        student = False
     if discount is None:
         discount = False
 
@@ -235,6 +241,8 @@ def make_subscription_api_request(request: Dict) -> Dict:
         "discount": discount,
         "name": name,
         "company": company,
+        "university": university,
+        "student": student,
         "country": country,
         "postal_code": postal_code,
         "purchase_type": "membership"
