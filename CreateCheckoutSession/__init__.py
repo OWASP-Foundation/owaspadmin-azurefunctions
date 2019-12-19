@@ -41,7 +41,7 @@ def validate_request(request: Dict) -> Dict:
         if checkout_type == 'donation':
             if request.get('currency') is None or request.get('currency') not in ['usd', 'eur', 'gbp']:
                 errors['currency'] = ['currency is required and must be usd, eur, or gbp']
-            if request.get('amount') is None or request.get('amount') < 1:
+            if request.get('amount') is None or int(request.get('amount')) < 1:
                 errors['amount'] = ['amount is required']
             if request.get('name') is None:
                 errors['name'] = ['name is required']
@@ -142,7 +142,7 @@ def send_subscription_management_email(member_email, customer_id, subscription_i
 
 def make_donation_api_request(request: Dict) -> Dict:
     currency = request.get('currency')
-    amount = request.get('amount') * 100
+    amount = int(request.get('amount')) * 100
     recurring = request.get('recurring')
     mailing_list = request.get('mailing_list')
     repo_name = request.get('repo_name')
