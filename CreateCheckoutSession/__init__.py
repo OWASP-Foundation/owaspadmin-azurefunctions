@@ -147,6 +147,7 @@ def make_donation_api_request(request: Dict) -> Dict:
     mailing_list = request.get('mailing_list')
     repo_name = request.get('repo_name')
     project_title = request.get('project_title')
+    restricted = request.get('restricted')
     attribution = request.get('attribution')
     email = request.get('email')
     name = request.get('name')
@@ -158,6 +159,8 @@ def make_donation_api_request(request: Dict) -> Dict:
         mailing_list = False
     if attribution is None:
         attribution = False
+    if restricted is None:
+        restricted = False
 
     metadata = {
         "recurring": recurring,
@@ -165,6 +168,7 @@ def make_donation_api_request(request: Dict) -> Dict:
         "repo_name": repo_name,
         "project_title": project_title,
         "attribution": attribution,
+        "restricted": restricted,
         "name": name,
         "source": source,
         "purchase_type": "donation"
