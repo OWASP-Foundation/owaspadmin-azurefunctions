@@ -269,7 +269,10 @@ def make_subscription_api_request(request: Dict) -> Dict:
         }
 
     else:
-        if discount:
+        if student:
+            amount = 2000
+            description = 'OWASP Student One Year Membershp'
+        elif discount:
             amount = 2000
             description = 'OWASP Discounted One Year Membership'
         elif membership_type == 'One Year':
