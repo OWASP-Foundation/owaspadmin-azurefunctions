@@ -108,14 +108,6 @@
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "United States",
-                            "emoji": true
-                        },
-                        "value": "United States"
-                    },
-                    {
-                        "text": {
-                            "type": "plain_text",
                             "text": "Africa",
                             "emoji": true
                         },
@@ -124,26 +116,18 @@
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Asia/Pacific",
+                            "text": "Asia",
                             "emoji": true
                         },
-                        "value": "Asia/Pacific"
+                        "value": "Asia"
                     },
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Canada",
+                            "text": "Oceania",
                             "emoji": true
                         },
-                        "value": "Canada"
-                    },
-                    {
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Caribbean",
-                            "emoji": true
-                        },
-                        "value": "Caribbean"
+                        "value": "Oceania"
                     },
                     {
                         "text": {
@@ -156,18 +140,18 @@
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Latin America",
+                            "text": "North America",
                             "emoji": true
                         },
-                        "value": "Latin America"
+                        "value": "North America"
                     },
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Middle East",
+                            "text": "South America",
                             "emoji": true
                         },
-                        "value": "Middle East"
+                        "value": "South America"
                     },
                     {
                         "text": {
