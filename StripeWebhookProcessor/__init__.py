@@ -45,6 +45,9 @@ def handle_checkout_session_completed(event: Dict):
     setup_intent = event.get('setup_intent', None)
     subscription_data = {}
 
+    if customer_email is None:
+        customer_email = get_customer_email_from_id(customer_id)
+
     if setup_intent is not None:
         setup_intent = stripe.SetupIntent.retrieve(setup_intent)
         metadata = setup_intent.get('metadata', {})
@@ -75,13 +78,32 @@ def handle_checkout_session_completed(event: Dict):
             purchase_type = metadata.get('purchase_type', 'donation')
 
             if purchase_type == 'membership':
-                subscription_data = get_subscription_data(payment_intent, subscription)
+                subscription_data = get_subscription_data(subscription)
 
         add_to_mailing_list(customer_email, metadata, subscription_data)
+        update_customer_record(customer_id, metadata, subscription_data)
 
         attribution = metadata.get('attribution', 'False')
         if attribution == 'True':
             attribute_donation(metadata)
+
+
+def update_customer_record(customer_id, metadata, subscription_data):
+    if metadata.get('purchase_type') == 'membership':
+
+        if (metadata.get('recurring', 'False') == 'True'):
+            recurring = 'yes'
+        else:
+            recurring = 'no'
+
+        stripe.Customer.modify(
+            customer_id,
+            metadata={
+                "membership_type": subscription_data['membership_type'],
+                "membership_end": subscription_data['membership_end'],
+                "membership_recurring": recurring
+            }
+        )
 
 
 def get_subscription_data_from_event(event):
@@ -107,7 +129,7 @@ def get_subscription_data_from_event(event):
 
 def get_subscription_data(subscription):
     period_end = datetime.utcfromtimestamp(subscription["current_period_end"]).strftime('%m/%d/%Y')
-    memership_type = 'one'
+    membership_type = 'one'
 
     return {
         "membership_end": period_end,
@@ -227,3 +249,8 @@ def get_mailchimp_subscriber_hash(email):
     hashed = hashlib.md5(email.encode('utf8'))
 
     return hashed.hexdigest()
+
+
+def get_customer_email_from_id(customer_id):
+    customer = stripe.Customer.retrieve(customer_id)
+    return customer.email

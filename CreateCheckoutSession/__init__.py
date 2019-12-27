@@ -14,6 +14,10 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import From
 
+from ..SharedCode import recurringtoken
+
+import urllib.parse
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
     request = req.get_json()
     errors = validate_request(request)
@@ -94,36 +98,22 @@ def start_manage_membership_session(request: Dict) -> Dict:
     if len(customers) > 0:
         for customer in customers:
             if customer.email == member_email:
-                subscriptions = stripe.Subscription.list(status='active', customer=customer.id)
-                if len(subscriptions.data) > 0:
-                    subscription_id = subscriptions.data[0].id
-                    send_subscription_management_email(member_email, customer.id, subscription_id)
+                customer_token = recurringtoken.make_token(customer.id)
+                send_subscription_management_email(member_email, customer_token)
                 break
 
     return {}
 
 
-def send_subscription_management_email(member_email, customer_id, subscription_id):
-    session = stripe.checkout.Session.create(
-      payment_method_types=['card'],
-      mode='setup',
-      customer_email=member_email,
-      setup_intent_data={
-	'metadata': {
-	  'customer_id': customer_id,
-	  'subscription_id': subscription_id,
-	},
-      },
-      success_url='https://www2.owasp.org/membership-update-success',
-      cancel_url='https://www2.owasp.org/membership-update-cancel',
-    )
-
+def send_subscription_management_email(member_email, customer_token):
     with open(pathlib.Path(__file__).parent / 'email-template.html') as dfile:
         email_contents = dfile.read()
 
-    message_contents = 'Someone, hopefully you, just requested a link to update the payment information for your OWASP membership. In order to update your payment information, please click the link below. The link will be vaild for 24 hours, but you can request a new one at any time. Thanks for being a member of OWASP!'
+    message_contents = 'Someone, hopefully you, just requested a link to update the billing information that OWASP uses for your membership of recurring donation. In order to update your payment information, please click the link below. The link will be vaild for 24 hours, but you can request a new one at any time. Thanks for supporting OWASP!'
 
-    message_link = 'https://www2.owasp.org/manage-membership?token=' + session.id
+    params = {'token': customer_token}
+    
+    message_link = 'https://www2.owasp.org/manage-membership?' + urllib.parse.urlencode(params)
 
     email_contents = email_contents.replace("{{ message_contents }}", message_contents)
     email_contents = email_contents.replace("{{ action_link }}", message_link)
@@ -131,7 +121,7 @@ def send_subscription_management_email(member_email, customer_id, subscription_i
     message = Mail(
         from_email=From('noreply@owasp.org', 'OWASP'),
         to_emails=member_email,
-        subject='Manage Your OWASP Membership',
+        subject='Manage Your OWASP Payment Information',
         html_content=email_contents)
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
@@ -178,8 +168,13 @@ def make_donation_api_request(request: Dict) -> Dict:
         "success_url": "https://www2.owasp.org/donation-success",
         "cancel_url": "https://www2.owasp.org/donation-error",
         "payment_method_types": ["card"],
-        "customer_email": email
     }
+
+    stripe_customer_id = get_stripe_customer_id(email)
+    if (stripe_customer_id is not None):
+        api_request['customer'] = stripe_customer_id
+    else:
+        api_request['customer_email'] = email
 
     if recurring is True:
         plan_id = get_recurring_donation_plan_id(amount, currency)
@@ -252,8 +247,13 @@ def make_subscription_api_request(request: Dict) -> Dict:
         "success_url": "https://www2.owasp.org/membership-success",
         "cancel_url": "https://www2.owasp.org/membership-error",
         "payment_method_types": ["card"],
-        "customer_email": email,
     }
+
+    stripe_customer_id = get_stripe_customer_id(email)
+    if (stripe_customer_id is not None):
+        api_request['customer'] = stripe_customer_id
+    else:
+        api_request['customer_email'] = email
 
     if recurring and membership_type == 'One Year':
         if discount:
@@ -343,3 +343,13 @@ def return_response(response, success):
         body=json.dumps(response),
         status_code=status_code
     )
+
+
+def get_stripe_customer_id(email):
+    customers = stripe.Customer.list(email=email)
+    if len(customers) > 0:
+        for customer in customers:
+            if customer.email == email:
+                return customer.id
+
+    return None
