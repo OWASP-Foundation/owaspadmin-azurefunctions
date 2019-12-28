@@ -39,7 +39,7 @@ def cancel_membership(checkout_session):
                 subscription_id,
                 cancel_at_period_end=True
             )
-            if "Membership" in subscription['plan']['nickname']:
+            if subscription['plan']['nickname'] is not None and "Membership" in subscription['plan']['nickname']:
                 stripe.Customer.modify(
                     customer_id,
                     metadata={
