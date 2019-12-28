@@ -32,11 +32,19 @@ def cancel_membership(checkout_session):
         setup_intent = stripe.SetupIntent.retrieve(setup_intent)
         metadata = setup_intent.get('metadata', {})
         subscription_id = metadata.get('subscription_id', None)
+        customer_id = metadata.get('customer_id', None)
         if subscription_id is not None:
             stripe.Subscription.modify(
                 subscription_id,
                 cancel_at_period_end=True
             )
+            stripe.Customer.modify(
+                customer_id,
+                metadata={
+                    "membership_recurring": "no"
+                }
+            )
+
 
 
 def return_response(response, success):
