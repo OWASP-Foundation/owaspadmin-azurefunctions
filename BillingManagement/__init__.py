@@ -74,7 +74,7 @@ def get_member_info(customer_id):
             card_exp_year = card_data.get('exp_year', '')
             card_last_4 = card_data.get('last4', '')
 
-            if "Membership" in subscription['plan']['nickname']:
+            if subscription['plan']['nickname'] is not None and  "Membership" in subscription['plan']['nickname']:
                 subscription_type = "membership"
             else:
                 subscription_type = "donation"
