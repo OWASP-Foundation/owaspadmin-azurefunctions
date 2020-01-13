@@ -213,6 +213,14 @@ class OWASPGitHub:
                             if self.TestResultCode(r.status_code):
                                 doc = json.loads(r.text)
                                 content = base64.b64decode(doc['content']).decode()
+                                ndx = content.find('title:')
+                                eol = content.find('\n', ndx + 7)
+                                if ndx >= 0:
+                                    title = content[ndx + 7:eol]
+                                    addrepo['title'] = title.strip()
+                                else:
+                                    addrepo['title'] = repoName
+                                    
                                 ndx = content.find('level:') + 6
                                 eol = content.find("\n", ndx)
                                 not_updated = (content.find("This is an example of a Project") >= 0)
