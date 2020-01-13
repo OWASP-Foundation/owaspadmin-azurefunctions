@@ -106,23 +106,17 @@ def start_manage_membership_session(request: Dict) -> Dict:
 
 
 def send_subscription_management_email(member_email, customer_token):
-    with open(pathlib.Path(__file__).parent / 'email-template.html') as dfile:
-        email_contents = dfile.read()
-
-    message_contents = 'Someone, hopefully you, just requested a link to update the billing information that OWASP uses for your membership of recurring donation. In order to update your payment information, please click the link below. The link will be vaild for 24 hours, but you can request a new one at any time. Thanks for supporting OWASP!'
-
     params = {'token': customer_token}
-    
     message_link = 'https://www2.owasp.org/manage-membership?' + urllib.parse.urlencode(params)
 
-    email_contents = email_contents.replace("{{ message_contents }}", message_contents)
-    email_contents = email_contents.replace("{{ action_link }}", message_link)
-
     message = Mail(
-        from_email=From('noreply@owasp.org', 'OWASP'),
-        to_emails=member_email,
-        subject='Manage Your OWASP Payment Information',
-        html_content=email_contents)
+	from_email=From('noreply@owasp.org', 'OWASP'),
+	to_emails=member_email,
+	html_content='<strong>Manage Billing</strong>')
+    message.dynamic_template_data = {
+	'manage_link': message_link
+    }
+    message.template_id = 'd-8d6003cb7bae478492ec9626b9e31199'
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         sg.send(message)
