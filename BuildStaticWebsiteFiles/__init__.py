@@ -14,7 +14,7 @@ def build_project_json():
     gh = github.OWASPGitHub()
     repos = gh.GetPublicRepositories('www-project')
 
-    for repo in repos:
+    for repo in repos: #change to use title in project repo.....
         repo['name'] = repo['name'].replace('www-project-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
 
