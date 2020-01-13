@@ -6,6 +6,7 @@ import os
 import json
 import hashlib
 import base64
+import html
 from datetime import datetime
 from datetime import timedelta
 from typing import Dict
@@ -96,6 +97,19 @@ def update_customer_record(customer_id, metadata, subscription_data):
         else:
             recurring = 'no'
 
+        customer = stripe.Customer.retrieve(
+            customer_id,
+            expand=['subscriptions']
+        )
+        customer_metadata = customer.get('metadata', {})
+        membership_end = customer_metadata.get('membership_end', None)
+
+        if membership_end is not None:
+            end_object = datetime.strptime(membership_end, '%m/%d/%Y')
+            if end_object > datetime.now():
+               new_end_date = end_object + timedelta(days=subscription_data['days_added'])
+               subscription_data['membership_end'] = new_end_date.strftime('%m/%d/%Y')
+
         stripe.Customer.modify(
             customer_id,
             metadata={
@@ -113,27 +127,35 @@ def get_subscription_data_from_event(event):
         membership_type = 'one'
         period_end = datetime.now() + timedelta(days=365)
         period_end = period_end.strftime('%m/%d/%Y')
+        add_days = 365
     if "Two Year" in description:
         membership_type = 'two'
         period_end = datetime.now() + timedelta(days=730)
         period_end = period_end.strftime('%m/%d/%Y')
+        add_days = 730
     if "Lifetime" in description:
         membership_type = 'lifetime'
         period_end = None
+        add_days = None
 
     return {
         "membership_end": period_end,
-        "membership_type": membership_type
+        "membership_type": membership_type,
+        "days_added": add_days,
+        "subscription_id": None
     }
 
 
 def get_subscription_data(subscription):
     period_end = datetime.utcfromtimestamp(subscription["current_period_end"]).strftime('%m/%d/%Y')
     membership_type = 'one'
+    add_days = 365
 
     return {
         "membership_end": period_end,
-        "membership_type": membership_type
+        "membership_type": membership_type,
+        "days_added": add_days,
+        "subscription_id": subscription.id
     }
 
 
@@ -224,6 +246,7 @@ def attribute_donation(metadata):
     repo_name = metadata.get('repo_name', None)
     donor_name = metadata.get('name', None)
     donor_file = '_data/ow_attributions.json'
+    donor_name = html.escape(donor_name)
 
     if repo_name is not None and donor_name is not None and repo_name.startswith('www'):
         gh = github.OWASPGitHub()
