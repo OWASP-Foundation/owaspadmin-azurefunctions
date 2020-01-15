@@ -101,14 +101,33 @@ def update_customer_record(customer_id, metadata, subscription_data):
             customer_id,
             expand=['subscriptions']
         )
+
+        existing_subscriptions = customer.get('subscriptions')
+        for subscription in existing_subscriptions:
+            if subscription['plan']['nickname'] is not None and "Membership" in subscription['plan']['nickname'] and subscription['id'] != subscription_data['subscription_id']:
+                stripe.Subscription.delete(subscription['id'])
+
+
         customer_metadata = customer.get('metadata', {})
         membership_end = customer_metadata.get('membership_end', None)
 
         if membership_end is not None:
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
             if end_object > datetime.now():
-               new_end_date = end_object + timedelta(days=subscription_data['days_added'])
-               subscription_data['membership_end'] = new_end_date.strftime('%m/%d/%Y')
+                new_end_date = end_object + timedelta(days=subscription_data['days_added'])
+                subscription_data['membership_end'] = new_end_date.strftime('%m/%d/%Y')
+
+                if new_end_date < datetime.now() + timedelta(days=730):
+                    if subscription_data['subscription_id'] is not None:
+                        stripe.Subscription.modify(
+                            subscription_data['subscription_id'],
+                            trial_end=int(new_end_date.timestamp()),
+                            prorate=False
+                        )
+                else:
+                    if subscription_data['subscription_id'] is not None:
+                        stripe.Subscription.delete(subscription_data['subscription_id'])
+                        recurring="no"
 
         stripe.Customer.modify(
             customer_id,
@@ -230,6 +249,8 @@ def get_merge_fields(metadata, subscription_data):
 
         if membership_end is not None:
             merge_fields['MEMEND'] = membership_end
+        else:
+            merge_fields['MEMEND'] = 'Null'
         if membership_type is not None:
             merge_fields['MEMTYPE'] = membership_type
         if company is not None:
