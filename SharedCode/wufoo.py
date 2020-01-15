@@ -50,7 +50,7 @@ class OWASPWufoo:
             if len(jsonEntries) > 0: 
                 jsonEntry = jsonEntries['Entries'][0]
                 result = jsonEntry[fieldid]
-        else
+        else:
             logging.error(f'Wufoo returned {r.text}')
         return result
 
@@ -69,7 +69,7 @@ class OWASPWufoo:
                     result = jsonEntry[self.STATUS_FIELD]
                     if 'Completed' in result:
                         break
-        else
+        else:
             logging.error(f'Wufoo returned {r.text}')
 
         return result
