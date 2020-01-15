@@ -65,5 +65,11 @@ def main(mytimer: func.TimerRequest) -> None:
                 merchant_type = names[wf.MERCHANT_TYPE_FIELD]
                 if sf.GenerateStudentSubscription(firstname, lastname, email, university, transaction_id, merchant_type):
                    queue.delete_message(message.id, message.pop_receipt)
+                else
+                    logging.error("Failed to generate student subscription")
+            else
+                logging.warn("No transaction id field")
+        else
+            logging.info("Status is not paid or complete")
             
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
