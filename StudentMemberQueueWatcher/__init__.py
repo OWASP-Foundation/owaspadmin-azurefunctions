@@ -58,11 +58,12 @@ def main(mytimer: func.TimerRequest) -> None:
         lastname = names[wf.LAST_NAME_FIELD]
         university = names[wf.UNIVERSITY_FIELD]
         datecreated = names[wf.DATE_CREATED_FIELD]
-        status = wf.GetPaidField(os.environ['WF_STUDENT_FORM'], email, datecreated)
+        results = wf.GetPaidField(os.environ['WF_STUDENT_FORM'], email, datecreated)
+        status = results[0]
         if 'Paid' in status or 'Completed' in status:
-            if wf.TRANSACTION_FIELD in names.keys():
-                transaction_id = names[wf.TRANSACTION_FIELD]
-                merchant_type = names[wf.MERCHANT_TYPE_FIELD]
+            if results[1] != None: 
+                transaction_id = results[1]
+                merchant_type = results[2]
                 if sf.GenerateStudentSubscription(firstname, lastname, email, university, transaction_id, merchant_type):
                    queue.delete_message(message.id, message.pop_receipt)
                 else:

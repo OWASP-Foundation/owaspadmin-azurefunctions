@@ -61,18 +61,23 @@ class OWASPWufoo:
         headers = { 'Authorization': f'Basic { auth }' }
         url = f'{self.baseurl}{form}/entries.json?system=1&Filter1={self.EMAIL_FIELD}+{self.OPERATOR_EQUAL}+{email}&Filter2={self.DATE_CREATED_FIELD}+{self.OPERATOR_ON}+{datecreated}'
         result = ''
+        transactionId = None
+        merchantType = None
         r = requests.get(url, headers=headers)
         if r.status_code == 200:
             jsonEntries = json.loads(r.text)
             if len(jsonEntries['Entries']) > 0: # There should be only one entry with the same email and datecreated but these idiots do not support is equal to for date...
                 for jsonEntry in jsonEntries['Entries']:
                     result = jsonEntry[self.STATUS_FIELD]
+
                     if 'Completed' in result:
+                        transactionId = jsonEntry[self.TRANSACTION_FIELD]
+                        merchantType = jsonEntry[self.MERCHANT_TYPE_FIELD]
                         break
         else:
             logging.error(f'Wufoo returned {r.text}')
 
-        return result
+        return result, transactionId, merchantType
 
             
         
