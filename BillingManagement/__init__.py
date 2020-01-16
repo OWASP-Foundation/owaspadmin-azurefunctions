@@ -92,8 +92,8 @@ def get_member_info(customer_id):
                         'subscription_id': subscription.id
                     }
                 },
-                success_url='https://www2.owasp.org/membership-update-success',
-		cancel_url='https://www2.owasp.org/membership-update-cancel',
+                success_url='https://owasp.org/membership-update-success',
+		cancel_url='https://owasp.org/membership-update-cancel',
             )
 
             subscription_list.append({

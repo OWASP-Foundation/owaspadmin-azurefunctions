@@ -107,7 +107,7 @@ def start_manage_membership_session(request: Dict) -> Dict:
 
 def send_subscription_management_email(member_email, customer_token):
     params = {'token': customer_token}
-    message_link = 'https://www2.owasp.org/manage-membership?' + urllib.parse.urlencode(params)
+    message_link = 'https://owasp.org/manage-membership?' + urllib.parse.urlencode(params)
 
     message = Mail(
 	from_email=From('noreply@owasp.org', 'OWASP'),
@@ -159,8 +159,8 @@ def make_donation_api_request(request: Dict) -> Dict:
     }
 
     api_request = {
-        "success_url": "https://www2.owasp.org/donation-success",
-        "cancel_url": "https://www2.owasp.org/donation-error",
+        "success_url": "https://owasp.org/donation-success",
+        "cancel_url": "https://owasp.org/donation-error",
         "payment_method_types": ["card"],
     }
 
@@ -238,8 +238,8 @@ def make_subscription_api_request(request: Dict) -> Dict:
     }
 
     api_request = {
-        "success_url": "https://www2.owasp.org/membership-success",
-        "cancel_url": "https://www2.owasp.org/membership-error",
+        "success_url": "https://owasp.org/membership-success",
+        "cancel_url": "https://owasp.org/membership-error",
         "payment_method_types": ["card"],
     }
 
