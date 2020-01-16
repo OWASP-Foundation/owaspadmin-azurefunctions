@@ -81,8 +81,8 @@ def handle_checkout_session_completed(event: Dict):
             if purchase_type == 'membership':
                 subscription_data = get_subscription_data(subscription)
 
-        add_to_mailing_list(customer_email, metadata, subscription_data)
         update_customer_record(customer_id, metadata, subscription_data)
+        add_to_mailing_list(customer_email, metadata, subscription_data, customer_id)
 
         attribution = metadata.get('attribution', 'False')
         if attribution == 'True':
@@ -178,14 +178,14 @@ def get_subscription_data(subscription):
     }
 
 
-def add_to_mailing_list(email, metadata, subscription_data):
+def add_to_mailing_list(email, metadata, subscription_data, customer_id):
     subscriber_hash = get_mailchimp_subscriber_hash(email)
 
     request_data = {
         "email_address": email,
         "status_if_new": "subscribed",
         "status": "subscribed",
-        "merge_fields": get_merge_fields(metadata, subscription_data),
+        "merge_fields": get_merge_fields(metadata, subscription_data, customer_id),
         "interests": get_interests(metadata),
         "marketing_permissions": get_marketing_permissions(metadata)
     }
@@ -225,7 +225,7 @@ def get_interests(metadata):
         }
 
 
-def get_merge_fields(metadata, subscription_data):
+def get_merge_fields(metadata, subscription_data, customer_id):
     merge_fields = {}
 
     purchase_type = metadata.get('purchase_type', 'donation')
@@ -244,15 +244,19 @@ def get_merge_fields(metadata, subscription_data):
 
         merge_fields['MEMSTART'] = datetime.today().strftime('%m/%d/%Y')
 
-        membership_end = subscription_data.get('membership_end', None)
-        membership_type = subscription_data.get('membership_type', None)
+        customer = stripe.Customer.retrieve(customer_id)
+        customer_metadata = customer.get('metadata', {})
+
+        membership_end = customer_metadata.get('membership_end', 'NULL')
+        membership_type = customer_metadata.get('membership_type', '')
+        membership_recurring = customer_metadata.get('membership_recurring', 'no')
 
         if membership_end is not None:
             merge_fields['MEMEND'] = membership_end
-        else:
-            merge_fields['MEMEND'] = 'Null'
         if membership_type is not None:
             merge_fields['MEMTYPE'] = membership_type
+        if membership_recurring is not None:
+            merge_fields['MEMRECUR'] = membership_recurring
         if company is not None:
             merge_fields['COMPANY'] = company
         if country is not None:
