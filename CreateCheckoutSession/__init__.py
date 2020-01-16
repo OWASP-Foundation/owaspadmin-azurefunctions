@@ -19,6 +19,7 @@ from ..SharedCode import recurringtoken
 import urllib.parse
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+
     request = req.get_json()
     errors = validate_request(request)
 
