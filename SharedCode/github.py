@@ -208,7 +208,7 @@ class OWASPGitHub:
                         if not matching or matching in repoName:
                             addrepo = {}
                             addrepo['name'] = repoName
-                            addrepo['url'] = f"https://www2.owasp.org/{ repoName }"
+                            addrepo['url'] = f"https://owasp.org/{ repoName }"
                             r = self.GetFile(repoName, 'index.md')
                             if self.TestResultCode(r.status_code):
                                 doc = json.loads(r.text)

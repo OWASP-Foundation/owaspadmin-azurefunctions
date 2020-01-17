@@ -258,7 +258,7 @@ def build_staff_project_json():
             name = get_page_name(content)
             if name:
                 project = StaffProject(get_page_name(content))
-                project.url = f"https://www2.owasp.org/www-staff/projects/{pfile.replace('.md','')}"
+                project.url = f"https://owasp.org/www-staff/projects/{pfile.replace('.md','')}"
                 project.description = get_project_description(content)
                 project.leaders = get_project_leaders(content)
                 project.milestones = get_project_milestones(content, project.name)
