@@ -5,6 +5,30 @@ import azure.functions as func
 from ..SharedCode import github
 import base64
 
+def build_committee_json():
+    gh = github.OWASPGitHub()
+    repos = gh.GetPublicRepositories('www-committee')
+
+    for repo in repos: #change to use title in project repo.....
+        repo['name'] = repo['name'].replace('www-committee-','').replace('-', ' ')
+        repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+
+    repos.sort(key=lambda x: x['name'])
+    repos.sort(key=lambda x: x['level'], reverse=True)
+   
+    sha = ''
+    r = gh.GetFile('owasp.github.io', '_data/committees.json')
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    contents = json.dumps(repos)
+    r = gh.UpdateFile('owasp.github.io', '_data/committees.json', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated _data/committees.json successfully')
+    else:
+        logging.error(f"Failed to update _data/committees.json: {r.text}")
+
 def build_project_json():
     # we want to build certain json data files every now and then to keep the website data fresh.
     #for each repository, public, with www-project
