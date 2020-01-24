@@ -362,6 +362,9 @@ def main(mytimer: func.TimerRequest) -> None:
     logging.info('Updating corp_members.yml sitedata from site.data')
     update_corp_members()
 
+    logging.info('Building committees json file')
+    build_committee_json()
+
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
 class Leader:

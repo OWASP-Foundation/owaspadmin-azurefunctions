@@ -29,3 +29,4 @@ six==1.11.0
 stripe==2.40.0
 urllib3==1.25.3
 wrapt==1.10.11
+google-api-python-client==1.7.11
