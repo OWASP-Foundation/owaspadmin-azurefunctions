@@ -14,7 +14,11 @@ def parse_leaderline(line):
 def add_to_leaders(repo, content, all_leaders, stype):
     lines = content.split('\n')
     for line in lines:
-        if(line.startswith('*')):
+        fstr = line.find('[')
+        if(line.startswith('###') and 'Leaders' not in line):
+            break
+        
+        if(line.startswith('*') and fstr > -1 and fstr < 4):
             name, email = parse_leaderline(line)
             leader = {}
             leader['name'] = name
@@ -31,7 +35,7 @@ def build_leaders_json(gh):
         r = gh.GetFile(repo['name'], 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)
-            content = base64.b64decode(doc['content']).decode()
+            content = base64.b64decode(doc['content']).decode(encoding='utf-8')
             stype = ''
             if 'www-chapter' in repo['name']:
                 stype = 'chapter'
@@ -50,7 +54,7 @@ def build_leaders_json(gh):
         doc = json.loads(r.text)
         sha = doc['sha']
     
-    r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders), sha)
+    r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders, ensure_ascii=False, indent = 4), sha)
     if r.ok:
         logging.info('Update leaders json succeeded')
     else:
@@ -412,7 +416,7 @@ def main(mytimer: func.TimerRequest) -> None:
     build_committee_json(gh)
     
     logging.info('Building leaders json file')
-    build_leaders_json(gh):
+    build_leaders_json(gh)
 
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
