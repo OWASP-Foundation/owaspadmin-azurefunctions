@@ -5,8 +5,59 @@ import azure.functions as func
 from ..SharedCode import github
 import base64
 
-def build_committee_json():
-    gh = github.OWASPGitHub()
+def parse_leaderline(line):
+    ename = line.find(']')
+    name = line[line.find('[') + 1:line.find(']')]
+    email = line[line.find('(', ename) + 1:line.find(')', ename)]
+    return name, email
+
+def add_to_leaders(repo, content, all_leaders, stype):
+    lines = content.split('\n')
+    for line in lines:
+        if(line.startswith('*')):
+            name, email = parse_leaderline(line)
+            leader = {}
+            leader['name'] = name
+            leader['email'] = email
+            leader['group'] = repo['title']
+            leader['group-type'] = stype
+            all_leaders.append(leader)
+
+
+def build_leaders_json(gh):
+    all_leaders = []
+    repos = gh.GetPublicRepositories('www-')
+    for repo in repos:
+        r = gh.GetFile(repo['name'], 'leaders.md')
+        if r.ok:
+            doc = json.loads(r.text)
+            content = base64.b64decode(doc['content']).decode()
+            stype = ''
+            if 'www-chapter' in repo['name']:
+                stype = 'chapter'
+            elif 'www-committee' in repo['name']:
+                stype = 'committee'
+            elif 'www-project' in repo['name']:
+                stype = 'project'
+            else:
+                continue
+
+            add_to_leaders(repo, content, all_leaders, stype)
+    
+    r = gh.GetFile('owasp.github.io', '_data/leaders.json')
+    sha = ''
+    if r.ok:
+        doc = json.loads(r.text)
+        sha = doc['sha']
+    
+    r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders), sha)
+    if r.ok:
+        logging.info('Update leaders json succeeded')
+    else:
+        logging.error(f'Update leaders json failed: {r.status}')
+
+
+def build_committee_json(gh):
     repos = gh.GetPublicRepositories('www-committee')
 
     for repo in repos: #change to use title in project repo.....
@@ -29,13 +80,12 @@ def build_committee_json():
     else:
         logging.error(f"Failed to update _data/committees.json: {r.text}")
 
-def build_project_json():
+def build_project_json(gh):
     # we want to build certain json data files every now and then to keep the website data fresh.
     #for each repository, public, with www-project
     #get name of project, level, and type
     # store in json
     #write json file out to github.owasp.io _data folder
-    gh = github.OWASPGitHub()
     repos = gh.GetPublicRepositories('www-project')
 
     for repo in repos: #change to use title in project repo.....
@@ -58,13 +108,12 @@ def build_project_json():
     else:
         logging.error(f"Failed to update _data/projects.json: {r.text}")
 
-def build_chapter_json():
+def build_chapter_json(gh):
     # we want to build certain json data files every now and then to keep the website data fresh.
     #for each repository, public, with www-project
     #get name of project, level, and type
     # store in json
     #write json file out to github.owasp.io _data folder
-    gh = github.OWASPGitHub()
     repos = gh.GetPublicRepositories('www-chapter')
     
     for repo in repos:
@@ -258,8 +307,7 @@ def build_staff_milestone_json(projects):
     else:
         logging.error(f"Failed to update www-staff/_data/milestones.json: {r.text}")
 
-def build_staff_project_json():
-    gh = github.OWASPGitHub()
+def build_staff_project_json(gh):
     repo = 'www-staff'
     path = 'projects'
 
@@ -305,8 +353,7 @@ def build_staff_project_json():
     else:
         logging.error(f"Failed to update www-staff/_data/projects.json: {r.text}")
 
-def update_chapter_admin_team():
-    gh = github.OWASPGitHub()
+def update_chapter_admin_team(gh):
     team_id = gh.GetTeamId('chapter-administration')
     if team_id:
         repos = gh.GetPublicRepositories('www-chapter')
@@ -316,9 +363,8 @@ def update_chapter_admin_team():
             if not r.ok:
                 logging.info(f'Failed to add repo: {r.text}')
 
-def update_corp_members():
+def update_corp_members(gh):
     # file from _data/corp_members.yml just needs to go in assets/sitedata/
-    gh = github.OWASPGitHub()
     r = gh.GetFile('owasp.github.io', '_data/corp_members.yml')
 
     if gh.TestResultCode(r.status_code):
@@ -343,27 +389,30 @@ def update_corp_members():
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
-
     if mytimer.past_due:
         logging.info('The timer is past due!')
 
+    gh = github.OWASPGitHub()
     logging.info("Building project json file")
-    build_project_json()
+    build_project_json(gh)
 
     logging.info("Building chapter json file")
-    build_chapter_json()
+    build_chapter_json(gh)
     
     logging.info("Building staff projects and milestones json files")
-    build_staff_project_json()
+    build_staff_project_json(gh)
 
     logging.info('Updating Chapter Administration Team repositories')
-    update_chapter_admin_team()
+    update_chapter_admin_team(gh)
 
     logging.info('Updating corp_members.yml sitedata from site.data')
-    update_corp_members()
+    update_corp_members(gh)
 
     logging.info('Building committees json file')
-    build_committee_json()
+    build_committee_json(gh)
+    
+    logging.info('Building leaders json file')
+    build_leaders_json(gh):
 
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
