@@ -67,6 +67,17 @@ def contact_lookup(text, response_url):
         "blocks": []
     }
 
+    if len(returned_members) == 0:
+        response_text['blocks'].append({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "No results found for " + text
+                }
+            ]
+        })
+
     for member in returned_members:
         response_text['blocks'].append({
             "type": "section",
@@ -176,8 +187,6 @@ def stripe_details(text, response_url):
     amount = transaction['amount'] / 100
     charge_date = datetime.fromtimestamp(transaction['created']).strftime('%Y-%m-%d %H:%M:%S')
 
-    logging.info(transaction)
-
     response_text = {
         "blocks": [
             {
@@ -186,6 +195,8 @@ def stripe_details(text, response_url):
             }
         ]
     }
+
+    metadata = transaction.get('metadata', None)
 
     response_text['blocks'][0]['fields'].append({
         "type": "mrkdwn",
@@ -202,12 +213,21 @@ def stripe_details(text, response_url):
         "text": "*Amount*\n" + str(amount) + '0'
     })
 
+    if metadata is None or metadata.get('purchase_type') == 'membership':
+        response_text['blocks'][0]['fields'].append({
+            "type": "mrkdwn",
+            "text": "*Transaction Type*\nMembership Payment"
+        })
+    else:
+        response_text['blocks'][0]['fields'].append({
+            "type": "mrkdwn",
+            "text": "*Transaction Type*\nDonation Payment"
+        })
+
     response_text['blocks'][0]['fields'].append({
         "type": "mrkdwn",
         "text": "*Card*\n" + transaction['payment_method_details']['card']['brand'] + ' ending in ' + transaction['payment_method_details']['card']['last4']
     })
-
-    metadata = transaction.get('metadata', None)
 
     if metadata is not None:
         response_text['blocks'][0]['fields'].append({
