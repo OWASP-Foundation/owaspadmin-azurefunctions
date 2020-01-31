@@ -19,6 +19,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     post_data = req.get_body().decode("utf-8")
     post_dict = urllib.parse.parse_qs(post_data)
 
+    token = post_dict.get('token')[0]
+
+    if token != os.environ["SL_TOKEN"]:
+        return func.HttpResponse(
+            body='Invalid token',
+            status_code=400
+        )
+
     text = post_dict.get('text')[0]
     command = post_dict.get('command')[0]
     response_url = post_dict.get('response_url')[0]
@@ -58,6 +66,17 @@ def contact_lookup(text, response_url):
     response_text = {
         "blocks": []
     }
+
+    if len(returned_members) == 0:
+        response_text['blocks'].append({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "No results found for " + text
+                }
+            ]
+        })
 
     for member in returned_members:
         response_text['blocks'].append({
@@ -168,8 +187,6 @@ def stripe_details(text, response_url):
     amount = transaction['amount'] / 100
     charge_date = datetime.fromtimestamp(transaction['created']).strftime('%Y-%m-%d %H:%M:%S')
 
-    logging.info(transaction)
-
     response_text = {
         "blocks": [
             {
@@ -178,6 +195,8 @@ def stripe_details(text, response_url):
             }
         ]
     }
+
+    metadata = transaction.get('metadata', None)
 
     response_text['blocks'][0]['fields'].append({
         "type": "mrkdwn",
@@ -194,12 +213,21 @@ def stripe_details(text, response_url):
         "text": "*Amount*\n" + str(amount) + '0'
     })
 
+    if metadata is None or metadata.get('purchase_type') == 'membership':
+        response_text['blocks'][0]['fields'].append({
+            "type": "mrkdwn",
+            "text": "*Transaction Type*\nMembership Payment"
+        })
+    else:
+        response_text['blocks'][0]['fields'].append({
+            "type": "mrkdwn",
+            "text": "*Transaction Type*\nDonation Payment"
+        })
+
     response_text['blocks'][0]['fields'].append({
         "type": "mrkdwn",
         "text": "*Card*\n" + transaction['payment_method_details']['card']['brand'] + ' ending in ' + transaction['payment_method_details']['card']['last4']
     })
-
-    metadata = transaction.get('metadata', None)
 
     if metadata is not None:
         response_text['blocks'][0]['fields'].append({
