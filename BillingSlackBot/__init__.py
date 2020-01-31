@@ -19,6 +19,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     post_data = req.get_body().decode("utf-8")
     post_dict = urllib.parse.parse_qs(post_data)
 
+    token = post_dict.get('token')[0]
+
+    if token != os.environ["SL_TOKEN"]:
+        return func.HttpResponse(
+            body='Invalid token',
+            status_code=400
+        )
+
     text = post_dict.get('text')[0]
     command = post_dict.get('command')[0]
     response_url = post_dict.get('response_url')[0]
