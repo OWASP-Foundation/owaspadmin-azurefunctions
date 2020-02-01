@@ -43,6 +43,8 @@ def get_member_info(customer_id):
     if membership_type is not None:
         if membership_type == 'one':
             membership_name = 'One Year Membership'
+        elif membership_type == 'student':
+            membership_name = 'One Year Student Membership'
         elif membership_type == 'two':
             membership_name = 'Two Year Membership'
         elif membership_type == 'lifetime':
