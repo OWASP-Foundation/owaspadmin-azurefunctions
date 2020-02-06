@@ -46,13 +46,22 @@ def process_form(values, view_id, function_directory):
             # create the leaders here....
             leaders = leader_names.splitlines()
             emails = leader_emails.splitlines()
+            emaillinks = []
             if len(leaders) == len(emails):
                 count = 0
                 for leader in leaders:
                     email = emails[count]
                     count = count + 1
                     logging.info("Adding project leader...")
-                    r = sf.AddProjectLeader(leader, email, cg_json["id"])
+                    cg_id = ''
+                    
+                    if 'id' in cg_json.keys():
+                        cg_id = cg_json['id']
+                    else:
+                        cg_id = cg_json['Id']
+
+                    emaillinks.append(f'[{leader}](mailto:{email})')
+                    r = sf.AddProjectLeader(leader, email, cg_id)
                     if not r.ok:
                         resString = f"Failed to add leader { leader } with email { email }."
                         break
@@ -61,7 +70,7 @@ def process_form(values, view_id, function_directory):
 
             if resString.find("Failed") < 0:
                 logging.info("Creating github repository")
-                resString = CreateGithubStructure(project_name, function_directory)
+                resString = CreateGithubStructure(project_name, function_directory, emaillinks)
 
 
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
@@ -77,7 +86,7 @@ def process_form(values, view_id, function_directory):
     logging.info(r.text)
 
 
-def CreateGithubStructure(project_name, func_dir):
+def CreateGithubStructure(project_name, func_dir, emaillinks):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
     resString = "Project created."
@@ -90,6 +99,19 @@ def CreateGithubStructure(project_name, func_dir):
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
+
+    if resString.find("Failed") < 0:
+        repoName = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
+        r = gh.GetFile(repoName, 'leaders.md')
+        if r.ok:
+            doc = json.loads(r.text)
+            sha = doc['sha']
+            contents = '### Leaders\n'
+            for link in emaillinks:
+                contents += f'* {link}\n'
+            r = gh.UpdateFile(repoName, 'leaders.md', contents, sha)
+            if not r.ok:
+                resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
         r = gh.EnablePages(project_name, gh.GH_REPOTYPE_PROJECT)
