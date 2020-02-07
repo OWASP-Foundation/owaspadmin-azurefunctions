@@ -247,7 +247,7 @@ def get_merge_fields(metadata, subscription_data, customer_id):
         customer = stripe.Customer.retrieve(customer_id)
         customer_metadata = customer.get('metadata', {})
 
-        membership_end = customer_metadata.get('membership_end', 'NULL')
+        membership_end = customer_metadata.get('membership_end', '') #should this return 'NULL' string and then compare via None as below?  Changed to ''
         membership_type = customer_metadata.get('membership_type', '')
         membership_recurring = customer_metadata.get('membership_recurring', 'no')
 
