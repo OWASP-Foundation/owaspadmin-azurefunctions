@@ -50,7 +50,7 @@ def contact_lookup(text, response_url):
     returned_fields = 'email_address'
 
     search_results = mailchimp.search_members.get(
-        query=text,
+        query=urllib.parse.quote(text),
         list_id=os.environ["MAILCHIMP_LIST_ID"]
     )
     returned_members = search_results['full_search']['members']
