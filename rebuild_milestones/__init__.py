@@ -1,18 +1,17 @@
 import logging
-import os
-import requests
 import json
-from urllib.parse import unquote_plus
-
+import requests
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import spotchk
 from ..SharedCode import helperfuncs
+import base64
+from urllib.parse import unquote_plus
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
-    
-    # first check for a valid call
+
+     # first check for a valid call
     body = req.get_body()
     
     strbody = unquote_plus(body.decode("utf-8"))
@@ -29,38 +28,21 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             'Rebuild site delayed 200ms',
             status_code = 200
         )
-    
-    logging.info('Requesting rebuild from Github...')
-    # Do the work that may take more than the timeout....
-    respond_url = names['response_url']
-    
-    headers = {'content-type':'application/json'}
-    data = {
-         'response_type':'ephemeral',
-         'text': 'Iterating through repositories...ignore timeouts'
-     }
-
-    # respond to caller...
-    msg = json.dumps(data)
-    r = requests.post(url = respond_url, headers=headers, data=msg)
-    
 
     gh = github.OWASPGitHub()
-    r = gh.RebuildSite()
-    if gh.TestResultCode(r.status_code):
-        resString = "Build queued..."
-    else:
-        resString = r.text
-
+    respond_url = names['response_url']
+    logging.info("Building staff projects and milestones json files")
     headers = {'content-type':'application/json'}
     data = {
          'response_type':'ephemeral',
-         'text': resString
+         'text': 'Rebuilding staff projects and milestones...ignore timeouts'
      }
 
     # respond to caller...
     msg = json.dumps(data)
     r = requests.post(url = respond_url, headers=headers, data=msg)
-     
 
-    return func.HttpResponse()
+    helperfuncs.build_staff_project_json(gh)
+    
+    return func.HttpResponse(f"Projects and milestones built!")
+    
