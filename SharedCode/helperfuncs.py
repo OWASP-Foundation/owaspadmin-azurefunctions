@@ -2,7 +2,6 @@ import datetime
 import logging
 import json
 import azure.functions as func
-import github
 import base64
 
 def get_page_name(content):
@@ -156,8 +155,7 @@ def get_project_milestones(content, pname):
                     
     return milestones
 
-def build_staff_milestone_json(projects):
-    gh = github.OWASPGitHub()
+def build_staff_milestone_json(gh, projects):
     milestones = []
     for project in projects:
         for milestone in project.milestones:
@@ -209,7 +207,7 @@ def build_staff_project_json(gh):
 
     contents = json.dumps(projects, default=lambda x: x.__dict__, indent=4)
     
-    build_staff_milestone_json(projects)
+    build_staff_milestone_json(gh, projects)
 
     r = gh.GetFile('www-staff', '_data/projects.json')
     sha = ''
