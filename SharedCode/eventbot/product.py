@@ -9,7 +9,10 @@ import stripe
 
 class Product:
     def create_product(event_payload={}, response_url=None):
-        product = stripe.Product.retrieve(event_payload.get('event_id'))
+        product = stripe.Product.retrieve(
+            event_payload.get('event_id'),
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
 
         metadata = {
             "type": "regular"
