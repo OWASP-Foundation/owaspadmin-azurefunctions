@@ -29,6 +29,13 @@
       "name": "prmsg",
       "queueName": "projectqueue",
       "connection": "AzureWebJobsStorage"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "evtmsg",
+      "queueName": "slack-event-bot-queue",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }

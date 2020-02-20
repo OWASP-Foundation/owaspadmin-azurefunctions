@@ -14,8 +14,6 @@ def main(req: func.HttpRequest, chmsg: func.Out[func.QueueMessage]) -> func.Http
 
     token = get_slack_token_from_payload(post_dict)
 
-    logging.info(post_dict)
-
     if token != os.environ["SL_TOKEN"]:
         return func.HttpResponse(
             body='Invalid token',
