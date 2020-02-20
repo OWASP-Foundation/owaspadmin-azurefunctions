@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "msg",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "slack-event-bot-queue",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
