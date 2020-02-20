@@ -65,8 +65,7 @@ def create_checkout_session(request: Dict) -> Dict:
     }
 
     stripe_customer_id = get_stripe_customer_id(
-        request.get('email'),
-        api_key=os.environ["STRIPE_TEST_SECRET"]
+        request.get('email')
     )
     if (stripe_customer_id is not None):
         api_request['customer'] = stripe_customer_id
