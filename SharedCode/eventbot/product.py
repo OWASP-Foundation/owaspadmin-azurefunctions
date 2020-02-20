@@ -90,7 +90,7 @@ class Product:
                 "type": "section",
                 "text": {
                         "type": "mrkdwn",
-                        "text": ":exclamation: *Error*\nNo events found."
+                        "text": ":exclamation: *Error*\nNo products found."
                 }
             })
             response_message.add_block({
