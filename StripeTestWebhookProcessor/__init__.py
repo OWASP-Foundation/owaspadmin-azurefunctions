@@ -26,7 +26,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         event = stripe.Event.construct_from(
-            payload, os.environ["STRIPE_SECRET"]
+            payload, os.environ["STRIPE_TEST_SECRET"]
         )
     except ValueError as e:
         return func.HttpResponse(status_code=400)
