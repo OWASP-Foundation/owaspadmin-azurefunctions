@@ -53,7 +53,7 @@ def handle_checkout_session_completed(event: Dict):
 
     if payment_intent is not None:
         payment_intent = stripe.PaymentIntent.retrieve(
-            payment_intent
+            payment_intent,
             api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
@@ -62,7 +62,7 @@ def handle_checkout_session_completed(event: Dict):
 
     if setup_intent is not None:
         setup_intent = stripe.SetupIntent.retrieve(
-            setup_intent
+            setup_intent,
             api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         metadata = setup_intent.get('metadata', {})
