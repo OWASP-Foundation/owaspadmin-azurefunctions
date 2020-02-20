@@ -14,7 +14,6 @@ from typing import Dict
 from ..SharedCode import github
 
 import stripe
-stripe.api_key = os.environ["STRIPE_TEST_SECRET"]
 
 from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
@@ -26,7 +25,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         event = stripe.Event.construct_from(
-            payload, os.environ["STRIPE_TEST_SECRET"]
+            payload,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
     except ValueError as e:
         return func.HttpResponse(status_code=400)
@@ -52,24 +52,32 @@ def handle_checkout_session_completed(event: Dict):
     subscription_data = {}
 
     if payment_intent is not None:
-        payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
+        payment_intent = stripe.PaymentIntent.retrieve(
+            payment_intent
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
 
     if customer_email is None:
         customer_email = get_customer_email_from_id(customer_id)
 
     if setup_intent is not None:
-        setup_intent = stripe.SetupIntent.retrieve(setup_intent)
+        setup_intent = stripe.SetupIntent.retrieve(
+            setup_intent
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
         metadata = setup_intent.get('metadata', {})
         customer_id = metadata.get('customer_id', None)
         subscription_id = metadata.get('subscription_id', None)
         payment_method = setup_intent.get('payment_method', None)
         stripe.PaymentMethod.attach(
             payment_method,
-            customer=customer_id
+            customer=customer_id,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         stripe.Subscription.modify(
             subscription_id,
-            default_payment_method=payment_method
+            default_payment_method=payment_method,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
     elif payment_intent is not None and payment_intent['metadata'].get('purchase_type') == 'event':
         pass
@@ -82,7 +90,10 @@ def handle_checkout_session_completed(event: Dict):
                 subscription_data = get_subscription_data_from_event(event)
 
         if subscription is not None:
-            subscription = stripe.Subscription.retrieve(subscription)
+            subscription = stripe.Subscription.retrieve(
+                subscription,
+                api_key=os.environ["STRIPE_TEST_SECRET"]
+            )
             metadata = subscription.get('metadata', {})
             purchase_type = metadata.get('purchase_type', 'donation')
 
@@ -107,13 +118,17 @@ def update_customer_record(customer_id, metadata, subscription_data):
 
         customer = stripe.Customer.retrieve(
             customer_id,
-            expand=['subscriptions']
+            expand=['subscriptions'],
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         existing_subscriptions = customer.get('subscriptions')
         for subscription in existing_subscriptions:
             if subscription['plan']['nickname'] is not None and "Membership" in subscription['plan']['nickname'] and subscription['id'] != subscription_data['subscription_id']:
-                stripe.Subscription.delete(subscription['id'])
+                stripe.Subscription.delete(
+                    subscription['id'],
+                    api_key=os.environ["STRIPE_TEST_SECRET"]
+                )
 
 
         customer_metadata = customer.get('metadata', {})
@@ -130,11 +145,15 @@ def update_customer_record(customer_id, metadata, subscription_data):
                         stripe.Subscription.modify(
                             subscription_data['subscription_id'],
                             trial_end=int(new_end_date.timestamp()),
-                            prorate=False
+                            prorate=False,
+                            api_key=os.environ["STRIPE_TEST_SECRET"]
                         )
                 else:
                     if subscription_data['subscription_id'] is not None:
-                        stripe.Subscription.delete(subscription_data['subscription_id'])
+                        stripe.Subscription.delete(
+                            subscription_data['subscription_id'],
+                            api_key=os.environ["STRIPE_TEST_SECRET"]
+                        )
                         recurring="no"
 
         stripe.Customer.modify(
@@ -143,7 +162,8 @@ def update_customer_record(customer_id, metadata, subscription_data):
                 "membership_type": subscription_data['membership_type'],
                 "membership_end": subscription_data['membership_end'],
                 "membership_recurring": recurring
-            }
+            },
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
 
@@ -252,7 +272,10 @@ def get_merge_fields(metadata, subscription_data, customer_id):
 
         merge_fields['MEMSTART'] = datetime.today().strftime('%m/%d/%Y')
 
-        customer = stripe.Customer.retrieve(customer_id)
+        customer = stripe.Customer.retrieve(
+            customer_id,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
         customer_metadata = customer.get('metadata', {})
 
         membership_end = customer_metadata.get('membership_end', '') #should this return 'NULL' string and then compare via None as below?  Changed to ''
@@ -336,7 +359,10 @@ def handle_product_created(event_data):
 
 
 def handle_sku_created(event_data):
-    product = stripe.Product.retrieve(event_data.get('product', None))
+    product = stripe.Product.retrieve(
+        event_data.get('product', None),
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
     product_metadata = product.get('metadata', {})
     sku_attributes = event_data.get('attributes', {})
     sku_metadata = event_data.get('metadata', {})
@@ -366,5 +392,8 @@ def handle_sku_created(event_data):
 
 
 def get_customer_email_from_id(customer_id):
-    customer = stripe.Customer.retrieve(customer_id)
+    customer = stripe.Customer.retrieve(
+        customer_id,
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
     return customer.email
