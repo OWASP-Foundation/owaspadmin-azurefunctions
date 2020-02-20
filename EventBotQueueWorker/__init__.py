@@ -7,9 +7,6 @@ import json
 import requests
 import time
 
-import stripe
-stripe.api_key = os.environ["STRIPE_TEST_SECRET"]
-
 from ..SharedCode.eventbot.slack_response import SlackResponse
 from ..SharedCode.eventbot.event import Event
 from ..SharedCode.eventbot.product import Product

@@ -6,7 +6,6 @@ from .slack_response import SlackResponse
 from .event import Event
 
 import stripe
-stripe.api_key = os.environ["STRIPE_TEST_SECRET"]
 
 class Product:
     def create_product(event_payload={}, response_url=None):
@@ -34,7 +33,8 @@ class Product:
             currency=product["metadata"].get('currency', 'usd'),
             inventory={"type": "infinite"},
             product=product["id"],
-            metadata=metadata
+            metadata=metadata,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Product created successfully')
@@ -64,7 +64,11 @@ class Product:
 
     def list_products(trigger_id, response_url, event_id):
         response_message = SlackResponse.message(response_url, 'Product Listing')
-        product_list = stripe.SKU.list(product=event_id,limit=20)
+        product_list = stripe.SKU.list(
+            product=event_id,
+            limit=20,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
 
         if len(product_list):
             response_message.add_block({

@@ -5,7 +5,6 @@ import json
 from .slack_response import SlackResponse
 
 import stripe
-stripe.api_key = os.environ["STRIPE_TEST_SECRET"]
 
 class Event:
     @classmethod
@@ -19,7 +18,8 @@ class Event:
                 "repo_name": payload.get('repo_name'),
                 "type": "event",
                 "currency": payload.get('currency')
-            }
+            },
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Event created successfully')
@@ -112,7 +112,10 @@ class Event:
 
     def list_events(response_url):
         event_list = []
-        stripe_products = stripe.Product.list(limit=10)
+        stripe_products = stripe.Product.list(
+            limit=10,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
         for event in stripe_products:
             metadata = event.get('metadata', {})
             product_type = metadata.get('type', None)
@@ -196,7 +199,10 @@ class Event:
 
     @classmethod
     def show_event(cls, response_url, product_id):
-        product = stripe.Product.retrieve(product_id)
+        product = stripe.Product.retrieve(
+            product_id,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
         response_message = SlackResponse.message(response_url, text='Manage Event')
         response_message.add_block({
             "type": "section",
