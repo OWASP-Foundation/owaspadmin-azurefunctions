@@ -40,6 +40,7 @@ def is_event_action(jsonstr):
         'list_event',
         'manage_event',
         'add_product',
+        'create_product',
         'list_products'
     ]
     
