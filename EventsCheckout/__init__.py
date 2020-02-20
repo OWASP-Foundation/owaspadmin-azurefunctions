@@ -8,7 +8,6 @@ import pathlib
 from typing import Dict
 
 import stripe
-stripe.api_key = os.environ["STRIPE_TEST_SECRET"]
 
 import urllib.parse
 
@@ -44,8 +43,14 @@ def create_checkout_session(request: Dict) -> Dict:
         "purchase_type": "event"
     }
 
-    sku = stripe.SKU.retrieve(request.get('sku'))
-    product = stripe.Product.retrieve(sku['product'])
+    sku = stripe.SKU.retrieve(
+        request.get('sku'),
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
+    product = stripe.Product.retrieve(
+        sku['product'],
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
 
     checkout_product_name = product.name + ' : ' + sku['attributes']['name']
 
@@ -59,7 +64,10 @@ def create_checkout_session(request: Dict) -> Dict:
         "payment_method_types": ["card"],
     }
 
-    stripe_customer_id = get_stripe_customer_id(request.get('email'))
+    stripe_customer_id = get_stripe_customer_id(
+        request.get('email'),
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
     if (stripe_customer_id is not None):
         api_request['customer'] = stripe_customer_id
     else:
@@ -77,6 +85,8 @@ def create_checkout_session(request: Dict) -> Dict:
             'quantity': 1
         }
     ]
+
+    api_request['api_key'] = os.environ["STRIPE_TEST_SECRET"]
 
     api_response = stripe.checkout.Session.create(**api_request)
 
@@ -106,7 +116,10 @@ def return_response(response, success):
 
 
 def get_stripe_customer_id(email):
-    customers = stripe.Customer.list(email=email)
+    customers = stripe.Customer.list(
+        email=email,
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
     if len(customers) > 0:
         for customer in customers:
             if customer.email == email:
