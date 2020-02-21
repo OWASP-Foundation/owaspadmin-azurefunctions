@@ -389,7 +389,11 @@ def handle_sku_created(event_data):
                 'metadata': sku_metadata
             })
 
-            file_contents = json.dumps(products)
+            file_contents = json.dumps(
+                products,
+                ensure_ascii=False,
+                indent=4
+            )
             gh.UpdateFile(repo_name, product_file, file_contents, sha)
 
 
