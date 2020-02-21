@@ -32,6 +32,27 @@ def validate_request(request: Dict) -> Dict:
     if request.get('email', None) is None:
         errors['email'] = ['Email is required']
 
+    if request.get('discount_code', None) is not None:
+        try:
+            coupon = stripe.Coupon.retrieve(
+                request.get('discount_code').upper(),
+                api_key=os.environ["STRIPE_TEST_SECRET"]
+            )
+            metadata = coupon.get('metadata', {})
+            product = stripe.Product.retrieve(
+                metadata.get('event_id'),
+                api_key=os.environ["STRIPE_TEST_SECRET"]
+            )
+            sku = stripe.SKU.retrieve(
+                request.get('sku'),
+                api_key=os.environ["STRIPE_TEST_SECRET"]
+            )
+            sku_metadata = sku.get('metadata', {})
+            if sku.get('product') != product['id'] or metadata.get('event_id') != product['id']:
+                errors['discount_code'] = ['This discount is not valid']
+        except Exception as err:
+            errors['discount_code'] = ['This discount is not valid']
+
     return errors
 
 
@@ -40,6 +61,7 @@ def create_checkout_session(request: Dict) -> Dict:
         "name": request.get('name', None),
         "email": request.get('email', None),
         "sku": request.get('sku', None),
+        "discount_code": request.get('discount_code', None),
         "purchase_type": "event"
     }
 
@@ -72,6 +94,17 @@ def create_checkout_session(request: Dict) -> Dict:
     else:
         api_request['customer_email'] = request.get('email')
 
+    discount_code = request.get('discount_code', None)
+    if discount_code is not None:
+        coupon = stripe.Coupon.retrieve(
+            request.get('discount_code').upper(),
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
+        checkout_product_name = checkout_product_name + ' + Discount'
+        purchase_price = sku['price'] - coupon['amount_off']
+    else:
+        purchase_price = sku['price']
+
     api_request['payment_intent_data'] = {
         'metadata': metadata
     }
@@ -79,7 +112,7 @@ def create_checkout_session(request: Dict) -> Dict:
     api_request['line_items'] = [
         {
             'name': checkout_product_name,
-            'amount': sku['price'],
+            'amount': purchase_price,
             'currency': product['metadata']['currency'],
             'quantity': 1
         }

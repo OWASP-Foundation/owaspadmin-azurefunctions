@@ -9,7 +9,6 @@ from .slack_response import SlackResponse
 
 class DiscountCode:
     def create(event_payload={}, response_url=None):
-        logging.info('IN DISCOUNT CODE CLASS')
         product = stripe.Product.retrieve(
             event_payload.get('event_id'),
             api_key=os.environ["STRIPE_TEST_SECRET"]
@@ -23,7 +22,7 @@ class DiscountCode:
             duration='forever',
             amount_off=event_payload.get('amount_off'),
             currency=product['metadata']['currency'],
-            name=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
+            id=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
             metadata=metadata,
             api_key=os.environ["STRIPE_TEST_SECRET"]
         )
@@ -43,7 +42,7 @@ class DiscountCode:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "The discount code *" + new_discount_code["name"] + "* has been successfully created.\n\nYou may use the buttons below to continue making changes to the event named *" + product["name"] + "*."
+                "text": "The discount code *" + new_discount_code["id"] + "* has been successfully created.\n\nYou may use the buttons below to continue making changes to the event named *" + product["name"] + "*."
             }
         })
         response_message.add_block({
@@ -79,7 +78,7 @@ class DiscountCode:
             },
             "hint": {
                 "type": "plain_text",
-                "text": "This code should be unique for this event. Users will enter it on the registration page to receive the discount."
+                "text": "This code must be unique and include alphanumeric characters only."
             }
         })
         modal_response.add_block({
@@ -118,7 +117,7 @@ class DiscountCode:
             metadata = stripe_coupon.get('metadata', {})
             if metadata.get('event_id', None) == event_id:
                 discount_codes.append({
-                    "name": stripe_coupon["name"],
+                    "id": stripe_coupon["id"],
                     "amount_off": str(stripe_coupon['amount_off'] / 100) + '0'
                 })
 
@@ -138,7 +137,7 @@ class DiscountCode:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*" + discount_code["name"] + "* ($" + discount_code['amount_off'] + " off)"
+                        "text": "*" + discount_code["id"] + "* ($" + discount_code['amount_off'] + " off)"
                     }
                 })
         else:
