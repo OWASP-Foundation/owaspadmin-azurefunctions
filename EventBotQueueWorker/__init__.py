@@ -10,6 +10,7 @@ import time
 from ..SharedCode.eventbot.slack_response import SlackResponse
 from ..SharedCode.eventbot.event import Event
 from ..SharedCode.eventbot.product import Product
+from ..SharedCode.eventbot.discount_code import DiscountCode
 
 def main(msg: func.QueueMessage) -> None:
     payload = json.loads(msg.get_body().decode('utf-8'))
@@ -24,3 +25,5 @@ def main(msg: func.QueueMessage) -> None:
         Event.list_events(response_url)
     elif event_type == 'create_product':
         Product.create_product(event_payload, response_url)
+    elif event_type == 'create_discount_code':
+        DiscountCode.create(event_payload, response_url)

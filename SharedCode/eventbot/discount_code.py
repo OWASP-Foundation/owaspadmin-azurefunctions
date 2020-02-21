@@ -1,3 +1,4 @@
+import re
 import os
 import logging
 import json
@@ -7,7 +8,8 @@ from .event import Event
 from .slack_response import SlackResponse
 
 class DiscountCode:
-    def create_discount_code(event_payload={}, response_url=None):
+    def create(event_payload={}, response_url=None):
+        logging.info('IN DISCOUNT CODE CLASS')
         product = stripe.Product.retrieve(
             event_payload.get('event_id'),
             api_key=os.environ["STRIPE_TEST_SECRET"]
@@ -21,7 +23,7 @@ class DiscountCode:
             duration='forever',
             amount_off=event_payload.get('amount_off'),
             currency=product['metadata']['currency'],
-            name=event_payload.get('code').upper(),
+            name=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
             metadata=metadata,
             api_key=os.environ["STRIPE_TEST_SECRET"]
         )
@@ -116,8 +118,8 @@ class DiscountCode:
             metadata = stripe_coupon.get('metadata', {})
             if metadata.get('event_id', None) == event_id:
                 discount_codes.append({
-                    id: stripe_coupon['id'],
-                    amount_off: stripe_coupon['amount_off'] / 100
+                    "name": stripe_coupon["name"],
+                    "amount_off": str(stripe_coupon['amount_off'] / 100) + '0'
                 })
 
         if len(discount_codes):
@@ -136,7 +138,7 @@ class DiscountCode:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*" + discount_code["id"] + "* ($" + discount_code['amount_off'] + " off)"
+                        "text": "*" + discount_code["name"] + "* ($" + discount_code['amount_off'] + " off)"
                     }
                 })
         else:
@@ -160,7 +162,7 @@ class DiscountCode:
 
         for input_field in input_values:
             if input_field['input_id'] == 'discount_code_amount_off_input':
-                queue_data['payload']['amount_off'] = input_field["value"]
+                queue_data["payload"]["amount_off"] = int(float(input_field["value"]) * 100)
             elif input_field['input_id'] == 'discount_code_code_input':
                 queue_data['payload']['code'] = input_field['value']
 
