@@ -6,6 +6,7 @@ import azure.functions as func
 from .slack_response import SlackResponse
 from .event import Event
 from .product import Product
+from .discount_code import DiscountCode
 
 
 class BlockAction:
@@ -36,6 +37,10 @@ class BlockAction:
             Product.show_create_form(self.trigger_id, self.response_url, self.action_value)
         elif self.action_id == 'list_products':
             Product.list_products(self.trigger_id, self.response_url, self.action_value)
+        elif self.action_id == 'create_discount_code':
+            DiscountCode.show_create_form(self.trigger_id, self.response_url, self.action_value)
+        elif self.action_id == 'list_discount_codes':
+            DiscountCode.list(self.trigger_id, self.response_url, self.action_value)
 
         acknowledgement = SlackResponse.acknowledgement()
         return acknowledgement.send()

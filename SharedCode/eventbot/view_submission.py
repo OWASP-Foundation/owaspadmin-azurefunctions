@@ -6,6 +6,7 @@ import azure.functions as func
 from .slack_response import SlackResponse
 from .event import Event
 from .product import Product
+from .discount_code import DiscountCode
 
 
 class ViewSubmission:
@@ -60,6 +61,13 @@ class ViewSubmission:
                 )
             if self.callback_id == 'create_product':
                 Product.handle_create_submission(
+                    self.input_values,
+                    queue=queue,
+                    response_url=self.response_url,
+                    event_id=self.callback_params
+                )
+            if self.callback_id == 'create_discount_code':
+                DiscountCode.handle_create_submission(
                     self.input_values,
                     queue=queue,
                     response_url=self.response_url,

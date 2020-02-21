@@ -340,7 +340,25 @@ class Event:
                     },
                     "value": event_id,
                     "action_id": "list_products"
-                }
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Add Discount Code"
+                    },
+                    "value": event_id,
+                    "action_id": "create_discount_code"
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "List Discount Codes"
+                    },
+                    "value": event_id,
+                    "action_id": "list_discount_codes"
+                },
             ]
         }
 

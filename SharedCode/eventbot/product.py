@@ -178,11 +178,7 @@ class Product:
             "block_id": "product_inventory_input",
             "element": {
                 "type": "plain_text_input",
-                "action_id": "product_inventory_input",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "0"
-                }
+                "action_id": "product_inventory_input"
             },
             "label": {
                 "type": "plain_text",
@@ -190,7 +186,7 @@ class Product:
             },
             "hint": {
                 "type": "plain_text",
-                "text": "Optional. Leave blank or set to 0 to sell unlimited units."
+                "text": "Optional. Leave blank to sell an unlimited amount."
             },
             "optional": True
         })

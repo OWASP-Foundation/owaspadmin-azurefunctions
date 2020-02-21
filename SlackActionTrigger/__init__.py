@@ -41,7 +41,9 @@ def is_event_action(jsonstr):
         'manage_event',
         'add_product',
         'create_product',
-        'list_products'
+        'list_products',
+        'create_discount_code',
+        'list_discount_codes'
     ]
     
     return [action_name for action_name in event_actions if (action_name in jsonstr)]

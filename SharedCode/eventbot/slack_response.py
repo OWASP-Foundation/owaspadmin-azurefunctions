@@ -90,6 +90,29 @@ class SlackResponse:
         self.content['blocks'].append(block_content)
 
 
+    def add_error_response_blocks(self, error_message):
+        self.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":exclamation: *Error*"
+            }
+        })
+        self.add_block({
+            "type": "divider"
+        })
+        self.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": error_message
+            }
+        })
+        self.add_block({
+            "type": "divider"
+        })
+
+
     def send(self):
         if self.response_type == 'modal':
             return self.__send_modal_response()
