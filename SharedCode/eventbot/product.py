@@ -108,11 +108,18 @@ class Product:
         response_message.send()
 
 
-    def show_create_form(trigger_id=None, response_url=None, event_id=None):
+    def show_create_form(trigger_id=None, response_url=None, event_id=None, mode='create'):
+        if mode == 'update':
+            pass
+        else:
+            callback_id = 'create_product|' + event_id
+            submit_label = 'Create'
+            title = 'Create Product'
+
         modal_response = SlackResponse.modal(
-            callback_id='create_product|' + event_id,
-            title='Create Product',
-            submit_label='Create',
+            callback_id=callback_id,
+            title=title,
+            submit_label=submit_label,
             close_label='Cancel',
             trigger_id=trigger_id,
             response_url=response_url
@@ -142,7 +149,9 @@ class Product:
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Enter a description for this product"
-                }
+                },
+                "multiline": True,
+                "max_length": 500
             },
             "label": {
                 "type": "plain_text",
@@ -150,7 +159,7 @@ class Product:
             },
             "hint": {
                 "type": "plain_text",
-                "text": "This description will be displayed next to the product name on the registration page."
+                "text": "This description will be displayed next to the product name on the registration page. Markdown formatting is allowed."
             }
         })
         modal_response.add_block({

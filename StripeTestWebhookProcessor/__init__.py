@@ -7,6 +7,7 @@ import json
 import hashlib
 import base64
 import html
+import markdown
 from datetime import datetime
 from datetime import timedelta
 from typing import Dict
@@ -376,6 +377,8 @@ def handle_sku_created(event_data):
         if gh.TestResultCode(existing_file.status_code):
             products = json.loads(existing_file.text)
             sha = products['sha']
+
+            sku_metadata['description'] = markdown.markdown(sku_metadata.get('description', ''), extensions=['nl2br'])
 
             file_text = base64.b64decode(products['content']).decode('utf-8')
             products = json.loads(file_text)
