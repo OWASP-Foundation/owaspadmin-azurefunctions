@@ -188,7 +188,7 @@ def main(mytimer: func.TimerRequest) -> None:
     build_chapter_json(gh)
     
     logging.info("Building staff projects and milestones json files")
-    build_staff_project_json(gh)
+    helperfuncs.build_staff_project_json(gh)
 
     logging.info('Updating Chapter Administration Team repositories')
     update_chapter_admin_team(gh)
