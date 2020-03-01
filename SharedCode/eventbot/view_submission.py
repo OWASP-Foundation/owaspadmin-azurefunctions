@@ -73,6 +73,13 @@ class ViewSubmission:
                     response_url=self.response_url,
                     event_id=self.callback_params
                 )
+            if self.callback_id == 'edit_product':
+                Product.handle_edit_submission(
+                    self.input_values,
+                    queue=queue,
+                    response_url=self.response_url,
+                    product_id=self.callback_params
+                )
         except Exception as excptn:
             response = {
                 "response_action": "errors",

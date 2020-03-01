@@ -25,5 +25,7 @@ def main(msg: func.QueueMessage) -> None:
         Event.list_events(response_url)
     elif event_type == 'create_product':
         Product.create_product(event_payload, response_url)
+    elif event_type == 'update_product':
+        Product.edit_product(event_payload, response_url)
     elif event_type == 'create_discount_code':
         DiscountCode.create(event_payload, response_url)

@@ -65,15 +65,84 @@ class Product:
         response_message.send()
 
 
+    def edit_product(event_payload={}, response_url=None):
+        sku = stripe.SKU.retrieve(
+            event_payload.get('product_id'),
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
+
+        metadata = sku.get('metadata', {})
+
+        if event_payload.get('display_start', None) is not None:
+            metadata["display_start"] = event_payload["display_start"]
+        if event_payload.get('display_end', None) is not None:
+            metadata["display_end"] = event_payload["display_end"]
+        if event_payload.get('inventory', None) is not None and event_payload.get('inventory') != 0:
+            metadata["inventory"] = event_payload["inventory"]
+            metadata["starting_inventory"] = event_payload["inventory"]
+        if event_payload.get('description', None) is not None:
+            metadata["description"] = event_payload["description"]
+
+        sku = stripe.SKU.modify(
+            event_payload.get('product_id'),
+            metadata=metadata,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
+
+        product = stripe.Product.retrieve(
+            sku['product'],
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
+
+        response_message = SlackResponse.message(response_url, 'Product updated successfully')
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":white_check_mark: * Product updated successfully!*"
+            }
+        })
+        response_message.add_block({
+            "type": "divider"
+        })
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*" + sku["attributes"]["name"] + "* has been successfully updated.\n\nYou may use the buttons below to continue making changes to the event named " + product["name"] + "."
+            }
+        })
+        response_message.add_block({
+            "type": "divider"
+        })
+        response_message.add_block(Event.get_event_actions_blocks(product["id"]))
+        response_message.send()
+
+
     @classmethod
     def edit(cls, trigger_id, response_url, product_id):
+        product = stripe.SKU.retrieve(
+            product_id,
+            api_key=os.environ["STRIPE_TEST_SECRET"]
+        )
+
+        product_metadata = product.get('metadata', {})
+
+        product_payload = {
+            'id': product['id'],
+            'name': product['attributes']['name'],
+            'description': product_metadata.get('description'),
+            'amount': int(product['price'] / 100),
+            'inventory': product_metadata.get('inventory', ''),
+            'display_start': product_metadata.get('display_start', ''),
+            'display_end': product_metadata.get('display_end', '')
+        }
+
         cls.show_create_form(
             trigger_id=trigger_id,
             response_url=response_url,
             mode='update',
-            product={
-                "id": "12345"
-            }
+            product=product_payload
         )
 
 
@@ -171,7 +240,8 @@ class Product:
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Enter the name of the product"
-                }
+                },
+                "initial_value": product.get('name', '')
             },
             "label": {
                 "type": "plain_text",
@@ -189,7 +259,8 @@ class Product:
                     "text": "Enter a description for this product"
                 },
                 "multiline": True,
-                "max_length": 500
+                "max_length": 500,
+                "initial_value": product.get('description', '')
             },
             "label": {
                 "type": "plain_text",
@@ -209,7 +280,8 @@ class Product:
                 "placeholder": {
                     "type": "plain_text",
                     "text": "0.00"
-                }
+                },
+                "initial_value": str(product.get('amount', ''))
             },
             "label": {
                 "type": "plain_text",
@@ -225,7 +297,8 @@ class Product:
             "block_id": "product_inventory_input",
             "element": {
                 "type": "plain_text_input",
-                "action_id": "product_inventory_input"
+                "action_id": "product_inventory_input",
+                "initial_value": product.get('inventory', '')
             },
             "label": {
                 "type": "plain_text",
@@ -243,6 +316,7 @@ class Product:
             "element": {
                 "type": "datepicker",
                 "action_id": "product_display_start_input",
+                "initial_date": product.get('display_start', '')
             },
             "label": {
                 "type": "plain_text",
@@ -256,6 +330,7 @@ class Product:
             "element": {
                 "type": "datepicker",
                 "action_id": "product_display_end_input",
+                "initial_date": product.get('display_end', '')
             },
             "label": {
                 "type": "plain_text",
@@ -264,6 +339,35 @@ class Product:
             "optional": True
         })
         modal_response.send()
+
+
+    def handle_edit_submission(input_values, queue, response_url=None, product_id=None):
+        queue_data = {
+            'event_type': 'update_product',
+            'payload': {}
+        }
+
+        if product_id is not None:
+            queue_data["payload"]["product_id"] = product_id
+
+        if response_url is not None:
+            queue_data['response_url'] = response_url
+
+        for input_value in input_values:
+            if input_value["input_id"] == "product_name_input":
+                queue_data["payload"]["name"] = input_value["value"]
+            if input_value["input_id"] == "product_description_input":
+                queue_data["payload"]["description"] = input_value["value"]
+            elif input_value["input_id"] == "product_amount_input":
+                queue_data["payload"]["amount"] = int(float(input_value["value"]) * 100)
+            elif input_value["input_id"] == "product_inventory_input" and input_value["value"] is not None:
+                queue_data["payload"]["inventory"] = input_value["value"]
+            elif input_value["input_id"] == "product_display_start_input" and input_value["value"] is not None:
+                queue_data["payload"]["display_start"] = input_value["value"]
+            elif input_value["input_id"] == "product_display_end_input" and input_value["value"] is not None:
+                queue_data["payload"]["display_end"] = input_value["value"]
+
+        queue.set(json.dumps(queue_data))
 
 
     def handle_create_submission(input_values, queue, response_url=None, event_id=None):
