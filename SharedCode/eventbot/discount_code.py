@@ -132,12 +132,26 @@ class DiscountCode:
             response_message.add_block({
                 "type": "divider"
             })
+
+            product = stripe.Product.retrieve(
+                event_id,
+                api_key=os.environ["STRIPE_TEST_SECRET"]
+            )
+
+            currency = product['metadata'].get('currency', 'usd')
+            if currency == 'eur':
+                currency_symbol = '€'
+            elif currency == 'gbp':
+                currency_symbol = '£'
+            else:
+                currency_symbol = '$'
+
             for discount_code in discount_codes:
                 response_message.add_block({
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*" + discount_code["id"] + "* ($" + discount_code['amount_off'] + " off)"
+                        "text": "*" + discount_code["id"] + "* (" + currency_symbol + discount_code['amount_off'] + " off)"
                     }
                 })
         else:
