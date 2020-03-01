@@ -67,11 +67,15 @@ def create_checkout_session(request: Dict) -> Dict:
         "persona": request.get('persona', None),
         "country": request.get('country', None),
         "city": request.get('city', None),
-        "dietary_restrictions": '|'.join(request.get('dietary_restrictions', '')),
-        "discount_code": request.get('discount_code', None),
         "mailing_list": request.get('mailing_list', False),
         "purchase_type": "event"
     }
+
+    if request.get('dietary_restrictions', None) is not None:
+        metadata['dietary_restrictions'] = '|'.join(request.get('dietary_restrictions', ''))
+
+    if request.get('discount_code', None) is not None and request.get('discount_code', None) != '':
+        metadata['discount_code'] = request.get('discount_code', None)
 
     sku = stripe.SKU.retrieve(
         request.get('sku'),
