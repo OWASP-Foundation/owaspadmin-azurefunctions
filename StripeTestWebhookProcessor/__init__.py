@@ -80,7 +80,8 @@ def handle_checkout_session_completed(event: Dict):
             api_key=os.environ["STRIPE_TEST_SECRET"]
         )
     elif payment_intent is not None and payment_intent['metadata'].get('purchase_type') == 'event':
-        pass
+        metadata = payment_intent.get('metadata', {})
+        add_event_registrant_to_mailing_list(customer_email, metadata)
     else:
         if payment_intent is not None:
             metadata = payment_intent.get('metadata', {})
@@ -219,6 +220,62 @@ def add_to_mailing_list(email, metadata, subscription_data, customer_id):
     }
 
     list_member = mailchimp.lists.members.create_or_update(os.environ["MAILCHIMP_LIST_ID"], subscriber_hash, request_data)
+
+    return list_member
+
+
+def add_event_registrant_to_mailing_list(email, metadata):
+    subscriber_hash = get_mailchimp_subscriber_hash(email)
+
+    first_name = metadata.get('name').strip().split(' ')[0]
+    last_name = ' '.join((metadata.get('name') + ' ').split(' ')[1:]).strip()
+
+    merge_fields = {}
+    merge_fields['NAME'] = metadata.get('name')
+    merge_fields['FNAME'] = first_name
+    merge_fields['LNAME'] = last_name
+    merge_fields['COMPANY'] = metadata.get('company')
+    merge_fields['COUNTRY'] = metadata.get('country')
+
+    request_data = {
+        "email_address": email,
+        "status_if_new": "subscribed",
+        "status": "subscribed",
+        "merge_fields": merge_fields,
+        "marketing_permissions": get_marketing_permissions(metadata)
+    }
+
+    list_member = mailchimp.lists.members.create_or_update(os.environ["MAILCHIMP_LIST_ID"], subscriber_hash, request_data)
+
+    product = stripe.Product.retrieve(
+        metadata.get('event_id'),
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
+
+    segment_name = '2020 ' + product['name']
+
+    segments = mailchimp.lists.segments.all(os.environ['MAILCHIMP_LIST_ID'], True)
+    segment_id = None
+    for segment in segments['segments']:
+        if segment['name'] == segment_name:
+            segment_id = segment['id']
+            break
+
+    if segment_id is None:
+        segment = mailchimp.lists.segments.create(os.environ['MAILCHIMP_LIST_ID'], {
+            'name': segment_name,
+            'static_segment': []
+        })
+        segment_id = segment['id']
+
+    mailchimp.lists.segments.members.create(
+        os.environ['MAILCHIMP_LIST_ID'],
+        segment_id,
+        {
+            'email_address': email,
+            'status': 'subscribed'
+        }
+    )
 
     return list_member
 

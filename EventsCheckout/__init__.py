@@ -32,10 +32,10 @@ def validate_request(request: Dict) -> Dict:
     if request.get('email', None) is None:
         errors['email'] = ['Email is required']
 
-    if request.get('discount_code', None) is not None:
+    if request.get('discount_code', None) is not None and request.get('discount_code', None) is not '':
         try:
             coupon = stripe.Coupon.retrieve(
-                request.get('discount_code').upper(),
+                request.get('discount_code').strip().upper(),
                 api_key=os.environ["STRIPE_TEST_SECRET"]
             )
             metadata = coupon.get('metadata', {})
@@ -60,8 +60,16 @@ def create_checkout_session(request: Dict) -> Dict:
     metadata = {
         "name": request.get('name', None),
         "email": request.get('email', None),
-        "sku": request.get('sku', None),
+        "skus": request.get('sku', None),
+        "company": request.get('company', None),
+        "title": request.get('title', None),
+        "experience": request.get('experience', None),
+        "persona": request.get('persona', None),
+        "country": request.get('country', None),
+        "city": request.get('city', None),
+        "dietary_restrictions": '|'.join(request.get('dietary_restrictions', '')),
         "discount_code": request.get('discount_code', None),
+        "mailing_list": request.get('mailing_list', False),
         "purchase_type": "event"
     }
 
@@ -73,6 +81,8 @@ def create_checkout_session(request: Dict) -> Dict:
         sku['product'],
         api_key=os.environ["STRIPE_TEST_SECRET"]
     )
+
+    metadata['event_id'] = product['id']
 
     checkout_product_name = product.name + ' : ' + sku['attributes']['name']
 
@@ -95,7 +105,7 @@ def create_checkout_session(request: Dict) -> Dict:
         api_request['customer_email'] = request.get('email')
 
     discount_code = request.get('discount_code', None)
-    if discount_code is not None:
+    if discount_code is not None and discount_code is not '':
         coupon = stripe.Coupon.retrieve(
             request.get('discount_code').upper(),
             api_key=os.environ["STRIPE_TEST_SECRET"]
