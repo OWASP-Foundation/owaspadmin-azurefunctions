@@ -94,9 +94,13 @@ def create_checkout_session(request: Dict) -> Dict:
     if company_name is not None:
         metadata['company'] = company_name
 
+    product_metadata = product.get('metadata', {})
+    success_url = product_metadata.get('success_url', 'https://www2.owasp.org/www-event-example/registration-success')
+    cancel_url = product_metadata.get('cancel_url', 'https://www2.owasp.org/www-event-example/registration-error')
+
     api_request = {
-        "success_url": "https://www2.owasp.org/www-event-example/registration-success",
-        "cancel_url": "https://www2.owasp.org/www-event-example/registration-error",
+        "success_url": success_url,
+        "cancel_url": cancel_url,
         "payment_method_types": ["card"],
     }
 
