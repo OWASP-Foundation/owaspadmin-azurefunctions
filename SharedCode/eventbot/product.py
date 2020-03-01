@@ -11,7 +11,7 @@ class Product:
     def create_product(event_payload={}, response_url=None):
         product = stripe.Product.retrieve(
             event_payload.get('event_id'),
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         metadata = {
@@ -37,7 +37,7 @@ class Product:
             inventory={"type": "infinite"},
             product=product["id"],
             metadata=metadata,
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Product created successfully')
@@ -68,7 +68,7 @@ class Product:
     def edit_product(event_payload={}, response_url=None):
         sku = stripe.SKU.retrieve(
             event_payload.get('product_id'),
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         metadata = sku.get('metadata', {})
@@ -86,12 +86,12 @@ class Product:
         sku = stripe.SKU.modify(
             event_payload.get('product_id'),
             metadata=metadata,
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         product = stripe.Product.retrieve(
             sku['product'],
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Product updated successfully')
@@ -123,7 +123,7 @@ class Product:
     def edit(cls, trigger_id, response_url, product_id):
         product = stripe.SKU.retrieve(
             product_id,
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         product_metadata = product.get('metadata', {})
@@ -151,7 +151,7 @@ class Product:
         product_list = stripe.SKU.list(
             product=event_id,
             limit=20,
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         if len(product_list):

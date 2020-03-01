@@ -36,16 +36,16 @@ def validate_request(request: Dict) -> Dict:
         try:
             coupon = stripe.Coupon.retrieve(
                 request.get('discount_code').strip().upper(),
-                api_key=os.environ["STRIPE_TEST_SECRET"]
+                api_key=os.environ["STRIPE_SECRET"]
             )
             metadata = coupon.get('metadata', {})
             product = stripe.Product.retrieve(
                 metadata.get('event_id'),
-                api_key=os.environ["STRIPE_TEST_SECRET"]
+                api_key=os.environ["STRIPE_SECRET"]
             )
             sku = stripe.SKU.retrieve(
                 request.get('sku'),
-                api_key=os.environ["STRIPE_TEST_SECRET"]
+                api_key=os.environ["STRIPE_SECRET"]
             )
             sku_metadata = sku.get('metadata', {})
             if sku.get('product') != product['id'] or metadata.get('event_id') != product['id']:
@@ -79,11 +79,11 @@ def create_checkout_session(request: Dict) -> Dict:
 
     sku = stripe.SKU.retrieve(
         request.get('sku'),
-        api_key=os.environ["STRIPE_TEST_SECRET"]
+        api_key=os.environ["STRIPE_SECRET"]
     )
     product = stripe.Product.retrieve(
         sku['product'],
-        api_key=os.environ["STRIPE_TEST_SECRET"]
+        api_key=os.environ["STRIPE_SECRET"]
     )
 
     metadata['event_id'] = product['id']
@@ -116,7 +116,7 @@ def create_checkout_session(request: Dict) -> Dict:
     if discount_code is not None and discount_code is not '':
         coupon = stripe.Coupon.retrieve(
             request.get('discount_code').upper(),
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
         checkout_product_name = checkout_product_name + ' + Discount'
         purchase_price = sku['price'] - coupon['amount_off']
@@ -139,7 +139,7 @@ def create_checkout_session(request: Dict) -> Dict:
         }
     ]
 
-    api_request['api_key'] = os.environ["STRIPE_TEST_SECRET"]
+    api_request['api_key'] = os.environ["STRIPE_SECRET"]
 
     api_response = stripe.checkout.Session.create(**api_request)
 
@@ -171,7 +171,7 @@ def return_response(response, success):
 def get_stripe_customer_id(email):
     customers = stripe.Customer.list(
         email=email,
-        api_key=os.environ["STRIPE_TEST_SECRET"]
+        api_key=os.environ["STRIPE_SECRET"]
     )
     if len(customers) > 0:
         for customer in customers:

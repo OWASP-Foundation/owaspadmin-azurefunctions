@@ -7,6 +7,7 @@ import json
 import hashlib
 import base64
 import html
+import markdown
 from datetime import datetime
 from datetime import timedelta
 from typing import Dict
@@ -14,7 +15,6 @@ from typing import Dict
 from ..SharedCode import github
 
 import stripe
-stripe.api_key = os.environ["STRIPE_SECRET"]
 
 from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
@@ -31,9 +31,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     except ValueError as e:
         return func.HttpResponse(status_code=400)
 
+    event_data = event.data.object
+
     if event.type == 'checkout.session.completed':
-        event_data = event.data.object
         handle_checkout_session_completed(event_data)
+    elif event.type == 'product.created':
+        handle_product_created(event_data)
+    elif event.type == 'sku.created':
+        handle_sku_created(event_data)
+    elif event.type == 'sku.updated':
+        handle_sku_updated(event_data)
 
     return func.HttpResponse(status_code=200)
 
@@ -46,27 +53,39 @@ def handle_checkout_session_completed(event: Dict):
     setup_intent = event.get('setup_intent', None)
     subscription_data = {}
 
+    if payment_intent is not None:
+        payment_intent = stripe.PaymentIntent.retrieve(
+            payment_intent,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+
     if customer_email is None:
         customer_email = get_customer_email_from_id(customer_id)
 
     if setup_intent is not None:
-        setup_intent = stripe.SetupIntent.retrieve(setup_intent)
+        setup_intent = stripe.SetupIntent.retrieve(
+            setup_intent,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
         metadata = setup_intent.get('metadata', {})
         customer_id = metadata.get('customer_id', None)
         subscription_id = metadata.get('subscription_id', None)
         payment_method = setup_intent.get('payment_method', None)
         stripe.PaymentMethod.attach(
             payment_method,
-            customer=customer_id
+            customer=customer_id,
+            api_key=os.environ["STRIPE_SECRET"]
         )
         stripe.Subscription.modify(
             subscription_id,
-            default_payment_method=payment_method
+            default_payment_method=payment_method,
+            api_key=os.environ["STRIPE_SECRET"]
         )
-
+    elif payment_intent is not None and payment_intent['metadata'].get('purchase_type') == 'event':
+        metadata = payment_intent.get('metadata', {})
+        add_event_registrant_to_mailing_list(customer_email, metadata)
     else:
         if payment_intent is not None:
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent)
             metadata = payment_intent.get('metadata', {})
             purchase_type = metadata.get('purchase_type', 'donation')
             
@@ -74,7 +93,10 @@ def handle_checkout_session_completed(event: Dict):
                 subscription_data = get_subscription_data_from_event(event)
 
         if subscription is not None:
-            subscription = stripe.Subscription.retrieve(subscription)
+            subscription = stripe.Subscription.retrieve(
+                subscription,
+                api_key=os.environ["STRIPE_SECRET"]
+            )
             metadata = subscription.get('metadata', {})
             purchase_type = metadata.get('purchase_type', 'donation')
 
@@ -99,13 +121,17 @@ def update_customer_record(customer_id, metadata, subscription_data):
 
         customer = stripe.Customer.retrieve(
             customer_id,
-            expand=['subscriptions']
+            expand=['subscriptions'],
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         existing_subscriptions = customer.get('subscriptions')
         for subscription in existing_subscriptions:
             if subscription['plan']['nickname'] is not None and "Membership" in subscription['plan']['nickname'] and subscription['id'] != subscription_data['subscription_id']:
-                stripe.Subscription.delete(subscription['id'])
+                stripe.Subscription.delete(
+                    subscription['id'],
+                    api_key=os.environ["STRIPE_SECRET"]
+                )
 
 
         customer_metadata = customer.get('metadata', {})
@@ -122,11 +148,15 @@ def update_customer_record(customer_id, metadata, subscription_data):
                         stripe.Subscription.modify(
                             subscription_data['subscription_id'],
                             trial_end=int(new_end_date.timestamp()),
-                            prorate=False
+                            prorate=False,
+                            api_key=os.environ["STRIPE_SECRET"]
                         )
                 else:
                     if subscription_data['subscription_id'] is not None:
-                        stripe.Subscription.delete(subscription_data['subscription_id'])
+                        stripe.Subscription.delete(
+                            subscription_data['subscription_id'],
+                            api_key=os.environ["STRIPE_SECRET"]
+                        )
                         recurring="no"
 
         stripe.Customer.modify(
@@ -135,7 +165,8 @@ def update_customer_record(customer_id, metadata, subscription_data):
                 "membership_type": subscription_data['membership_type'],
                 "membership_end": subscription_data['membership_end'],
                 "membership_recurring": recurring
-            }
+            },
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
 
@@ -195,6 +226,66 @@ def add_to_mailing_list(email, metadata, subscription_data, customer_id):
     return list_member
 
 
+def add_event_registrant_to_mailing_list(email, metadata):
+    subscriber_hash = get_mailchimp_subscriber_hash(email)
+
+    first_name = metadata.get('name').strip().split(' ')[0]
+    last_name = ' '.join((metadata.get('name') + ' ').split(' ')[1:]).strip()
+
+    merge_fields = {}
+    merge_fields['NAME'] = metadata.get('name')
+    merge_fields['FNAME'] = first_name
+    merge_fields['LNAME'] = last_name
+    merge_fields['COMPANY'] = metadata.get('company')
+    merge_fields['COUNTRY'] = metadata.get('country')
+
+    request_data = {
+        "email_address": email,
+        "status_if_new": "subscribed",
+        "status": "subscribed",
+        "merge_fields": merge_fields,
+        "marketing_permissions": get_marketing_permissions(metadata)
+    }
+
+    list_member = mailchimp.lists.members.create_or_update(
+        os.environ["MAILCHIMP_LIST_ID"],
+        subscriber_hash,
+        request_data
+    )
+
+    product = stripe.Product.retrieve(
+        metadata.get('event_id'),
+        api_key=os.environ["STRIPE_SECRET"]
+    )
+
+    segment_name = '2020 ' + product['name']
+
+    segments = mailchimp.lists.segments.all(os.environ['MAILCHIMP_LIST_ID'], True)
+    segment_id = None
+    for segment in segments['segments']:
+        if segment['name'] == segment_name:
+            segment_id = segment['id']
+            break
+
+    if segment_id is None:
+        segment = mailchimp.lists.segments.create(os.environ['MAILCHIMP_LIST_ID'], {
+            'name': segment_name,
+            'static_segment': []
+        })
+        segment_id = segment['id']
+
+    mailchimp.lists.segments.members.create(
+        os.environ['MAILCHIMP_LIST_ID'],
+        segment_id,
+        {
+            'email_address': email,
+            'status': 'subscribed'
+        }
+    )
+
+    return list_member
+
+
 def get_marketing_permissions(metadata):
     if metadata.get('mailing_list', 'False') == 'True':
         return [
@@ -244,7 +335,10 @@ def get_merge_fields(metadata, subscription_data, customer_id):
 
         merge_fields['MEMSTART'] = datetime.today().strftime('%m/%d/%Y')
 
-        customer = stripe.Customer.retrieve(customer_id)
+        customer = stripe.Customer.retrieve(
+            customer_id,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
         customer_metadata = customer.get('metadata', {})
 
         membership_end = customer_metadata.get('membership_end', '') #should this return 'NULL' string and then compare via None as below?  Changed to ''
@@ -299,6 +393,113 @@ def get_mailchimp_subscriber_hash(email):
     return hashed.hexdigest()
 
 
+def handle_product_created(event_data):
+    metadata = event_data.get('metadata', {})
+
+    if metadata.get('type', None) == 'event':
+        product_file = '_data/products.json'
+        repo_name = metadata.get('repo_name', None)
+        event_name = event_data.get('name', None)
+
+        gh = github.OWASPGitHub()
+        existing_file = gh.GetFile(repo_name, product_file)
+
+        sha = ''
+
+        if gh.TestResultCode(existing_file.status_code):
+            products = json.loads(existing_file.text)
+            sha = products['sha']
+
+        product_listing = {
+            'id': event_data.get('id', None),
+            'name': event_name,
+            'currency': metadata.get('currency', 'usd'),
+            'products': []
+        }
+
+        file_contents = json.dumps(product_listing)
+        gh.UpdateFile(repo_name, product_file, file_contents, sha)
+
+
+def handle_sku_updated(event_data):
+    product = stripe.Product.retrieve(
+        event_data.get('product', None),
+        api_key=os.environ["STRIPE_SECRET"]
+    )
+    product_metadata = product.get('metadata', {})
+
+    if product_metadata.get('type', None) == 'event':
+        product_file = '_data/products.json'
+        repo_name = product_metadata.get('repo_name', None)
+
+        gh = github.OWASPGitHub()
+        existing_file = gh.GetFile(repo_name, product_file)
+
+        if gh.TestResultCode(existing_file.status_code):
+            products = json.loads(existing_file.text)
+            sha = products['sha']
+
+            event_data['metadata']['description'] = markdown.markdown(event_data['metadata'].get('description', ''), extensions=['nl2br'])
+
+            file_text = base64.b64decode(products['content']).decode('utf-8')
+            products = json.loads(file_text)
+
+            for product in products['products']:
+                if product['id'] == event_data['id']:
+                    product['metadata'] = event_data['metadata']
+                    break
+
+            file_contents = json.dumps(
+                products,
+                ensure_ascii=False,
+                indent=4
+            )
+            gh.UpdateFile(repo_name, product_file, file_contents, sha)
+
+
+
+def handle_sku_created(event_data):
+    product = stripe.Product.retrieve(
+        event_data.get('product', None),
+        api_key=os.environ["STRIPE_SECRET"]
+    )
+    product_metadata = product.get('metadata', {})
+    sku_attributes = event_data.get('attributes', {})
+    sku_metadata = event_data.get('metadata', {})
+
+    if product_metadata.get('type', None) == 'event':
+        product_file = '_data/products.json'
+        repo_name = product_metadata.get('repo_name', None)
+
+        gh = github.OWASPGitHub()
+        existing_file = gh.GetFile(repo_name, product_file)
+
+        if gh.TestResultCode(existing_file.status_code):
+            products = json.loads(existing_file.text)
+            sha = products['sha']
+
+            sku_metadata['description'] = markdown.markdown(sku_metadata.get('description', ''), extensions=['nl2br'])
+
+            file_text = base64.b64decode(products['content']).decode('utf-8')
+            products = json.loads(file_text)
+            products['products'].append({
+                'id': event_data.get('id', None),
+                'name': sku_attributes.get('name', None),
+                'amount': event_data.get('price', None),
+                'metadata': sku_metadata
+            })
+
+            file_contents = json.dumps(
+                products,
+                ensure_ascii=False,
+                indent=4
+            )
+            gh.UpdateFile(repo_name, product_file, file_contents, sha)
+
+
 def get_customer_email_from_id(customer_id):
-    customer = stripe.Customer.retrieve(customer_id)
+    customer = stripe.Customer.retrieve(
+        customer_id,
+        api_key=os.environ["STRIPE_SECRET"]
+    )
     return customer.email

@@ -11,7 +11,7 @@ class DiscountCode:
     def create(event_payload={}, response_url=None):
         product = stripe.Product.retrieve(
             event_payload.get('event_id'),
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         metadata = {
@@ -24,7 +24,7 @@ class DiscountCode:
             currency=product['metadata']['currency'],
             id=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
             metadata=metadata,
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Discount code created successfully')
@@ -111,7 +111,7 @@ class DiscountCode:
 
         stripe_coupons = stripe.Coupon.list(
             limit=50,
-            api_key=os.environ["STRIPE_TEST_SECRET"]
+            api_key=os.environ["STRIPE_SECRET"]
         )
         for stripe_coupon in stripe_coupons.auto_paging_iter():
             metadata = stripe_coupon.get('metadata', {})
@@ -135,7 +135,7 @@ class DiscountCode:
 
             product = stripe.Product.retrieve(
                 event_id,
-                api_key=os.environ["STRIPE_TEST_SECRET"]
+                api_key=os.environ["STRIPE_SECRET"]
             )
 
             currency = product['metadata'].get('currency', 'usd')
