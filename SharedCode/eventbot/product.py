@@ -65,6 +65,18 @@ class Product:
         response_message.send()
 
 
+    @classmethod
+    def edit(cls, trigger_id, response_url, product_id):
+        cls.show_create_form(
+            trigger_id=trigger_id,
+            response_url=response_url,
+            mode='update',
+            product={
+                "id": "12345"
+            }
+        )
+
+
     def list_products(trigger_id, response_url, event_id):
         response_message = SlackResponse.message(response_url, 'Product Listing')
         product_list = stripe.SKU.list(
@@ -87,11 +99,28 @@ class Product:
             for product in product_list:
                 response_message.add_block({
                     "type": "section",
+                    "block_id": 'manage_product|' + product["id"],
                     "text": {
                         "type": "mrkdwn",
-                        "text": product["attributes"]["name"]
+                        "text": "*" + product["attributes"]["name"] + "*"
+                    },
+                    "accessory": {
+                        "type": "overflow",
+                        "action_id": "manage_product",
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Edit Product"
+                                },
+                                "value": "edit"
+                            }
+                        ]
                     }
                 })
+            response_message.add_block({
+                "type": "divider"
+            })
         else:
             response_message.add_block({
                 "type": "section",
@@ -108,8 +137,17 @@ class Product:
         response_message.send()
 
 
-    def show_create_form(trigger_id=None, response_url=None, event_id=None, mode='create'):
+    def show_create_form(
+            trigger_id=None,
+            response_url=None,
+            event_id=None,
+            mode='create',
+            product={}
+    ):
         if mode == 'update':
+            callback_id = 'edit_product|' + product["id"]
+            submit_label = 'Update'
+            title = 'Edit Product'
             pass
         else:
             callback_id = 'create_product|' + event_id
