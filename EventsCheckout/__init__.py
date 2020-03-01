@@ -123,6 +123,9 @@ def create_checkout_session(request: Dict) -> Dict:
         'metadata': metadata
     }
 
+    if purchase_price < 0:
+        purchase_price = 100
+
     api_request['line_items'] = [
         {
             'name': checkout_product_name,
