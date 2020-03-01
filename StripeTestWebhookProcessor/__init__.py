@@ -39,6 +39,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         handle_product_created(event_data)
     elif event.type == 'sku.created':
         handle_sku_created(event_data)
+    elif event.type == 'sku.updated':
+        handle_sku_updated(event_data)
 
     return func.HttpResponse(status_code=200)
 
@@ -413,6 +415,43 @@ def handle_product_created(event_data):
 
         file_contents = json.dumps(product_listing)
         gh.UpdateFile(repo_name, product_file, file_contents, sha)
+
+
+def handle_sku_updated(event_data):
+    product = stripe.Product.retrieve(
+        event_data.get('product', None),
+        api_key=os.environ["STRIPE_TEST_SECRET"]
+    )
+    product_metadata = product.get('metadata', {})
+
+    if product_metadata.get('type', None) == 'event':
+        product_file = '_data/products.json'
+        repo_name = product_metadata.get('repo_name', None)
+
+        gh = github.OWASPGitHub()
+        existing_file = gh.GetFile(repo_name, product_file)
+
+        if gh.TestResultCode(existing_file.status_code):
+            products = json.loads(existing_file.text)
+            sha = products['sha']
+
+            event_data['metadata']['description'] = markdown.markdown(event_data['metadata'].get('description', ''), extensions=['nl2br'])
+
+            file_text = base64.b64decode(products['content']).decode('utf-8')
+            products = json.loads(file_text)
+
+            for product in products['products']:
+                if product['id'] == event_data['id']:
+                    product['metadata'] = event_data['metadata']
+                    break
+
+            file_contents = json.dumps(
+                products,
+                ensure_ascii=False,
+                indent=4
+            )
+            gh.UpdateFile(repo_name, product_file, file_contents, sha)
+
 
 
 def handle_sku_created(event_data):
