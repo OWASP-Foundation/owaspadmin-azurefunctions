@@ -236,8 +236,11 @@ def add_event_registrant_to_mailing_list(email, metadata):
     merge_fields['NAME'] = metadata.get('name')
     merge_fields['FNAME'] = first_name
     merge_fields['LNAME'] = last_name
-    merge_fields['COMPANY'] = metadata.get('company')
-    merge_fields['COUNTRY'] = metadata.get('country')
+
+    if metadata.get('company', None) is not None:
+        merge_fields['COMPANY'] = metadata.get('company')
+    if metadata.get('country', None) is not None:
+        merge_fields['COUNTRY'] = metadata.get('country')
 
     request_data = {
         "email_address": email,
