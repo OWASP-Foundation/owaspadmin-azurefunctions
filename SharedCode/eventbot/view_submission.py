@@ -80,6 +80,13 @@ class ViewSubmission:
                     response_url=self.response_url,
                     product_id=self.callback_params
                 )
+            if self.callback_id == 'delete_product':
+                Product.delete(
+                    self.input_values,
+                    queue=queue,
+                    response_url=self.response_url,
+                    product_id=self.callback_params
+                )
         except Exception as excptn:
             response = {
                 "response_action": "errors",

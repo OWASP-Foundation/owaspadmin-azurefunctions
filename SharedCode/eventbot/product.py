@@ -151,6 +151,7 @@ class Product:
         product_list = stripe.SKU.list(
             product=event_id,
             limit=20,
+            active=True,
             api_key=os.environ["STRIPE_SECRET"]
         )
 
@@ -183,6 +184,13 @@ class Product:
                                     "text": "Edit Product"
                                 },
                                 "value": "edit"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Delete Product"
+                                },
+                                "value": "delete"
                             }
                         ]
                     }
@@ -204,6 +212,25 @@ class Product:
 
         response_message.add_block(Event.get_event_actions_blocks(event_id))
         response_message.send()
+
+
+    def confirm_delete(trigger_id=None, response_url=None, product_id=None):
+        modal_response = SlackResponse.modal(
+            callback_id='delete_product|' + product_id,
+            title='Delete Product?',
+            submit_label='Delete',
+            close_label='Cancel',
+            trigger_id=trigger_id,
+            response_url=response_url
+        )
+        modal_response.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Are you sure you want to delete this product? This operation cannot be undone."
+            }
+        })
+        modal_response.send()
 
 
     def show_create_form(
@@ -310,35 +337,106 @@ class Product:
             },
             "optional": True
         })
-        modal_response.add_block({
-            "type": "input",
-            "block_id": "product_display_start_input",
-            "element": {
-                "type": "datepicker",
-                "action_id": "product_display_start_input",
-                "initial_date": product.get('display_start', '')
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "Begin Display"
-            },
-            "optional": True
-        })
-        modal_response.add_block({
-            "type": "input",
-            "block_id": "product_display_end_input",
-            "element": {
-                "type": "datepicker",
-                "action_id": "product_display_end_input",
-                "initial_date": product.get('display_end', '')
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "End Display"
-            },
-            "optional": True
-        })
+        if mode == 'create':
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "product_display_start_input",
+                "element": {
+                    "type": "datepicker",
+                    "action_id": "product_display_start_input",
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Begin Display"
+                },
+                "optional": True
+            })
+        else:
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "product_display_start_input",
+                "element": {
+                    "type": "datepicker",
+                    "action_id": "product_display_start_input",
+                    "initial_date": product.get('display_start', '')
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Begin Display"
+                },
+                "optional": True
+            })
+
+        if mode == 'create':
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "product_display_end_input",
+                "element": {
+                    "type": "datepicker",
+                    "action_id": "product_display_end_input",
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "End Display"
+                },
+                "optional": True
+            })
+        else:
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "product_display_end_input",
+                "element": {
+                    "type": "datepicker",
+                    "action_id": "product_display_end_input",
+                    "initial_date": product.get('display_end', '')
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "End Display"
+                },
+                "optional": True
+            })
+
         modal_response.send()
+
+    
+    def delete(input_values, queue, response_url=None, product_id=None):
+        sku = stripe.SKU.retrieve(
+            product_id,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        product = stripe.Product.retrieve(
+            sku['product'],
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        stripe.SKU.modify(
+            product_id,
+            active=False,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        response_message = SlackResponse.message(response_url, 'Product deleted successfully')
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":white_check_mark: * Product deleted successfully!*"
+            }
+        })
+        response_message.add_block({
+            "type": "divider"
+        })
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*" + sku['attributes']['name'] + "* has been successfully deleted.\n\nYou may use the buttons below to continue making changes to the event named " + product['name'] + "."
+            }
+        })
+        response_message.add_block({
+            "type": "divider"
+        })
+        response_message.add_block(Event.get_event_actions_blocks(product['id']))
+        response_message.send()
 
 
     def handle_edit_submission(input_values, queue, response_url=None, product_id=None):

@@ -447,10 +447,16 @@ def handle_sku_updated(event_data):
             file_text = base64.b64decode(products['content']).decode('utf-8')
             products = json.loads(file_text)
 
-            for product in products['products']:
-                if product['id'] == event_data['id']:
-                    product['metadata'] = event_data['metadata']
-                    break
+            if event_data['active'] is False:
+                for i in range(len(products['products'])):
+                    if products['products'][i]['id'] == event_data['id']:
+                        del products['products'][i]
+                        break
+            else:
+                for product in products['products']:
+                    if product['id'] == event_data['id']:
+                        product['metadata'] = event_data['metadata']
+                        break
 
             file_contents = json.dumps(
                 products,

@@ -50,6 +50,9 @@ class BlockAction:
         elif self.action_id == 'manage_product' and self.action_value == 'edit':
             product_id = self.block_id.partition('|')[2]
             Product.edit(self.trigger_id, self.response_url, product_id)
+        elif self.action_id == 'manage_product' and self.action_value == 'delete':
+            product_id = self.block_id.partition('|')[2]
+            Product.confirm_delete(self.trigger_id, self.response_url, product_id)
 
         acknowledgement = SlackResponse.acknowledgement()
         return acknowledgement.send()
