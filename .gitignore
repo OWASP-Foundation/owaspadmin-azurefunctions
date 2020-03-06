@@ -129,3 +129,6 @@ appsettings.json
 local.settings.json
 .python_packages
 owaspadmin-azurefunctions.zip
+
+# vscode
+.vscode/

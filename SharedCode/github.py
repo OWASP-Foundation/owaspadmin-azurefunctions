@@ -174,6 +174,19 @@ class OWASPGitHub:
         r = requests.put(url = url, headers=headers, data=json.dumps(data))
         return r
 
+    def GetPages(self, repoName):
+        headers = {"Authorization": "token " + self.apitoken,
+            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
+        }
+        result = ''
+        url = self.gh_endpoint + self.pages_fragment
+        url = url.replace(':repo', repoName)
+        r = requests.get(url=url, headers = headers)
+        if r.ok:
+            result = json.loads(r.text)
+        
+        return result
+
     def GetPublicRepositories(self, matching=""):
         headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
@@ -205,6 +218,10 @@ class OWASPGitHub:
                     istemplate = repo['is_template']
                     haspages = repo['has_pages']
                     if not istemplate and haspages:
+                        pages = self.GetPages(repo)
+                        if pages['source'] == None:
+                            continue
+                        
                         if not matching or matching in repoName:
                             addrepo = {}
                             addrepo['name'] = repoName
