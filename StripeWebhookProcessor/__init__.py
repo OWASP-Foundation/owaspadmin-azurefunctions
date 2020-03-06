@@ -442,7 +442,7 @@ def handle_sku_updated(event_data):
             products = json.loads(existing_file.text)
             sha = products['sha']
 
-            event_data['metadata']['description'] = markdown.markdown(event_data['metadata'].get('description', ''), extensions=['nl2br'])
+            event_data['metadata']['description'] = markdown.markdown(event_data['metadata'].get('description', ''), extensions=['markdown.extensions.nl2br'])
 
             file_text = base64.b64decode(products['content']).decode('utf-8')
             products = json.loads(file_text)
@@ -487,7 +487,7 @@ def handle_sku_created(event_data):
             products = json.loads(existing_file.text)
             sha = products['sha']
 
-            sku_metadata['description'] = markdown.markdown(sku_metadata.get('description', ''), extensions=['nl2br'])
+            sku_metadata['description'] = markdown.markdown(sku_metadata.get('description', ''), extensions=['markdown.extensions.nl2br'])
 
             file_text = base64.b64decode(products['content']).decode('utf-8')
             products = json.loads(file_text)
