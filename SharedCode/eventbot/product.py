@@ -85,6 +85,9 @@ class Product:
 
         sku = stripe.SKU.modify(
             event_payload.get('product_id'),
+            attributes={
+                "name": event_payload.get('name')
+            },
             metadata=metadata,
             api_key=os.environ["STRIPE_SECRET"]
         )
@@ -337,7 +340,7 @@ class Product:
             },
             "optional": True
         })
-        if mode == 'create':
+        if mode == 'create' or product.get('display_start', '') == '':
             modal_response.add_block({
                 "type": "input",
                 "block_id": "product_display_start_input",
@@ -367,7 +370,7 @@ class Product:
                 "optional": True
             })
 
-        if mode == 'create':
+        if mode == 'create' or product.get('display_end', '') == '':
             modal_response.add_block({
                 "type": "input",
                 "block_id": "product_display_end_input",

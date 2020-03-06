@@ -455,6 +455,8 @@ def handle_sku_updated(event_data):
             else:
                 for product in products['products']:
                     if product['id'] == event_data['id']:
+                        product['name'] = event_data['attributes']['name']
+                        product['amount'] = event_data['price']
                         product['metadata'] = event_data['metadata']
                         break
 
