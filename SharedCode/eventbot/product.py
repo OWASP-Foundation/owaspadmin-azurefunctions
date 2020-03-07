@@ -27,6 +27,8 @@ class Product:
             metadata["starting_inventory"] = event_payload["inventory"]
         if event_payload.get('description', None) is not None:
             metadata["description"] = event_payload["description"]
+        if event_payload.get('discountable', None) is True:
+            metadata["discountable"] = event_payload["discountable"]
 
         sku = stripe.SKU.create(
             attributes={
@@ -83,6 +85,11 @@ class Product:
         if event_payload.get('description', None) is not None:
             metadata["description"] = event_payload["description"]
 
+        if event_payload.get('discountable', None) is True:
+            metadata["discountable"] = event_payload["discountable"]
+        else:
+            metadata["discountable"] = False
+
         sku = stripe.SKU.modify(
             event_payload.get('product_id'),
             attributes={
@@ -129,6 +136,8 @@ class Product:
             api_key=os.environ["STRIPE_SECRET"]
         )
 
+        logging.info(product)
+
         product_metadata = product.get('metadata', {})
 
         product_payload = {
@@ -138,7 +147,8 @@ class Product:
             'amount': int(product['price'] / 100),
             'inventory': product_metadata.get('inventory', ''),
             'display_start': product_metadata.get('display_start', ''),
-            'display_end': product_metadata.get('display_end', '')
+            'display_end': product_metadata.get('display_end', ''),
+            'discountable': product_metadata.get('discountable', False)
         }
 
         cls.show_create_form(
@@ -340,6 +350,61 @@ class Product:
             },
             "optional": True
         })
+        if product.get('discountable', False) == 'True':
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "product_discountable_input",
+                "element": {
+                    "type": "checkboxes",
+                    "action_id": "product_discountable_input",
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Discount codes can be applied to this product."
+                            },
+                            "value": "discountable"
+                        }
+                    ],
+                    "initial_options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Discount codes can be applied to this product."
+                            },
+                            "value": "discountable"
+                        }
+                    ]
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Discount Settings"
+                },
+                "optional": True
+            })
+        else:
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "product_discountable_input",
+                "element": {
+                    "type": "checkboxes",
+                    "action_id": "product_discountable_input",
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Discount codes can be applied to this product."
+                            },
+                            "value": "discountable"
+                        }
+                    ]
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Discount Settings"
+                },
+                "optional": True
+            })
         if mode == 'create' or product.get('display_start', '') == '':
             modal_response.add_block({
                 "type": "input",
@@ -467,6 +532,8 @@ class Product:
                 queue_data["payload"]["display_start"] = input_value["value"]
             elif input_value["input_id"] == "product_display_end_input" and input_value["value"] is not None:
                 queue_data["payload"]["display_end"] = input_value["value"]
+            elif input_value["input_id"] == "product_discountable_input" and input_value["value"] is not None and input_value["value"] != '':
+                queue_data["payload"]["discountable"] = True
 
         queue.set(json.dumps(queue_data))
 
@@ -503,7 +570,7 @@ class Product:
         for input_value in input_values:
             if input_value["input_id"] == "product_name_input":
                 queue_data["payload"]["name"] = input_value["value"]
-            if input_value["input_id"] == "product_description_input":
+            elif input_value["input_id"] == "product_description_input":
                 queue_data["payload"]["description"] = input_value["value"]
             elif input_value["input_id"] == "product_amount_input":
                 queue_data["payload"]["amount"] = int(float(input_value["value"]) * 100)
@@ -513,5 +580,7 @@ class Product:
                 queue_data["payload"]["display_start"] = input_value["value"]
             elif input_value["input_id"] == "product_display_end_input" and input_value["value"] is not None:
                 queue_data["payload"]["display_end"] = input_value["value"]
+            elif input_value["input_id"] == "product_discountable_input" and input_value["value"] is not None and input_value["value"] != '':
+                queue_data["payload"]["discountable"] = True
 
         queue.set(json.dumps(queue_data))
