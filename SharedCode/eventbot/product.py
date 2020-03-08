@@ -8,7 +8,8 @@ from .event import Event
 import stripe
 
 class Product:
-    def create_product(event_payload={}, response_url=None):
+    @classmethod
+    def create_product(cls, event_payload={}, response_url=None):
         product = stripe.Product.retrieve(
             event_payload.get('event_id'),
             api_key=os.environ["STRIPE_SECRET"]
@@ -29,6 +30,8 @@ class Product:
             metadata["description"] = event_payload["description"]
         if event_payload.get('discountable', None) is True:
             metadata["discountable"] = event_payload["discountable"]
+
+        metadata["display_order"] = cls.get_new_product_position(event_payload.get('event_id'))
 
         sku = stripe.SKU.create(
             attributes={
@@ -136,8 +139,6 @@ class Product:
             api_key=os.environ["STRIPE_SECRET"]
         )
 
-        logging.info(product)
-
         product_metadata = product.get('metadata', {})
 
         product_payload = {
@@ -169,6 +170,7 @@ class Product:
         )
 
         if len(product_list):
+            product_list = sorted(product_list, key = lambda i: i['metadata'].get('display_order', 0))
             response_message.add_block({
                 "type": "section",
                 "text": {
@@ -179,7 +181,40 @@ class Product:
             response_message.add_block({
                 "type": "divider"
             })
+            inc = 0
             for product in product_list:
+                product_options = [
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Edit Product"
+                        },
+                        "value": "edit"
+                    }
+                ]
+                if inc != 0:
+                    product_options.append({
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Move Up"
+                        },
+                        "value": "move_up"
+                    })
+                if inc != len(product_list) - 1 and len(product_list):
+                    product_options.append({
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Move Down"
+                        },
+                        "value": "move_down"
+                    })
+                product_options.append({
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Delete Product"
+                    },
+                    "value": "delete"
+                })
                 response_message.add_block({
                     "type": "section",
                     "block_id": 'manage_product|' + product["id"],
@@ -190,24 +225,10 @@ class Product:
                     "accessory": {
                         "type": "overflow",
                         "action_id": "manage_product",
-                        "options": [
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Edit Product"
-                                },
-                                "value": "edit"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Delete Product"
-                                },
-                                "value": "delete"
-                            }
-                        ]
+                        "options": product_options
                     }
                 })
+                inc += 1
             response_message.add_block({
                 "type": "divider"
             })
@@ -584,3 +605,93 @@ class Product:
                 queue_data["payload"]["discountable"] = True
 
         queue.set(json.dumps(queue_data))
+
+
+    def get_new_product_position(event_id):
+        products = stripe.SKU.list(
+            active=True,
+            product=event_id,
+            limit=100,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        
+        max_position = 1
+
+        for product in products:
+            product_metadata = product.get('metadata', {})
+            display_position = int(product_metadata.get('display_order', 0))
+            if display_position >= max_position:
+                max_position = display_position + 1
+
+        return max_position
+
+
+    @classmethod
+    def change_position(cls, payload, response_url):
+        product_id = payload['product_id']
+        direction = payload['direction']
+
+        sku = stripe.SKU.retrieve(
+            product_id,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+
+        all_skus = stripe.SKU.list(
+            active=True,
+            product=sku.get('product'),
+            limit=100,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+
+        sku_metadata = sku.get('metadata', {})
+        current_position = int(sku_metadata.get('display_order', 0))
+
+        if direction == 'down':
+            for current_sku in all_skus:
+                current_sku_metadata = current_sku.get('metadata', {})
+                current_sku_position = current_sku_metadata.get('display_order', None)
+                if current_sku_position is None or current_sku['id'] == sku['id'] or int(current_sku_position) <= current_position:
+                    continue
+                current_sku_position = int(current_sku_position)
+                if current_sku_position == current_position + 1:
+                    current_sku_metadata['display_order'] = current_sku_position - 1
+                else:
+                    current_sku_metadata['display_order'] = current_sku_position + 1
+                stripe.SKU.modify(
+                    current_sku['id'],
+                    metadata=current_sku_metadata,
+                    api_key=os.environ["STRIPE_SECRET"]
+                )
+
+            sku_metadata['display_order'] = current_position + 1
+            stripe.SKU.modify(
+                sku['id'],
+                metadata=sku_metadata,
+                api_key=os.environ["STRIPE_SECRET"]
+            )
+        else:
+            for current_sku in all_skus:
+                current_sku_metadata = current_sku.get('metadata', {})
+                current_sku_position = current_sku_metadata.get('display_order', None)
+                if current_sku_position is None or current_sku['id'] == sku['id'] or int(current_sku_position) >= current_position:
+                    continue
+                current_sku_position = int(current_sku_position)
+                if current_sku_position == current_position - 1:
+                    current_sku_metadata['display_order'] = current_sku_position + 1
+                else:
+                    current_sku_metadata['display_order'] = current_sku_position - 1
+                stripe.SKU.modify(
+                    current_sku['id'],
+                    metadata=current_sku_metadata,
+                    api_key=os.environ["STRIPE_SECRET"]
+                )
+
+            sku_metadata['display_order'] = current_position - 1
+            stripe.SKU.modify(
+                sku['id'],
+                metadata=sku_metadata,
+                api_key=os.environ["STRIPE_SECRET"]
+            )
+        
+        cls.list_products(None, response_url, sku['product'])
+

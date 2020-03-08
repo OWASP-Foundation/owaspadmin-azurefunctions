@@ -53,7 +53,26 @@ class BlockAction:
         elif self.action_id == 'manage_product' and self.action_value == 'delete':
             product_id = self.block_id.partition('|')[2]
             Product.confirm_delete(self.trigger_id, self.response_url, product_id)
+        elif self.action_id == 'manage_product' and self.action_value == 'move_down':
+            product_id = self.block_id.partition('|')[2]
+            queue.set(json.dumps({
+                'event_type': 'change_product_position',
+                'response_url': self.response_url,
+                'payload': {
+                    'product_id': product_id,
+                    'direction': 'down'
+                }
+            }))
+        elif self.action_id == 'manage_product' and self.action_value == 'move_up':
+            product_id = self.block_id.partition('|')[2]
+            queue.set(json.dumps({
+                'event_type': 'change_product_position',
+                'response_url': self.response_url,
+                'payload': {
+                    'product_id': product_id,
+                    'direction': 'up'
+                }
+            }))
 
         acknowledgement = SlackResponse.acknowledgement()
         return acknowledgement.send()
-
