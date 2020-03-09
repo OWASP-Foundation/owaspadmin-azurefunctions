@@ -293,7 +293,6 @@ class DiscountCode:
 
 
     def handle_create_submission(input_values, queue, response_url=None, event_id=None):
-        logging.info(input_values)
         queue_data = {
             'event_type': 'create_discount_code',
             'payload': {}
@@ -314,8 +313,6 @@ class DiscountCode:
                 queue_data['payload']['inventory'] = input_field['value']
             elif input_field['input_id'] == 'discount_code_comp_input' and input_field.get('value', '') != '':
                 queue_data['payload']['percent_off'] = 100
-
-        logging.info(queue_data)
 
         queue.set(json.dumps(queue_data))
 
