@@ -18,14 +18,27 @@ class DiscountCode:
             'event_id': event_payload.get('event_id')
         }
 
-        new_discount_code = stripe.Coupon.create(
-            duration='forever',
-            amount_off=event_payload.get('amount_off'),
-            currency=product['metadata']['currency'],
-            id=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
-            metadata=metadata,
-            api_key=os.environ["STRIPE_SECRET"]
-        )
+        if event_payload.get('inventory', None) is not None:
+            metadata['inventory'] = event_payload.get('inventory')
+
+        if event_payload.get('amount_off', None) is not None:
+            new_discount_code = stripe.Coupon.create(
+                duration='forever',
+                amount_off=event_payload.get('amount_off'),
+                currency=product['metadata']['currency'],
+                id=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
+                metadata=metadata,
+                api_key=os.environ["STRIPE_SECRET"]
+            )
+        else:
+            new_discount_code = stripe.Coupon.create(
+                duration='forever',
+                percent_off=event_payload.get('percent_off'),
+                currency=product['metadata']['currency'],
+                id=re.sub('[^A-Za-z0-9]+', '', event_payload.get('code').upper()),
+                metadata=metadata,
+                api_key=os.environ["STRIPE_SECRET"]
+            )
 
         response_message = SlackResponse.message(response_url, 'Discount code created successfully')
         response_message.add_block({
@@ -178,7 +191,7 @@ class DiscountCode:
                                 "type": "plain_text",
                                 "text": "This is a comp (100% off) discount code"
                             },
-                            "value": "discountable"
+                            "value": "comp"
                         }
                     ]
                 },
@@ -203,10 +216,16 @@ class DiscountCode:
         for stripe_coupon in stripe_coupons.auto_paging_iter():
             metadata = stripe_coupon.get('metadata', {})
             if metadata.get('event_id', None) == event_id:
-                discount_codes.append({
-                    "id": stripe_coupon["id"],
-                    "amount_off": str(stripe_coupon['amount_off'] / 100) + '0'
-                })
+                if stripe_coupon.get('amount_off', None) is not None:
+                    discount_codes.append({
+                        "id": stripe_coupon["id"],
+                        "amount_off": str(stripe_coupon['amount_off'] / 100) + '0'
+                    })
+                else:
+                    discount_codes.append({
+                        "id": stripe_coupon["id"],
+                        "percent_off": int(stripe_coupon['percent_off'])
+                    })
 
         if len(discount_codes):
             response_message.add_block({
@@ -237,7 +256,7 @@ class DiscountCode:
                 if discount_code.get('amount_off', None):
                     amount_off = currency_symbol + discount_code['amount_off']
                 else:
-                    amount_off = str(discount_code['percentage_off']) + "%"
+                    amount_off = str(discount_code['percent_off']) + "%"
                 response_message.add_block({
                     "type": "section",
                     "block_id": "manage_discount_code|" + discount_code["id"],
@@ -274,6 +293,7 @@ class DiscountCode:
 
 
     def handle_create_submission(input_values, queue, response_url=None, event_id=None):
+        logging.info(input_values)
         queue_data = {
             'event_type': 'create_discount_code',
             'payload': {}
@@ -286,10 +306,16 @@ class DiscountCode:
             queue_data['response_url'] = response_url
 
         for input_field in input_values:
-            if input_field['input_id'] == 'discount_code_amount_off_input':
+            if input_field['input_id'] == 'discount_code_amount_off_input' and input_field.get('value', None) is not None:
                 queue_data["payload"]["amount_off"] = int(float(input_field["value"]) * 100)
             elif input_field['input_id'] == 'discount_code_code_input':
                 queue_data['payload']['code'] = input_field['value']
+            elif input_field['input_id'] == 'discount_code_inventory_input' and input_field.get('value', '') != '':
+                queue_data['payload']['inventory'] = input_field['value']
+            elif input_field['input_id'] == 'discount_code_comp_input' and input_field.get('value', '') != '':
+                queue_data['payload']['percent_off'] = 100
+
+        logging.info(queue_data)
 
         queue.set(json.dumps(queue_data))
 
