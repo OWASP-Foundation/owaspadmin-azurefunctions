@@ -278,7 +278,6 @@ class Product:
             callback_id = 'edit_product|' + product["id"]
             submit_label = 'Update'
             title = 'Edit Product'
-            pass
         else:
             callback_id = 'create_product|' + event_id
             submit_label = 'Create'

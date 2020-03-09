@@ -53,6 +53,12 @@ class BlockAction:
         elif self.action_id == 'manage_product' and self.action_value == 'delete':
             product_id = self.block_id.partition('|')[2]
             Product.confirm_delete(self.trigger_id, self.response_url, product_id)
+        elif self.action_id == 'manage_discount_code' and self.action_value == 'edit':
+            discount_code_id = self.block_id.partition('|')[2]
+            DiscountCode.edit(self.trigger_id, self.response_url, discount_code_id)
+        elif self.action_id == 'manage_discount_code' and self.action_value == 'delete':
+            discount_code_id = self.block_id.partition('|')[2]
+            DiscountCode.confirm_delete(self.trigger_id, self.response_url, discount_code_id)
         elif self.action_id == 'manage_product' and self.action_value == 'move_down':
             product_id = self.block_id.partition('|')[2]
             queue.set(json.dumps({

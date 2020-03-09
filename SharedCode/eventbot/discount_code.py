@@ -52,55 +52,142 @@ class DiscountCode:
         response_message.send()
 
 
-    def show_create_form(trigger_id=None, response_url=None, event_id=None):
+    def show_create_form(trigger_id=None, response_url=None, event_id=None, discount_code={}, mode='create'):
+        if mode == 'update':
+            callback_id = 'edit_discount_code|' + discount_code["id"]
+            submit_label = 'Update'
+            title = 'Edit Discount Code'
+            product = stripe.Product.retrieve(
+                discount_code['metadata'].get('event_id'),
+                api_key=os.environ["STRIPE_SECRET"]
+            )
+            currency = product['metadata'].get('currency', 'usd')
+            if currency == 'eur':
+                currency_symbol = '€'
+            elif currency == 'gbp':
+                currency_symbol = '£'
+            else:
+                currency_symbol = '$'
+        else:
+            callback_id = 'create_discount_code|' + event_id
+            submit_label = 'Create'
+            title = 'Create Discount Code'
+
         modal_response = SlackResponse.modal(
-            callback_id='create_discount_code|' + event_id,
-            title='Create Discount Code',
-            submit_label='Create',
+            callback_id=callback_id,
+            title=title,
+            submit_label=submit_label,
             close_label='Cancel',
             trigger_id=trigger_id,
             response_url=response_url
         )
+        if mode == 'create':
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "discount_code_code",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "discount_code_code_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Enter a unique code"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Code"
+                },
+                "hint": {
+                    "type": "plain_text",
+                    "text": "This code must be unique and include alphanumeric characters only."
+                }
+            })
+        else:
+            modal_response.add_block({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Code:* " + discount_code.get('id', '')
+                }
+            })
+        if mode == 'create':
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "discount_code_amount_off",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "discount_code_amount_off_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "0"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Amount Off Regular Price"
+                },
+                "hint": {
+                    "type": "plain_text",
+                    "text": "Enter a whole number. Do not include a currency sign or commas. This field is optional for comp discount codes."
+                },
+                "optional": True
+            })
+        else:
+            if (discount_code.get('amount_off')):
+                amount_off = currency_symbol + str(discount_code.get('amount_off') / 100) + '0' + ' off'
+            else:
+                amount_off = str(discount_code.get('percent_off')) + "% off"
+            modal_response.add_block({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Amount off:* " + amount_off
+                }
+            })
         modal_response.add_block({
             "type": "input",
-            "block_id": "discount_code_code",
+            "block_id": "discount_code_inventory",
             "element": {
                 "type": "plain_text_input",
-                "action_id": "discount_code_code_input",
+                "action_id": "discount_code_inventory_input",
                 "placeholder": {
                     "type": "plain_text",
-                    "text": "Enter a unique code"
+                    "text": "Available Redemptions"
                 }
             },
             "label": {
                 "type": "plain_text",
-                "text": "Code"
+                "text": "Available Redemptions"
             },
             "hint": {
                 "type": "plain_text",
-                "text": "This code must be unique and include alphanumeric characters only."
-            }
+                "text": "Optional. The number of times this discount code can be used. Leave blank for unlimited redemptions."
+            },
+            "optional": True
         })
-        modal_response.add_block({
-            "type": "input",
-            "block_id": "discount_code_amount_off",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "discount_code_amount_off_input",
-                "placeholder": {
+        if mode == 'create':
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "discount_code_comp",
+                "element": {
+                    "type": "checkboxes",
+                    "action_id": "discount_code_comp_input",
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "This is a comp (100% off) discount code"
+                            },
+                            "value": "discountable"
+                        }
+                    ]
+                },
+                "label": {
                     "type": "plain_text",
-                    "text": "0"
-                }
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "Amount Off Regular Price"
-            },
-            "hint": {
-                "type": "plain_text",
-                "text": "Enter a whole number. Do not include a currency sign or commas."
-            }
-        })
+                    "text": "Comp Settings"
+                },
+                "optional": True
+            })
         modal_response.send()
 
 
@@ -147,11 +234,36 @@ class DiscountCode:
                 currency_symbol = '$'
 
             for discount_code in discount_codes:
+                if discount_code.get('amount_off', None):
+                    amount_off = currency_symbol + discount_code['amount_off']
+                else:
+                    amount_off = str(discount_code['percentage_off']) + "%"
                 response_message.add_block({
                     "type": "section",
+                    "block_id": "manage_discount_code|" + discount_code["id"],
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*" + discount_code["id"] + "* (" + currency_symbol + discount_code['amount_off'] + " off)"
+                        "text": "*" + discount_code["id"] + "* (" + amount_off + " off)"
+                    },
+                    "accessory": {
+                        "type": "overflow",
+                        "action_id": "manage_discount_code",
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Edit Discount Code"
+                                },
+                                "value": "edit"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Delete Discount Code"
+                                },
+                                "value": "delete"
+                            }
+                        ]
                     }
                 })
         else:
@@ -180,3 +292,74 @@ class DiscountCode:
                 queue_data['payload']['code'] = input_field['value']
 
         queue.set(json.dumps(queue_data))
+
+
+    def delete(input_values, queue, response_url=None, discount_code=None):
+        discount_code = stripe.Coupon.retrieve(
+            discount_code,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        product = stripe.Product.retrieve(
+            discount_code['metadata']['event_id'],
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        stripe.Coupon.delete(
+            discount_code['id'],
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        response_message = SlackResponse.message(response_url, 'Discount Code deleted successfully')
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":white_check_mark: * Discount Code deleted successfully!*"
+            }
+        })
+        response_message.add_block({
+            "type": "divider"
+        })
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*" + discount_code['id'] + "* has been successfully deleted.\n\nYou may use the buttons below to continue making changes to the event named " + product['name'] + "."
+            }
+        })
+        response_message.add_block({
+            "type": "divider"
+        })
+        response_message.add_block(Event.get_event_actions_blocks(product['id']))
+        response_message.send()
+
+
+    @classmethod
+    def edit(cls, trigger_id, response_url, discount_code_id):
+        discount_code = stripe.Coupon.retrieve(
+            discount_code_id,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        cls.show_create_form(
+            trigger_id=trigger_id,
+            response_url=response_url,
+            discount_code=discount_code,
+            mode='update'
+        )
+
+
+    def confirm_delete(trigger_id, response_url, discount_code_id):
+        modal_response = SlackResponse.modal(
+            callback_id='delete_discount_code|' + discount_code_id,
+            title='Delete Discount Code?',
+            submit_label='Delete',
+            close_label='Cancel',
+            trigger_id=trigger_id,
+            response_url=response_url
+        )
+        modal_response.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Are you sure you want to delete this discount code? This operation cannot be undone."
+            }
+        })
+        modal_response.send()
