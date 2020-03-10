@@ -181,6 +181,7 @@ class OWASPGitHub:
         result = ''
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(':repo', repoName)
+
         r = requests.get(url=url, headers = headers)
         if r.ok:
             result = json.loads(r.text)
@@ -218,7 +219,7 @@ class OWASPGitHub:
                     istemplate = repo['is_template']
                     haspages = repo['has_pages']
                     if not istemplate and haspages:
-                        pages = self.GetPages(repo)
+                        pages = self.GetPages(repoName)
                         if pages['source'] == None:
                             continue
                         
