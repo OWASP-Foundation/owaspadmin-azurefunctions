@@ -17,7 +17,8 @@ class Event:
             metadata={
                 "repo_name": payload.get('repo_name'),
                 "type": "event",
-                "currency": payload.get('currency')
+                "currency": payload.get('currency'),
+                "event_date": payload.get('event_date')
             },
             api_key=os.environ["STRIPE_SECRET"]
         )
@@ -67,6 +68,8 @@ class Event:
                 event_data['payload']['name'] = input_field['value']
             elif input_field['input_id'] == 'event_repository_input':
                 event_data['payload']['repo_name'] = input_field['value']
+            elif input_field['input_id'] == 'event_date_input':
+                event_data['payload']['event_date'] = input_field['value']
 
         queue.set(json.dumps(event_data))
 
@@ -267,6 +270,18 @@ class Event:
             "label": {
                 "type": "plain_text",
                 "text": "Event Repository"
+            }
+        })
+        modal_response.add_block({
+            "type": "input",
+            "block_id": "even_date",
+            "element": {
+                "type": "datepicker",
+                "action_id": "event_date_input",
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Event Date"
             }
         })
         modal_response.add_block({

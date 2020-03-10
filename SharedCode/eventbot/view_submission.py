@@ -42,6 +42,12 @@ class ViewSubmission:
                     field_value = field_dict['selected_option']['value']
                 elif field_dict.get('type', 'plain_text_input') == 'datepicker':
                     field_value = field_dict.get('selected_date', None)
+                elif field_dict.get('type', 'plain_text_input') == 'checkboxes':
+                    values = []
+                    for selected_option in field_dict.get('selected_options', []):
+                        if selected_option.get('value', None) is not None:
+                            values.append(selected_option.get('value'))
+                    field_value = '|'.join(values)
                 else:
                     field_value = field_dict.get('value', None)
                 self.input_values.append({
@@ -86,6 +92,13 @@ class ViewSubmission:
                     queue=queue,
                     response_url=self.response_url,
                     product_id=self.callback_params
+                )
+            if self.callback_id == 'delete_discount_code':
+                DiscountCode.delete(
+                    self.input_values,
+                    queue=queue,
+                    response_url=self.response_url,
+                    discount_code=self.callback_params
                 )
         except Exception as excptn:
             response = {

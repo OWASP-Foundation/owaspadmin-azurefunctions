@@ -29,3 +29,7 @@ def main(msg: func.QueueMessage) -> None:
         Product.edit_product(event_payload, response_url)
     elif event_type == 'create_discount_code':
         DiscountCode.create(event_payload, response_url)
+    elif event_type == 'create_discount_code':
+        DiscountCode.create(event_payload, response_url)
+    elif event_type == 'change_product_position':
+        Product.change_position(event_payload, response_url)
