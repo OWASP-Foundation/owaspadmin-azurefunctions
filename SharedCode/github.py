@@ -220,7 +220,7 @@ class OWASPGitHub:
                     haspages = repo['has_pages']
                     if not istemplate and haspages:
                         pages = self.GetPages(repoName)
-                        if pages['source'] == None:
+                        if pages['status'] == None:
                             continue
                         
                         if not matching or matching in repoName:
