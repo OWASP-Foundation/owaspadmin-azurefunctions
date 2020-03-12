@@ -26,6 +26,8 @@ def add_to_leaders(repo, content, all_leaders, stype):
             leader['email'] = email
             leader['group'] = repo['title']
             leader['group-type'] = stype
+            leader['group_url'] = repo['url']
+            
             all_leaders.append(leader)
 
 
