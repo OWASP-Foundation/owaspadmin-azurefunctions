@@ -29,49 +29,21 @@ def process_form(values, view_id, function_directory):
     license = values["license-id"]["license-value"]["selected_option"]["value"]
     proj_type = values["project-type-id"]["project-type-value"]["selected_option"]["value"]   
 
-    logging.info("Logging into Salesforce...")
-    sf = salesforce.OWASPSalesforce()
-    r = sf.Login()
+    leaders = leader_names.splitlines()
+    emails = leader_emails.splitlines()
+    emaillinks = []
+    if len(leaders) == len(emails):
+        count = 0
+        for leader in leaders:
+            email = emails[count]
+            count = count + 1
+            logging.info("Adding project leader...")
 
-    resString = " Project created"
-    if not r.ok:
-        resString = "Failed to login to salesforce"
+            emaillinks.append(f'[{leader}](mailto:{email})')
+            logging.info("Creating github repository")
+            resString = CreateGithubStructure(project_name, function_directory, emaillinks)
     else:
-        logging.info("Creating project...")
-        r = sf.CreateProject(project_name, leader_names, leader_emails, summary, description, roadmap, license, proj_type)    
-        if not r.ok:
-            resString = f"Failed to Create Project {r.status_code}"
-        else:
-            cg_json = json.loads(r.text)
-            # create the leaders here....
-            leaders = leader_names.splitlines()
-            emails = leader_emails.splitlines()
-            emaillinks = []
-            if len(leaders) == len(emails):
-                count = 0
-                for leader in leaders:
-                    email = emails[count]
-                    count = count + 1
-                    logging.info("Adding project leader...")
-                    cg_id = ''
-                    
-                    if 'id' in cg_json.keys():
-                        cg_id = cg_json['id']
-                    else:
-                        cg_id = cg_json['Id']
-
-                    emaillinks.append(f'[{leader}](mailto:{email})')
-                    r = sf.AddProjectLeader(leader, email, cg_id)
-                    if not r.ok:
-                        resString = f"Failed to add leader { leader } with email { email }."
-                        break
-            else:
-                resString = "Failed due to non matching leader names with emails"
-
-            if resString.find("Failed") < 0:
-                logging.info("Creating github repository")
-                resString = CreateGithubStructure(project_name, function_directory, emaillinks)
-
+        resString = "Failed due to non matching leader names with emails"
 
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     resp += project_name
