@@ -15,9 +15,17 @@ class OWASPGitHub:
     pages_fragment = "repos/OWASP/:repo/pages"
     team_addrepo_fragment = "teams/:team_id/repos/OWASP/:repo"
     team_getbyname_fragment = "orgs/OWASP/teams/:team_slug"
+    collab_fragment = "repos/OWASP/:repo/collaborators/:username"
+
+    PERM_TYPE_PULL = "pull"
+    PERM_TYPE_PUSH = "push"
+    PERM_TYPE_ADMIN = "admin"
+    PERM_TYPE_MAINTAIN = "maintain"
+    PERM_TYPE_TRIAGE = "triage"
 
     GH_REPOTYPE_PROJECT = 0
     GH_REPOTYPE_CHAPTER = 1
+    GH_REPOTYPE_COMMITTEE = 2
 
     def CreateRepository(self, repoName, rtype):
         repoName = self.FormatRepoName(repoName, rtype)
@@ -111,8 +119,10 @@ class OWASPGitHub:
         resName = ""
         if rtype == 0:
             resName = "www-project-"
-        else:
+        elif rtype == 1:
             resName = "www-chapter-"
+        else:
+            resName = "www-committee-"
     
         return resName + repoName.replace(" ", "-").lower()
 
@@ -324,7 +334,22 @@ class OWASPGitHub:
 
         url = self.gh_endpoint + repofrag
 
-        data = { "permission" : "admin"}
+        data = { "permission" : self.PERM_TYPE_ADMIN}
+        jsonData = json.dumps(data)
+        r = requests.put(url = url, headers=headers, data=jsonData)
+
+        return r
+
+    def AddPersonToRepo(self, person, repo):
+        collabfrag = self.collab_fragment.replace(':repo', repo)
+        collabfrag = collabfrag.replace(':username', person)
+        headers = {"Authorization": "token " + self.apitoken,
+            "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
+        }
+
+        url = self.gh_endpoint + collabfrag
+
+        data = { "permission" : self.PERM_TYPE_ADMIN}
         jsonData = json.dumps(data)
         r = requests.put(url = url, headers=headers, data=jsonData)
 

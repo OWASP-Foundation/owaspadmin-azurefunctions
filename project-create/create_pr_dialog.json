@@ -2,7 +2,7 @@
     "type": "modal",
     "title": {
         "type": "plain_text",
-        "text": "admin_af_app",
+        "text": "owaspadmin",
         "emoji": true
     },
     "submit": {
