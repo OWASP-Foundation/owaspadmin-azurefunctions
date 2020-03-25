@@ -37,8 +37,9 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding committee leader...")
 
             emaillinks.append(f'[{leader}](mailto:{email})')
-            logging.info("Creating github repository")
-            resString = CreateGithubStructure(group_name, function_directory, emaillinks, githubs)
+        
+        logging.info("Creating github repository")
+        resString = CreateGithubStructure(group_name, function_directory, emaillinks, githubs)
     else:
         resString = "Failed due to non matching leader names with emails"
 
