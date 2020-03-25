@@ -1,0 +1,25 @@
+{
+    "files" : [
+        {
+            "path" : "docs/tab_example.md"
+        },
+        {
+            "path" : "docs/leaders.md"
+        },
+        {
+            "path" : "docs/info.md"
+        },
+        {
+            "path" : "docs/index.md"
+        },
+        {
+            "path" : "docs/Gemfile"
+        },
+        {
+            "path" : "docs/_config.yml"
+        },
+        {
+            "path" : "docs/gitignore"
+        }
+    ]
+}
