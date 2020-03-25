@@ -7,7 +7,8 @@ from ..EventsSlackbot.__init__ import main as event_bot
 def main(req: func.HttpRequest,
          chmsg: func.Out[func.QueueMessage],
          prmsg: func.Out[func.QueueMessage],
-         evtmsg: func.Out[func.QueueMessage]
+         evtmsg: func.Out[func.QueueMessage],
+         cmmsg: func, Out[func.QueueMessage]
          ) -> func.HttpResponse:
     logging.info('Slack Action Trigger')
     body = req.get_body()
@@ -28,6 +29,8 @@ def main(req: func.HttpRequest,
         chmsg.set(jsonstr)
     elif 'Project' in jsonstr:
         prmsg.set(jsonstr)
+    elif 'Committee' in jsonstr:
+        cmmsg.set(jsonstr)
 
     headers = {"Content-Type":"application/json;charset=utf-8"}
     

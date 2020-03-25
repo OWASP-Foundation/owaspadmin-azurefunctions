@@ -36,6 +36,13 @@
       "name": "evtmsg",
       "queueName": "slack-event-bot-queue",
       "connection": "AzureWebJobsStorage"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "cmmsg",
+      "queueName": "committeequeue",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }
