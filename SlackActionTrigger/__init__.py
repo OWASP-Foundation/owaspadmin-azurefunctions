@@ -8,7 +8,7 @@ def main(req: func.HttpRequest,
          chmsg: func.Out[func.QueueMessage],
          prmsg: func.Out[func.QueueMessage],
          evtmsg: func.Out[func.QueueMessage],
-         cmmsg: func, Out[func.QueueMessage]
+         cmmsg: func.Out[func.QueueMessage]
          ) -> func.HttpResponse:
     logging.info('Slack Action Trigger')
     body = req.get_body()
