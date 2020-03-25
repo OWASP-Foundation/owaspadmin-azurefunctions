@@ -4,6 +4,7 @@ import base64
 from pathlib import Path
 import os
 import logging
+import datetime
 
 class OWASPGitHub:
     apitoken = os.environ["GH_APITOKEN"]
@@ -227,6 +228,11 @@ class OWASPGitHub:
                             addrepo = {}
                             addrepo['name'] = repoName
                             addrepo['url'] = f"https://owasp.org/{ repoName }/"
+                        
+                            cdate = datetime.datetime.strptime(repo['created_at'], "%Y-%m-%dT%H:%M:%SZ")
+                            udate = datetime.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
+                            addrepo['created'] = cdate.strftime('%c')
+                            addrepo['updated'] = udate.strftime('%c')
                             r = self.GetFile(repoName, 'index.md')
                             if self.TestResultCode(r.status_code):
                                 doc = json.loads(r.text)
