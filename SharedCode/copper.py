@@ -2,6 +2,7 @@ import requests
 import json
 import os
 
+# Not currently a full implementation - does not, for instance, go through pages of Objects (limited to the first 200 right now)
 class OWASPCopper:
 
     cp_base_url = "https://api.prosperworks.com/developer_api/v1/"
@@ -52,6 +53,7 @@ class OWASPCopper:
         }
         return headers
 
+    # Provide a list (first 200) of Projects (these are Groups & Events)
     def ListProjects(self):
         data = {
             'page_size': 200,
@@ -63,7 +65,9 @@ class OWASPCopper:
             return r.text
         
         return ''
-        
+
+    # Provide a list (first 200) of Opportunities (these can be true opportunities, memberships, event attendees)
+    # Needs to be modified to accept a type and pull only that type
     def ListOpportunities(self):
         data = {
             'page_size': 200,
@@ -75,7 +79,8 @@ class OWASPCopper:
             return r.text
         
         return ''
-        
+    
+    # Finds a Person by email address.  Will return the first 5 matches
     def FindPersonByEmail(self, searchtext):
         lstxt = searchtext.lower()
 
@@ -92,6 +97,7 @@ class OWASPCopper:
         
         return ''
 
+    # Finds a person by the full name.  Will return the first 5 matches.
     def FindPersonByName(self, searchtext):
         lstxt = searchtext.lower()
 
@@ -108,6 +114,8 @@ class OWASPCopper:
         
         return ''
 
+    # Creates an Opportunity
+    # Needs to be modified to add custom fields (like type)
     def CreateOpportunity(self, opp_name, contact_email):
 
         contact_json = self.FindPersonByEmail(contact_email)
@@ -129,7 +137,8 @@ class OWASPCopper:
         
         return ''
 
-    def GetProject(self, proj_name):
+    # Finds a project by name.  Returns the first 200 results
+    def FindProject(self, proj_name):
         data = {
             'page_size': 200,
             'sort_by': 'name',
@@ -142,6 +151,8 @@ class OWASPCopper:
         
         return ''
 
+    # Relates a Person Record to another entity
+    # Could be modified to allow a type argument to relate and record type to another entity
     def RelateRecord(self, entity, entity_id, person_id):
         data = {
             'resource': {
@@ -157,6 +168,9 @@ class OWASPCopper:
 
         return ''
 
+    # Create a Project (Chapter or Event or some other Group)
+    # The emails, region, country, postal code are all specific to Chapter so
+    # it may be beneficial to call this CreateChapter and create another function for Event
     def CreateProject(self, proj_name, emails, status, region, country, postal_code, repo):
         data = {
                 'name':proj_name
@@ -206,6 +220,10 @@ class OWASPCopper:
         
         return ''
 
+    # Assistant function that returns ALL custom fields.  
+    # This class could be updated such that the custom field definition at the front of the
+    # class could go away and these returned fields could be used to look up the fields.
+    # Alternately, add classes for all the types (better)
     def GetCustomFields(self):
         url = f'{self.cp_base_url}{self.cp_custfields_fragment}'
         r = requests.get(url, headers=self.GetHeaders())
