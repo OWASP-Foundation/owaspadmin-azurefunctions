@@ -96,7 +96,7 @@ def create_checkout_session(request: Dict) -> Dict:
 
     product_metadata = product.get('metadata', {})
     success_url = product_metadata.get('success_url', 'https://owasp.org/' + product_metadata.get('repo_name') + '/registration-success')
-    cancel_url = product_metadata.get('cancel_url', 'https://owasp.org/' + product_metadata.get('repo-name') + 'www-event-example/registration-error')
+    cancel_url = product_metadata.get('cancel_url', 'https://owasp.org/' + product_metadata.get('repo_name') + 'www-event-example/registration-error')
 
     api_request = {
         "success_url": success_url,
