@@ -5,5 +5,5 @@
   "azureFunctions.projectRuntime": "~2",
   "debug.internalConsoleOptions": "neverOpen",
   "azureFunctions.preDeployTask": "func: pack --build-native-deps",
-  "python.pythonPath": "C:\\Users\\thewa\\AppData\\Local\\Programs\\Python\\Python37\\python.exe"
+  "python.pythonPath": ".venv/bin/python"
 }
