@@ -124,7 +124,8 @@ def create_checkout_session(request: Dict) -> Dict:
         purchase_price = sku['price']
 
     api_request['payment_intent_data'] = {
-        'metadata': metadata
+        'metadata': metadata,
+        'description': checkout_product_name
     }
 
     if purchase_price < 0:
