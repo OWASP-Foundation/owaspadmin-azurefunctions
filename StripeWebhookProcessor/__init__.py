@@ -83,6 +83,7 @@ def handle_checkout_session_completed(event: Dict):
         )
     elif payment_intent is not None and payment_intent['metadata'].get('purchase_type') == 'event':
         metadata = payment_intent.get('metadata', {})
+        create_order_from_payment_intent(payment_intent)
         add_event_registrant_to_mailing_list(customer_email, metadata)
     else:
         if payment_intent is not None:
@@ -472,7 +473,7 @@ def handle_sku_updated(event_data):
 def handle_sku_created(event_data):
     product = stripe.Product.retrieve(
         event_data.get('product', None),
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     product_metadata = product.get('metadata', {})
     sku_attributes = event_data.get('attributes', {})
@@ -506,6 +507,47 @@ def handle_sku_created(event_data):
                 indent=4
             )
             gh.UpdateFile(repo_name, product_file, file_contents, sha)
+
+
+def create_order_from_payment_intent(payment_intent):
+    skus = payment_intent.get('metadata', {}).get('skus', '').split('|')
+    order_total = 0
+    order_items = []
+
+    for sku in skus:
+        stripe_sku = stripe.SKU.retrieve(
+            sku,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        order_total += stripe_sku.get('price', 0)
+        order_items.append({
+            "amount": stripe_sku.get('price', 0),
+            "currency": payment_intent.get('currency', 'usd'),
+            "description": stripe_sku['attributes']['name'],
+            "parent": sku,
+            "quantity": 1,
+            "type": "sku"
+        })
+
+    if order_total > payment_intent.get('amount', 0):
+        order_items.append({
+            "amount": payment_intent['amount'] - order_total,
+            "currency": payment_intent.get('currency', 'usd'),
+            "description": 'Discount',
+            "quantity": 1,
+            "type": "discount"
+        })
+
+    metadata = payment_intent.get('metadata', {})
+    metadata['charge_id'] = payment_intent['charges']['data'][0]['id']
+
+    order = stripe.Order.create(
+        currency=payment_intent.get('currency', 'usd'),
+        customer=payment_intent['customer'],
+        metadata=metadata,
+        items=order_items,
+        api_key=os.environ["STRIPE_SECRET"]
+    )
 
 
 def get_customer_email_from_id(customer_id):
