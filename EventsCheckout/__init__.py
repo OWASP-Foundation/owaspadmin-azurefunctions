@@ -208,7 +208,14 @@ def create_checkout_session(request: Dict, line_items: Dict) -> Dict:
     else:
         api_request['customer_email'] = request.get('email')
 
+    product_array = []
+    for product in line_items:
+        product_array.append(product['name'])
+
+    checkout_description = ', '.join(product_array)
+
     api_request['payment_intent_data'] = {
+        'description': checkout_description,
         'metadata': metadata
     }
 
