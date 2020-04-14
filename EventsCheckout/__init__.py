@@ -6,11 +6,16 @@ import os
 import json
 import pathlib
 import datetime
+import hashlib
 from typing import Dict
 
 import stripe
 
 import urllib.parse
+
+from mailchimp3 import MailChimp
+from mailchimp3.mailchimpclient import MailChimpError
+mailchimp = MailChimp(mc_api=os.environ["MAILCHIMP_API_KEY"])
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     request = req.get_json()
@@ -341,6 +346,8 @@ def create_comp_order(request, line_items):
         api_key=os.environ["STRIPE_SECRET"]
     )
 
+    add_event_registrant_to_mailing_list(request.get('email'), metadata)
+
     success_url = product_metadata.get('success_url', 'https://owasp.org/' + product_metadata.get('repo_name') + '/registration-success')
 
     return_value = {
@@ -349,6 +356,68 @@ def create_comp_order(request, line_items):
     }
 
     return return_value
+
+def add_event_registrant_to_mailing_list(email, metadata):
+    subscriber_hash = get_mailchimp_subscriber_hash(email)
+
+    first_name = metadata.get('name').strip().split(' ')[0]
+    last_name = ' '.join((metadata.get('name') + ' ').split(' ')[1:]).strip()
+
+    merge_fields = {}
+    merge_fields['NAME'] = metadata.get('name')
+    merge_fields['FNAME'] = first_name
+    merge_fields['LNAME'] = last_name
+
+    if metadata.get('company', None) is not None:
+        merge_fields['COMPANY'] = metadata.get('company')
+    if metadata.get('country', None) is not None:
+        merge_fields['COUNTRY'] = metadata.get('country')
+
+    request_data = {
+        "email_address": email,
+        "status_if_new": "subscribed",
+        "status": "subscribed",
+        "merge_fields": merge_fields,
+        "marketing_permissions": get_marketing_permissions(metadata)
+    }
+
+    list_member = mailchimp.lists.members.create_or_update(
+        os.environ["MAILCHIMP_LIST_ID"],
+        subscriber_hash,
+        request_data
+    )
+
+    product = stripe.Product.retrieve(
+        metadata.get('event_id'),
+        api_key=os.environ["STRIPE_SECRET"]
+    )
+
+    segment_name = '2020 ' + product['name']
+
+    segments = mailchimp.lists.segments.all(os.environ['MAILCHIMP_LIST_ID'], True)
+    segment_id = None
+    for segment in segments['segments']:
+        if segment['name'] == segment_name:
+            segment_id = segment['id']
+            break
+
+    if segment_id is None:
+        segment = mailchimp.lists.segments.create(os.environ['MAILCHIMP_LIST_ID'], {
+            'name': segment_name,
+            'static_segment': []
+        })
+        segment_id = segment['id']
+
+    mailchimp.lists.segments.members.create(
+        os.environ['MAILCHIMP_LIST_ID'],
+        segment_id,
+        {
+            'email_address': email,
+            'status': 'subscribed'
+        }
+    )
+
+    return list_member
 
 
 def return_response(response, success):
@@ -370,6 +439,27 @@ def return_response(response, success):
         status_code=status_code
     )
 
+def get_mailchimp_subscriber_hash(email):
+    email = email.lower()
+    hashed = hashlib.md5(email.encode('utf8'))
+
+    return hashed.hexdigest()
+
+def get_marketing_permissions(metadata):
+    if metadata.get('mailing_list', 'False') == 'True':
+        return [
+            {
+                "marketing_permission_id": os.environ["MAILCHIMP_MKTG_PERMISSIONS_ID"],
+                "enabled": True
+            }
+        ]
+    else:
+        return [
+            {
+                "marketing_permission_id": os.environ["MAILCHIMP_MKTG_PERMISSIONS_ID"],
+                "enabled": False
+            }
+        ]
 
 def get_stripe_customer_id(email):
     customers = stripe.Customer.list(
