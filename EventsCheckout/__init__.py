@@ -17,6 +17,10 @@ from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
 mailchimp = MailChimp(mc_api=os.environ["MAILCHIMP_API_KEY"])
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import From
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
     request = req.get_json()
     errors = validate_request(request)
@@ -352,6 +356,7 @@ def create_comp_order(request, line_items):
     )
 
     add_event_registrant_to_mailing_list(request.get('email'), metadata)
+    send_comp_receipt(metadata, line_items)
 
     if metadata.get('discount_code', None) is not None:
         increment_discount_code(metadata.get('discount_code'))
@@ -364,6 +369,29 @@ def create_comp_order(request, line_items):
     }
 
     return return_value
+
+
+def send_comp_receipt(metadata, line_items):
+    stripe_event = stripe.Product.retrieve(
+        metadata.get('event_id'),
+        api_key=os.environ["STRIPE_SECRET"]
+    )
+    first_name = metadata.get('name').strip().split(' ')[0]
+    message = Mail(
+	from_email=From('noreply@owasp.org', 'OWASP'),
+	to_emails=metadata.get('email'))
+    message.dynamic_template_data = {
+	'user_first_name': first_name,
+        'event_name': stripe_event['name'],
+        'date': datetime.date.strftime(datetime.date.today(), "%m/%d/%Y"),
+        'items': line_items
+    }
+    message.template_id = 'd-d8ac573e939249ec9088df9d7ab090d8'
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        logging.info(str(e))
 
 
 def increment_discount_code(discount_code):
