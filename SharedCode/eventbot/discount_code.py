@@ -157,27 +157,51 @@ class DiscountCode:
                     "text": "*Amount off:* " + amount_off
                 }
             })
-        modal_response.add_block({
-            "type": "input",
-            "block_id": "discount_code_inventory",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "discount_code_inventory_input",
-                "placeholder": {
+        if mode == 'update' and discount_code.get('metadata', {}).get('inventory', None) is not None:
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "discount_code_inventory",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "discount_code_inventory_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Available Redemptions"
+                    },
+                    "initial_value": discount_code['metadata']['inventory']
+                },
+                "label": {
                     "type": "plain_text",
                     "text": "Available Redemptions"
-                }
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "Available Redemptions"
-            },
-            "hint": {
-                "type": "plain_text",
-                "text": "Optional. The number of times this discount code can be used. Leave blank for unlimited redemptions."
-            },
-            "optional": True
-        })
+                },
+                "hint": {
+                    "type": "plain_text",
+                    "text": "Optional. The number of times this discount code can be used. Leave blank for unlimited redemptions."
+                },
+                "optional": True
+            })
+        else:
+            modal_response.add_block({
+                "type": "input",
+                "block_id": "discount_code_inventory",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "discount_code_inventory_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Available Redemptions"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Available Redemptions"
+                },
+                "hint": {
+                    "type": "plain_text",
+                    "text": "Optional. The number of times this discount code can be used. Leave blank for unlimited redemptions."
+                },
+                "optional": True
+            })
         if mode == 'create':
             modal_response.add_block({
                 "type": "input",
