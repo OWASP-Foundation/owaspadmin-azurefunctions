@@ -67,6 +67,11 @@ def validate_request(request: Dict) -> Dict:
             sku_metadata = sku.get('metadata', {})
             if sku.get('product') != product['id'] or metadata.get('event_id') != product['id']:
                 errors['discount_code'] = ['This discount is not valid']
+            if metadata.get('inventory', None) is not None and metadata.get('uses', None) is not None:
+                coupon_inventory = int(metadata.get('inventory'))
+                coupon_uses = int(metadata.get('uses'))
+                if (coupon_inventory <= coupon_uses):
+                    errors['discount_code'] = ['This discount is not valid']
         except Exception as err:
             errors['discount_code'] = ['This discount is not valid']
 
@@ -274,7 +279,7 @@ def create_comp_order(request, line_items):
         "country": request.get('country', None),
         "city": request.get('city', None),
         "mailing_list": request.get('mailing_list', False),
-        "purchase_type": "event"
+        "purchase_type": "event",
     }
 
     if request.get('dietary_restrictions', None) is not None:
@@ -348,6 +353,9 @@ def create_comp_order(request, line_items):
 
     add_event_registrant_to_mailing_list(request.get('email'), metadata)
 
+    if metadata.get('discount_code', None) is not None:
+        increment_discount_code(metadata.get('discount_code'))
+
     success_url = product_metadata.get('success_url', 'https://owasp.org/' + product_metadata.get('repo_name') + '/registration-success')
 
     return_value = {
@@ -356,6 +364,25 @@ def create_comp_order(request, line_items):
     }
 
     return return_value
+
+
+def increment_discount_code(discount_code):
+    try:
+        discount_code = discount_code.strip().upper()
+        coupon = stripe.Coupon.retrieve(
+            discount_code,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        metadata = coupon.get('metadata', {})
+        uses = int(metadata.get('uses', 0)) + 1
+        stripe.Coupon.modify(
+            discount_code,
+            metadata={"uses": uses},
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+    except Exception as exception:
+        pass
+
 
 def add_event_registrant_to_mailing_list(email, metadata):
     subscriber_hash = get_mailchimp_subscriber_hash(email)

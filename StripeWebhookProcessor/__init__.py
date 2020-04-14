@@ -549,6 +549,27 @@ def create_order_from_payment_intent(payment_intent):
         api_key=os.environ["STRIPE_SECRET"]
     )
 
+    if metadata.get('discount_code', None) is not None:
+        increment_discount_code(metadata.get('discount_code'))
+
+
+def increment_discount_code(discount_code):
+    try:
+        discount_code = discount_code.strip().upper()
+        coupon = stripe.Coupon.retrieve(
+            discount_code,
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+        metadata = coupon.get('metadata', {})
+        uses = int(metadata.get('uses', 0)) + 1
+        stripe.Coupon.modify(
+            discount_code,
+            metadata={"uses": uses},
+            api_key=os.environ["STRIPE_SECRET"]
+        )
+    except Exception as exception:
+        pass
+
 
 def get_customer_email_from_id(customer_id):
     customer = stripe.Customer.retrieve(
