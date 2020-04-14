@@ -310,23 +310,21 @@ def create_comp_order(request, line_items):
 
     order_items = []
     order_total = 0
-    inc = 0
 
-    for line_item in line_items:
+    for line_item in request.get('sku', []):
         sku = stripe.SKU.retrieve(
-            request.get('sku')[inc],
+            line_item,
             api_key=os.environ["STRIPE_SECRET"]
         )
         order_items.append({
             "amount": sku['price'],
-            "currency": line_item['currency'],
-            "description": line_item['name'],
-            "parent": request.get('sku')[inc],
+            "currency": sku['currency'],
+            "description": sku['attributes']['name'],
+            "parent": line_item,
             "quantity": 1,
             "type": "sku"
         })
         order_total += sku['price']
-        ++inc
 
     order_items.append({
         "amount": order_total * -1,
