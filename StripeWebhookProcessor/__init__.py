@@ -473,7 +473,7 @@ def handle_sku_updated(event_data):
 def handle_sku_created(event_data):
     product = stripe.Product.retrieve(
         event_data.get('product', None),
-        api_key=os.environ["STRIPE_TEST_SECRET"]
+        api_key=os.environ["STRIPE_SECRET"]
     )
     product_metadata = product.get('metadata', {})
     sku_attributes = event_data.get('attributes', {})
