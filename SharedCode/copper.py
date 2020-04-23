@@ -2,7 +2,6 @@ import requests
 import json
 import os
 
-# Not currently a full implementation - does not, for instance, go through pages of Objects (limited to the first 200 right now)
 class OWASPCopper:
 
     cp_base_url = "https://api.prosperworks.com/developer_api/v1/"
@@ -53,7 +52,6 @@ class OWASPCopper:
         }
         return headers
 
-    # Provide a list (first 200) of Projects (these are Groups & Events)
     def ListProjects(self):
         data = {
             'page_size': 200,
@@ -65,9 +63,7 @@ class OWASPCopper:
             return r.text
         
         return ''
-
-    # Provide a list (first 200) of Opportunities (these can be true opportunities, memberships, event attendees)
-    # Needs to be modified to accept a type and pull only that type
+        
     def ListOpportunities(self):
         data = {
             'page_size': 200,
@@ -79,8 +75,7 @@ class OWASPCopper:
             return r.text
         
         return ''
-    
-    # Finds a Person by email address.  Will return the first 5 matches
+        
     def FindPersonByEmail(self, searchtext):
         lstxt = searchtext.lower()
 
@@ -97,7 +92,6 @@ class OWASPCopper:
         
         return ''
 
-    # Finds a person by the full name.  Will return the first 5 matches.
     def FindPersonByName(self, searchtext):
         lstxt = searchtext.lower()
 
@@ -114,8 +108,24 @@ class OWASPCopper:
         
         return ''
 
-    # Creates an Opportunity
-    # Needs to be modified to add custom fields (like type)
+    def CreatePerson(self, email):
+        data = {
+            'emails': [
+                {
+                    'email':email,
+                    'category': 'work'
+                }
+            ]
+        }
+        url = f'{self.cp_base_url}{self.cp_people_fragment}'
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        pid = None
+        if r.ok:
+            person = json.loads(r.text)
+            pid = person.id
+        
+        return pid
+
     def CreateOpportunity(self, opp_name, contact_email):
 
         contact_json = self.FindPersonByEmail(contact_email)
@@ -137,8 +147,7 @@ class OWASPCopper:
         
         return ''
 
-    # Finds a project by name.  Returns the first 200 results
-    def FindProject(self, proj_name):
+    def GetProject(self, proj_name):
         data = {
             'page_size': 200,
             'sort_by': 'name',
@@ -151,8 +160,6 @@ class OWASPCopper:
         
         return ''
 
-    # Relates a Person Record to another entity
-    # Could be modified to allow a type argument to relate and record type to another entity
     def RelateRecord(self, entity, entity_id, person_id):
         data = {
             'resource': {
@@ -168,39 +175,54 @@ class OWASPCopper:
 
         return ''
 
-    # Create a Project (Chapter or Event or some other Group)
-    # The emails, region, country, postal code are all specific to Chapter so
-    # it may be beneficial to call this CreateChapter and create another function for Event
+    def FindProject(self, proj_name):
+        lstxt = proj_name.lower()
+
+        data = {
+            'page_size': 5,
+            'sort_by': 'name',
+            'name': lstxt
+        }
+        projects = []
+        url = f'{self.cp_base_url}{self.cp_projects_fragment}{self.cp_search_fragment}'
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        if r.ok:
+            projects = json.loads(r.text)
+            return projects
+        
+        return projects
+
     def CreateProject(self, proj_name, emails, status, region, country, postal_code, repo):
         data = {
                 'name':proj_name
         }
-        custom_fields = [{
-                    'custom_field_definition_id': self.cp_project_type,
-                    'value': self.cp_project_type_option_chapter
-                },
-                {
+        fields = []
+        fields.append({'custom_field_definition_id' : self.cp_project_type, 'value': self.cp_project_type_option_chapter})
+        fields.append({
                     'custom_field_definition_id': self.cp_project_chapter_status,
                     'value': status
-                }
-                ,
-                {
+                })
+        if region:
+            fields.append({
                     'custom_field_definition_id': self.cp_project_chapter_region,
                     'value': region
-                },
-                {
+                })
+        if country:
+            fields.append({
                     'custom_field_definition_id': self.cp_project_chapter_country,
                     'value': country
-                },
-                {
+                })
+        if postal_code:
+            fields.append({
                     'custom_field_definition_id': self.cp_project_chapter_postal_code,
                     'value': postal_code
-                },
-                {
+                })
+        fields.append({
                     'custom_field_definition_id': self.cp_project_github_repo,
                     'value': repo
-                }
-                ]
+                })
+                
+        custom_fields = fields
 
         data['custom_fields'] = custom_fields
 
@@ -212,18 +234,20 @@ class OWASPCopper:
 
             for email in emails:
                 sr = self.FindPersonByEmail(email)
-                if len(sr) > 0:
-                    person_id = json.loads(sr)[0]['id']
+                people = json.loads(sr)
+                if len(people) > 0:
+                    person_id = people[0]['id']
+                else: 
+                    person_id = self.CreatePerson(email)    
+                
+                if person_id:
                     self.RelateRecord('projects', pid, person_id)
+
 
             return r.text
         
         return ''
 
-    # Assistant function that returns ALL custom fields.  
-    # This class could be updated such that the custom field definition at the front of the
-    # class could go away and these returned fields could be used to look up the fields.
-    # Alternately, add classes for all the types (better)
     def GetCustomFields(self):
         url = f'{self.cp_base_url}{self.cp_custfields_fragment}'
         r = requests.get(url, headers=self.GetHeaders())

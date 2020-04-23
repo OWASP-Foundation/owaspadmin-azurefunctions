@@ -16,7 +16,8 @@ def add_to_leaders(repo, content, all_leaders, stype):
     lines = content.split('\n')
     for line in lines:
         fstr = line.find('[')
-        if(line.startswith('###') and 'Leaders' not in line):
+        testline = line.lower()
+        if(testline.startswith('###') and 'leader' not in testline):
             break
         
         if(line.startswith('*') and fstr > -1 and fstr < 4):

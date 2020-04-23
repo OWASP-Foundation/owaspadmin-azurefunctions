@@ -14,6 +14,7 @@ class Event:
             attributes=['name'],
             description=payload.get('name'),
             type="good",
+            shippable=False,
             metadata={
                 "repo_name": payload.get('repo_name'),
                 "type": "event",
@@ -116,6 +117,7 @@ class Event:
     def list_events(response_url):
         event_list = []
         stripe_products = stripe.Product.list(
+            active=True,
             limit=10,
             api_key=os.environ["STRIPE_SECRET"]
         )
