@@ -6,7 +6,7 @@ import requests
 from urllib.parse import unquote_plus
 from ..SharedCode import salesforce 
 from ..SharedCode import github
-
+from ..SharedCode import copper
 
 def main(msg: func.QueueMessage, context: func.Context) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
@@ -30,6 +30,7 @@ def process_form(values, view_id, function_directory):
     leaders = leader_names.splitlines()
     emails = leader_emails.splitlines()
     emaillinks = []
+    
     if len(leaders) == len(emails):
         count = 0
         for leader in leaders:
@@ -38,8 +39,10 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding chapter leader...")
             emaillinks.append(f'[{leader}](mailto:{email})')
         logging.info("Creating github repository")
-        resString = CreateGithubStructure(chapter_name, function_directory, emaillinks)
-
+        resString = CreateGithubStructure(chapter_name,function_directory, region, emaillinks)
+        # do copper integration here
+        if not 'Failed' in resString:
+            resString = CreateCopperObjects(chapter_name, emails, region, country)
     else:
         resString = "Failed due to non matching leader names with emails"
 
@@ -56,8 +59,35 @@ def process_form(values, view_id, function_directory):
     r = requests.post(urldialog,headers=headers, data=resp)
     logging.info(r.text)
 
+def GetCopperRegion(region):
+    cp_region = None
+    if 'North' in region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_northamerica
+    elif 'South' in region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_southamerica
+    elif 'Oceania' == region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_oceania
+    elif 'Asia' == region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_asia
+    elif 'Africa' == region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_africa
+    elif 'Europe' == region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_europe
 
-def CreateGithubStructure(chapter_name, func_dir, emaillinks):
+    return cp_region
+
+def CreateCopperObjects(chapter_name, emails, region, country):
+    resString = 'Copper object created.'
+    cp = copper.OWASPCopper()
+    cp_region = GetCopperRegion(region)
+    gh = github.OWASPGitHub()
+    repo = gh.FormatRepoName(chapter_name)
+
+    cp.CreateProject(chapter_name, emails, copper.OWASPCopper.cp_project_chapter_status_option_active, cp_region, country=country, repo = repo)
+
+    return resString
+
+def CreateGithubStructure(chapter_name, func_dir, region, emaillinks):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
     resString = "Chapter created."
@@ -66,7 +96,7 @@ def CreateGithubStructure(chapter_name, func_dir, emaillinks):
         logging.error(resString + " : " + r.text)
     
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(chapter_name, gh.GH_REPOTYPE_CHAPTER, basedir = func_dir)
+        r = gh.InitializeRepositoryPages(chapter_name, gh.GH_REPOTYPE_CHAPTER, basedir = func_dir, region=region)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {chapter_name}."
             logging.error(resString + " : " + r.text)

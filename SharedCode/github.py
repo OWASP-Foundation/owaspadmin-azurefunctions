@@ -40,7 +40,7 @@ class OWASPGitHub:
 
         return r
 
-    def InitializeRepositoryPages(self, repoName, rtype, basedir = ""):
+    def InitializeRepositoryPages(self, repoName, rtype, basedir = "", region="", proj_type = ""):
         if basedir and not basedir.endswith('/'):
             basedir = basedir + '/'
 
@@ -54,7 +54,7 @@ class OWASPGitHub:
         for f in filestosend["files"]:
             fpath = basedir + f['path']
             
-            r = self.SendFile( url, fpath, "[GROUPNAME]", groupName)
+            r = self.SendFile( url, fpath, ["[GROUPNAME]", "[:REGION]", "[:PROJTYPE]"], [groupName, region, proj_type])
             if not self.TestResultCode(r.status_code):
                 break
 
@@ -70,7 +70,7 @@ class OWASPGitHub:
         r = requests.get(url = url, headers=headers)
         return r
 
-    def SendFile(self, url, filename, replacetag = None, replacestr = None):
+    def SendFile(self, url, filename, replacetags = None, replacestrs = None):
         pathname = filename[filename.find("docs/") + 5:]
         if pathname == "gitignore":
             pathname = "." + pathname
@@ -78,8 +78,11 @@ class OWASPGitHub:
         url = url.replace(":path", pathname)
         sfile = open(filename)
         filecstr = sfile.read()
-        if replacetag and replacestr:
-            filecstr = filecstr.replace(replacetag, replacestr)
+    
+        if replacetags and replacestrs and len(replacetags) > 0 and len(replacetags) == len(replacestrs):
+            for idx, replacetag in enumerate(replacetags):
+                replacestr = replacestrs[idx] # this is liquid, not python...
+                filecstr = filecstr.replace(replacetag, replacestr)
 
         bytestosend = base64.b64encode(filecstr.encode())   
         committer = {

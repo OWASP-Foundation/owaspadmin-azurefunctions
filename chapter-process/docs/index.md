@@ -3,7 +3,7 @@
 layout: col-sidebar
 title: OWASP [GROUPNAME]
 tags: example-tag
-region: 
+region: [:REGION]
 
 ---
 

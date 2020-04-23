@@ -6,7 +6,7 @@ import requests
 from urllib.parse import unquote_plus
 from ..SharedCode import salesforce 
 from ..SharedCode import github
-
+from ..SharedCode import copper
 
 def main(msg: func.QueueMessage, context: func.Context) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
@@ -41,7 +41,10 @@ def process_form(values, view_id, function_directory):
 
             emaillinks.append(f'[{leader}](mailto:{email})')
             logging.info("Creating github repository")
-            resString = CreateGithubStructure(project_name, function_directory, emaillinks)
+            resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks)
+            # do copper integration here
+            if not 'Failed' in resString:
+                resString = CreateCopperObjects(project_name, emails)
     else:
         resString = "Failed due to non matching leader names with emails"
 
@@ -57,8 +60,17 @@ def process_form(values, view_id, function_directory):
     r = requests.post(urldialog,headers=headers, data=resp)
     logging.info(r.text)
 
+def CreateCopperObjects(project_name, emails):
+    resString = 'Copper object created.'
+    cp = copper.OWASPCopper()
+    gh = github.OWASPGitHub()
+    repo = gh.FormatRepoName(project_name)
 
-def CreateGithubStructure(project_name, func_dir, emaillinks):
+    cp.CreateProject(project_name, emails, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo)
+
+    return resString
+
+def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
     resString = "Project created."

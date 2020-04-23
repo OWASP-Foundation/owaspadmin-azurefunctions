@@ -4,7 +4,7 @@ layout: col-sidebar
 title: OWASP [GROUPNAME]
 tags: example-tag
 level: 1
-type: code/tool/documentation or other
+type: [:PROJTYPE]
 pitch: A very brief, one-line description of your project
 
 ---
