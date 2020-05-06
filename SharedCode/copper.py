@@ -198,7 +198,7 @@ class OWASPCopper:
         
         return projects
 
-    def CreateProject(self, proj_name, emails, project_type, status, region, country, postal_code, repo):
+    def CreateProject(self, proj_name, emails, project_type, status, region = None, country = None, postal_code = None, repo = None):
         data = {
                 'name':proj_name
         }
@@ -228,7 +228,8 @@ class OWASPCopper:
                     'custom_field_definition_id': self.cp_project_chapter_postal_code,
                     'value': postal_code
                 })
-        fields.append({
+        if repo:
+            fields.append({
                     'custom_field_definition_id': self.cp_project_github_repo,
                     'value': repo
                 })
