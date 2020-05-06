@@ -60,7 +60,7 @@ def process_form(values, view_id, function_directory):
     logging.info(r.text)
 
 def CreateCopperObjects(committee_name, emails):
-    resString = 'Copper object created.'
+    resString = 'Committee created.'
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
     repo = gh.FormatRepoName(committee_name, gh.GH_REPOTYPE_COMMITTEE)

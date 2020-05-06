@@ -61,7 +61,7 @@ def process_form(values, view_id, function_directory):
     logging.info(r.text)
 
 def CreateCopperObjects(project_name, emails):
-    resString = 'Copper object created.'
+    resString = 'Project created.'
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
     repo = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)

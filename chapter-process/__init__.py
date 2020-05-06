@@ -77,7 +77,7 @@ def GetCopperRegion(region):
     return cp_region
 
 def CreateCopperObjects(chapter_name, emails, region, country):
-    resString = 'Copper object created.'
+    resString = 'Chapter created.'
     cp = copper.OWASPCopper()
     cp_region = GetCopperRegion(region)
     gh = github.OWASPGitHub()
