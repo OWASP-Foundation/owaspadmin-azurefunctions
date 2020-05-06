@@ -64,6 +64,7 @@ def CreateCopperObjects(committee_name, emails):
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
     repo = gh.FormatRepoName(committee_name, gh.GH_REPOTYPE_COMMITTEE)
+    committee_name = "Committee - OWASP " + committee_name
 
     if cp.CreateProject(committee_name, emails, copper.OWASPCopper.cp_project_type_option_project, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo) == '':
         resString = "Failed to create Copper objects"
