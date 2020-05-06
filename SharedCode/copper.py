@@ -19,6 +19,8 @@ class OWASPCopper:
     cp_project_type_option_chapter = 899316
     cp_project_type_option_global_partner = 900407
     cp_project_type_option_local_partner = 900408
+    cp_project_type_option_project = 1378082
+    cp_project_type_option_committee = 1378083
     cp_project_github_repo = 399740
     # event specific
     cp_project_event_start_date = 392473
@@ -78,6 +80,8 @@ class OWASPCopper:
         
     def FindPersonByEmail(self, searchtext):
         lstxt = searchtext.lower()
+        if len(lstxt) <= 0:
+            return ''
 
         data = {
             'page_size': 5,
@@ -94,7 +98,9 @@ class OWASPCopper:
 
     def FindPersonByName(self, searchtext):
         lstxt = searchtext.lower()
-
+        if len(lstxt) <= 0:
+            return ''
+            
         data = {
             'page_size': 5,
             'sort_by': 'name',
@@ -192,13 +198,18 @@ class OWASPCopper:
         
         return projects
 
-    def CreateProject(self, proj_name, emails, status, region, country, postal_code, repo):
+    def CreateProject(self, proj_name, emails, project_type, status, region, country, postal_code, repo):
         data = {
                 'name':proj_name
         }
         fields = []
-        fields.append({'custom_field_definition_id' : self.cp_project_type, 'value': self.cp_project_type_option_chapter})
-        fields.append({
+        if project_type:
+            fields.append({
+                    'custom_field_definition_id' : self.cp_project_type, 
+                    'value': project_type
+                })
+        if status:
+            fields.append({
                     'custom_field_definition_id': self.cp_project_chapter_status,
                     'value': status
                 })

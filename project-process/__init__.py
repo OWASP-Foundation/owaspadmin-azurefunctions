@@ -66,7 +66,7 @@ def CreateCopperObjects(project_name, emails):
     gh = github.OWASPGitHub()
     repo = gh.FormatRepoName(project_name)
 
-    cp.CreateProject(project_name, emails, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo)
+    cp.CreateProject(project_name, emails, copper.OWASPCopper.cp_project_type_option_project, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo)
 
     return resString
 
@@ -78,6 +78,7 @@ def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks):
         resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
     
+
     if resString.find("Failed") < 0:
         r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir)
         if not gh.TestResultCode(r.status_code):
