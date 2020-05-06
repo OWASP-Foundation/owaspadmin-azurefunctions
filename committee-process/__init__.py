@@ -6,6 +6,7 @@ import requests
 from urllib.parse import unquote_plus
 from ..SharedCode import salesforce 
 from ..SharedCode import github
+from ..SharedCode import copper
 
 
 def main(msg: func.QueueMessage, context: func.Context) -> None:
@@ -40,6 +41,9 @@ def process_form(values, view_id, function_directory):
         
         logging.info("Creating github repository")
         resString = CreateGithubStructure(group_name, function_directory, emaillinks, githubs)
+        # do copper integration here
+        if not 'Failed' in resString:
+            resString = CreateCopperObjects(group_name, emails)
     else:
         resString = "Failed due to non matching leader names with emails"
 
@@ -55,6 +59,15 @@ def process_form(values, view_id, function_directory):
     r = requests.post(urldialog,headers=headers, data=resp)
     logging.info(r.text)
 
+def CreateCopperObjects(committee_name, emails):
+    resString = 'Copper object created.'
+    cp = copper.OWASPCopper()
+    gh = github.OWASPGitHub()
+    repo = gh.FormatRepoName(committee_name, gh.GH_REPOTYPE_COMMITTEE)
+
+    cp.CreateProject(committee_name, emails, copper.OWASPCopper.cp_project_type_option_project, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo)
+
+    return resString
 
 def CreateGithubStructure(project_name, func_dir, emaillinks, githubs):
     gh = github.OWASPGitHub()

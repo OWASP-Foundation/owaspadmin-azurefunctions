@@ -81,7 +81,7 @@ def CreateCopperObjects(chapter_name, emails, region, country):
     cp = copper.OWASPCopper()
     cp_region = GetCopperRegion(region)
     gh = github.OWASPGitHub()
-    repo = gh.FormatRepoName(chapter_name)
+    repo = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
 
     cp.CreateProject(chapter_name, emails, copper.OWASPCopper.cp_project_type_option_chapter, copper.OWASPCopper.cp_project_chapter_status_option_active, cp_region, country=country, repo = repo)
 

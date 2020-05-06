@@ -19,6 +19,9 @@
             "path" : "docs/_config.yml"
         },
         {
+            "path" : "docs/404.html"
+        },
+        {
             "path" : "docs/gitignore"
         }
     ]

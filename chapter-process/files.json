@@ -22,6 +22,9 @@
             "path" : "docs/gitignore"
         },
         {
+            "path" : "docs/404.html"
+        },
+        {
             "path" : "docs/assets/images/README.md"
         }
     ]
