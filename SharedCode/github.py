@@ -202,7 +202,10 @@ class OWASPGitHub:
         
         return result
 
-    def GetPublicRepositories(self, matching=""):
+    def GetInactiveRepositories(self, matching=""):
+       return self.GetPublicRepositories(matching=matching, inactive=True)
+
+    def GetPublicRepositories(self, matching="", inactive=False):
         headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
         }
@@ -234,7 +237,9 @@ class OWASPGitHub:
                     haspages = repo['has_pages']
                     if not istemplate and haspages:
                         pages = self.GetPages(repoName)
-                        if pages['status'] == None:
+                        if pages['status'] == None and not inactive:
+                            continue
+                        elif pages['status'] != None and inactive:
                             continue
                         
                         if not matching or matching in repoName:

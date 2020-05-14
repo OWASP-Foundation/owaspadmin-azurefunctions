@@ -144,6 +144,29 @@ def build_chapter_json(gh):
     else:
         logging.error(f"Failed to update _data/chapters.json: {r.text}")
 
+def build_inactive_chapters_json(gh):
+    repos = gh.GetPublicRepositories('www-chapter', True)
+    
+    for repo in repos:
+        repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
+        repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+
+    repos.sort(key=lambda x: x['name'])
+    repos.sort(key=lambda x: x['region'], reverse=True)
+   
+    sha = ''
+    r = gh.GetFile('owasp.github.io', '_data/inactive_chapters.json')
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    contents = json.dumps(repos)
+    r = gh.UpdateFile('owasp.github.io', '_data/inactive_chapters.json', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated _data/inactive_chapters.json successfully')
+    else:
+        logging.error(f"Failed to update _data/inactive_chapters.json: {r.text}")
+
 def update_chapter_admin_team(gh):
     team_id = gh.GetTeamId('chapter-administration')
     if team_id:
