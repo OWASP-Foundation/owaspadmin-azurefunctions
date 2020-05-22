@@ -145,7 +145,7 @@ def build_chapter_json(gh):
         logging.error(f"Failed to update _data/chapters.json: {r.text}")
 
 def build_inactive_chapters_json(gh):
-    repos = gh.GetPublicRepositories('www-chapter', True)
+    repos = gh.GetInactiveRepositories('www-chapter')
     
     for repo in repos:
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
