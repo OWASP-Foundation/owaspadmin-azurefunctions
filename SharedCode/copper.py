@@ -114,8 +114,10 @@ class OWASPCopper:
         
         return ''
 
-    def CreatePerson(self, email):
+    def CreatePerson(self, name, email):
+        # Needs Name
         data = {
+            'name':name,
             'emails': [
                 {
                     'email':email,
@@ -128,7 +130,7 @@ class OWASPCopper:
         pid = None
         if r.ok:
             person = json.loads(r.text)
-            pid = person.id
+            pid = person['id']
         
         return pid
 
@@ -198,7 +200,7 @@ class OWASPCopper:
         
         return projects
 
-    def CreateProject(self, proj_name, emails, project_type, status, region = None, country = None, postal_code = None, repo = None):
+    def CreateProject(self, proj_name, leaders, emails, project_type, status, region = None, country = None, postal_code = None, repo = None):
         data = {
                 'name':proj_name
         }
@@ -244,14 +246,15 @@ class OWASPCopper:
             project = json.loads(r.text)
             pid = project['id']
 
+            endx = 0
             for email in emails:
                 sr = self.FindPersonByEmail(email)
                 people = json.loads(sr)
                 if len(people) > 0:
                     person_id = people[0]['id']
                 else: 
-                    person_id = self.CreatePerson(email)    
-                
+                    person_id = self.CreatePerson(leaders[endx], email)    
+                endx = endx + 1
                 if person_id:
                     self.RelateRecord('projects', pid, person_id)
 

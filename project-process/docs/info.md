@@ -1,7 +1,7 @@
 ### [GROUPNAME] Information
-* [Flagship Project](#)
-* [Tool Project](#)
-* [Version 2.8.0](#)
+* [Incubator Project](#)
+* [Type of Project](#)
+* [Version 0.0.0](#)
 * [Builder](#)
 * [Breaker](#)
 
