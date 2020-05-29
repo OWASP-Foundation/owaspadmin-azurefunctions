@@ -25,7 +25,6 @@ class Product:
             metadata["display_end"] = event_payload["display_end"]
         if event_payload.get('inventory', None) is not None and event_payload.get('inventory') != 0:
             metadata["inventory"] = event_payload["inventory"]
-            metadata["starting_inventory"] = event_payload["inventory"]
         if event_payload.get('description', None) is not None:
             metadata["description"] = event_payload["description"]
         if event_payload.get('discountable', None) is True:
@@ -84,7 +83,6 @@ class Product:
             metadata["display_end"] = event_payload["display_end"]
         if event_payload.get('inventory', None) is not None and event_payload.get('inventory') != 0:
             metadata["inventory"] = event_payload["inventory"]
-            metadata["starting_inventory"] = event_payload["inventory"]
         if event_payload.get('description', None) is not None:
             metadata["description"] = event_payload["description"]
 
@@ -164,7 +162,7 @@ class Product:
         response_message = SlackResponse.message(response_url, 'Product Listing')
         product_list = stripe.SKU.list(
             product=event_id,
-            limit=20,
+            limit=100,
             active=True,
             api_key=os.environ["STRIPE_SECRET"]
         )
@@ -215,12 +213,17 @@ class Product:
                     },
                     "value": "delete"
                 })
+
+                sub_text = product['id']
+                if (product['metadata'].get('inventory', None) is not None):
+                    sub_text += ' | ' + str(product['metadata']['inventory']) + ' remaining'
+
                 response_message.add_block({
                     "type": "section",
                     "block_id": 'manage_product|' + product["id"],
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*" + product["attributes"]["name"] + "*"
+                        "text": "*" + product["attributes"]["name"] + "*\n" + sub_text
                     },
                     "accessory": {
                         "type": "overflow",
@@ -362,7 +365,7 @@ class Product:
             },
             "label": {
                 "type": "plain_text",
-                "text": "Product Inventory"
+                "text": ("Inventory Remaining" if mode == 'update' else "Product Inventory")
             },
             "hint": {
                 "type": "plain_text",
@@ -627,6 +630,16 @@ class Product:
 
     @classmethod
     def change_position(cls, payload, response_url):
+        response_message = SlackResponse.message(response_url, 'Product Listing')
+        response_message.add_block({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Sit tight, the product listing is being reordered..."
+            }
+        })
+        response_message.send()
+
         product_id = payload['product_id']
         direction = payload['direction']
 

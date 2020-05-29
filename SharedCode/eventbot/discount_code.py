@@ -166,13 +166,13 @@ class DiscountCode:
                     "action_id": "discount_code_inventory_input",
                     "placeholder": {
                         "type": "plain_text",
-                        "text": "Available Redemptions"
+                        "text": "Remaining Redemptions"
                     },
                     "initial_value": discount_code['metadata']['inventory']
                 },
                 "label": {
                     "type": "plain_text",
-                    "text": "Available Redemptions"
+                    "text": "Remaining Redemptions"
                 },
                 "hint": {
                     "type": "plain_text",
@@ -243,12 +243,14 @@ class DiscountCode:
                 if stripe_coupon.get('amount_off', None) is not None:
                     discount_codes.append({
                         "id": stripe_coupon["id"],
-                        "amount_off": str(stripe_coupon['amount_off'] / 100) + '0'
+                        "amount_off": str(stripe_coupon['amount_off'] / 100) + '0',
+                        "inventory": metadata.get('inventory', None)
                     })
                 else:
                     discount_codes.append({
                         "id": stripe_coupon["id"],
-                        "percent_off": int(stripe_coupon['percent_off'])
+                        "percent_off": int(stripe_coupon['percent_off']),
+                        "inventory": metadata.get('inventory', None)
                     })
 
         if len(discount_codes):
@@ -286,7 +288,7 @@ class DiscountCode:
                     "block_id": "manage_discount_code|" + discount_code["id"],
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*" + discount_code["id"] + "* (" + amount_off + " off)"
+                        "text": "*" + discount_code["id"] + "* (" + amount_off + " off)" + ((' ' + discount_code['inventory'] + ' Redemptions remaining') if discount_code['inventory'] is not None else '')
                     },
                     "accessory": {
                         "type": "overflow",

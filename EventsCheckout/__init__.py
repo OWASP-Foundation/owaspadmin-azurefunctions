@@ -71,10 +71,9 @@ def validate_request(request: Dict) -> Dict:
             sku_metadata = sku.get('metadata', {})
             if sku.get('product') != product['id'] or metadata.get('event_id') != product['id']:
                 errors['discount_code'] = ['This discount is not valid']
-            if metadata.get('inventory', None) is not None and metadata.get('uses', None) is not None:
+            if metadata.get('inventory', None) is not None:
                 coupon_inventory = int(metadata.get('inventory'))
-                coupon_uses = int(metadata.get('uses'))
-                if (coupon_inventory <= coupon_uses):
+                if (coupon_inventory < 1):
                     errors['discount_code'] = ['This discount is not valid']
         except Exception as err:
             errors['discount_code'] = ['This discount is not valid']
@@ -134,8 +133,8 @@ def get_line_items(request):
                     raise Exception('Invalid product')
 
         # check that sku has available inventory
-        if sku_metadata.get('inventory', None) is not None and sku_metadata.get('purchased', None) is not None:
-            if sku_metadata['inventory'] <= sku_metadata['purchased']:
+        if sku_metadata.get('inventory', None) is not None:
+            if int(sku_metadata['inventory']) < 1:
                 raise Exception('Product sold out')
 
         product_name = stripe_sku['attributes']['name']
