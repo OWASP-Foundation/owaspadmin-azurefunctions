@@ -44,7 +44,7 @@ def create_spreadsheet(event):
 
 
 def add_order(order):
-    event = stripe.Product.retrieve(order['metadata'].get('event_id'), api_key=os.environ['STRIPE_SECRET'])
+    event = stripe.Product.retrieve(order['metadata'].get('event_id'), api_key=os.environ['STRIPE_TEST_SECRET'])
 
     sheet = get_google_sheet(get_spreadsheet_name(event))
     row_data = get_base_row_data_for_order(order)
@@ -53,7 +53,7 @@ def add_order(order):
         if item['type'] != 'sku':
             continue
 
-        sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_SECRET'])
+        sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_TEST_SECRET'])
         sku_row = row_data.copy()
         sku_row.extend([sku['id'], sku['attributes'].get('name', '')])
 
@@ -61,13 +61,13 @@ def add_order(order):
 
 
 def add_refund(charge_id, amount_refunded):
-    charge = stripe.Charge.retrieve(charge_id, api_key=os.environ['STRIPE_SECRET'])
+    charge = stripe.Charge.retrieve(charge_id, api_key=os.environ['STRIPE_TEST_SECRET'])
     event_id = charge['metadata'].get('event_id', None)
 
     if event_id is None:
         return
 
-    event = stripe.Product.retrieve(charge['metadata'].get('event_id'), api_key=os.environ['STRIPE_SECRET'])
+    event = stripe.Product.retrieve(charge['metadata'].get('event_id'), api_key=os.environ['STRIPE_TEST_SECRET'])
 
     sheet = get_google_sheet(get_spreadsheet_name(event))
     cell_list = sheet.findall(charge_id)
@@ -91,8 +91,8 @@ def get_base_row_data_for_order(order):
     charge_id = order['metadata'].get('charge_id', None)
 
     if charge_id is not None:
-        charge = stripe.Charge.retrieve(charge_id, api_key=os.environ['STRIPE_SECRET'])
-        balance_transaction = stripe.BalanceTransaction.retrieve(charge['balance_transaction'], api_key=os.environ['STRIPE_SECRET'])
+        charge = stripe.Charge.retrieve(charge_id, api_key=os.environ['STRIPE_TEST_SECRET'])
+        balance_transaction = stripe.BalanceTransaction.retrieve(charge['balance_transaction'], api_key=os.environ['STRIPE_TEST_SECRET'])
         payment_fee = balance_transaction['fee'] / 100
     else:
         payment_fee = ''

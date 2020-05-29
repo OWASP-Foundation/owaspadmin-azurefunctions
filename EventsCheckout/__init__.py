@@ -57,16 +57,16 @@ def validate_request(request: Dict) -> Dict:
         try:
             coupon = stripe.Coupon.retrieve(
                 request.get('discount_code').strip().upper(),
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
             metadata = coupon.get('metadata', {})
             product = stripe.Product.retrieve(
                 metadata.get('event_id'),
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
             sku = stripe.SKU.retrieve(
                 request.get('sku')[0],
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
             sku_metadata = sku.get('metadata', {})
             if sku.get('product') != product['id'] or metadata.get('event_id') != product['id']:
@@ -93,7 +93,7 @@ def get_line_items(request):
         try:
             coupon = stripe.Coupon.retrieve(
                 request.get('discount_code').strip().upper(),
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
             metadata = coupon.get('metadata', {})
             available_discount = coupon.get('amount_off', 0)
@@ -106,7 +106,7 @@ def get_line_items(request):
     for sku in skus:
         stripe_sku = stripe.SKU.retrieve(
             sku,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         sku_metadata = stripe_sku.get('metadata', {})
         
@@ -190,11 +190,11 @@ def create_checkout_session(request: Dict, line_items: Dict) -> Dict:
 
     sku = stripe.SKU.retrieve(
         request.get('sku')[0],
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     product = stripe.Product.retrieve(
         sku['product'],
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
 
     metadata['event_id'] = product['id']
@@ -233,7 +233,7 @@ def create_checkout_session(request: Dict, line_items: Dict) -> Dict:
     }
 
     api_request['line_items'] = line_items
-    api_request['api_key'] = os.environ["STRIPE_SECRET"]
+    api_request['api_key'] = os.environ["STRIPE_TEST_SECRET"]
     api_response = stripe.checkout.Session.create(**api_request)
 
     return {
@@ -293,11 +293,11 @@ def create_comp_order(request, line_items):
 
     sku = stripe.SKU.retrieve(
         request.get('sku')[0],
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     product = stripe.Product.retrieve(
         sku['product'],
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     product_metadata = product.get('metadata', {})
 
@@ -313,7 +313,7 @@ def create_comp_order(request, line_items):
     for line_item in request.get('sku', []):
         sku = stripe.SKU.retrieve(
             line_item,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         order_items.append({
             "amount": sku['price'],
@@ -340,7 +340,7 @@ def create_comp_order(request, line_items):
         customer_request = stripe.Customer.create(
             email=request.get('email'),
             name=request.get('name'),
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         stripe_customer_id = customer_request['id']
 
@@ -349,7 +349,7 @@ def create_comp_order(request, line_items):
         customer=stripe_customer_id,
         metadata=metadata,
         items=order_items,
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
 
     add_event_registrant_to_mailing_list(request.get('email'), metadata)
@@ -371,7 +371,7 @@ def create_comp_order(request, line_items):
 def send_comp_receipt(metadata, line_items):
     stripe_event = stripe.Product.retrieve(
         metadata.get('event_id'),
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     first_name = metadata.get('name').strip().split(' ')[0]
     message = Mail(
@@ -396,14 +396,14 @@ def increment_discount_code(discount_code):
         discount_code = discount_code.strip().upper()
         coupon = stripe.Coupon.retrieve(
             discount_code,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         metadata = coupon.get('metadata', {})
         uses = int(metadata.get('uses', 0)) + 1
         stripe.Coupon.modify(
             discount_code,
             metadata={"uses": uses},
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
     except Exception as exception:
         pass
@@ -441,7 +441,7 @@ def add_event_registrant_to_mailing_list(email, metadata):
 
     product = stripe.Product.retrieve(
         metadata.get('event_id'),
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
 
     segment_name = '2020 ' + product['name']
@@ -516,7 +516,7 @@ def get_marketing_permissions(metadata):
 def get_stripe_customer_id(email):
     customers = stripe.Customer.list(
         email=email,
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     if len(customers) > 0:
         for customer in customers:

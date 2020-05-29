@@ -12,7 +12,7 @@ class Product:
     def create_product(cls, event_payload={}, response_url=None):
         product = stripe.Product.retrieve(
             event_payload.get('event_id'),
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         metadata = {
@@ -41,7 +41,7 @@ class Product:
             inventory={"type": "infinite"},
             product=product["id"],
             metadata=metadata,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Product created successfully')
@@ -72,7 +72,7 @@ class Product:
     def edit_product(event_payload={}, response_url=None):
         sku = stripe.SKU.retrieve(
             event_payload.get('product_id'),
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         metadata = sku.get('metadata', {})
@@ -97,12 +97,12 @@ class Product:
                 "name": event_payload.get('name')
             },
             metadata=metadata,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         product = stripe.Product.retrieve(
             sku['product'],
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Product updated successfully')
@@ -134,7 +134,7 @@ class Product:
     def edit(cls, trigger_id, response_url, product_id):
         product = stripe.SKU.retrieve(
             product_id,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         product_metadata = product.get('metadata', {})
@@ -164,7 +164,7 @@ class Product:
             product=event_id,
             limit=100,
             active=True,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         if len(product_list):
@@ -494,16 +494,16 @@ class Product:
     def delete(input_values, queue, response_url=None, product_id=None):
         sku = stripe.SKU.retrieve(
             product_id,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         product = stripe.Product.retrieve(
             sku['product'],
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         stripe.SKU.modify(
             product_id,
             active=False,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         response_message = SlackResponse.message(response_url, 'Product deleted successfully')
         response_message.add_block({
@@ -614,7 +614,7 @@ class Product:
             active=True,
             product=event_id,
             limit=100,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         
         max_position = 1
@@ -645,14 +645,14 @@ class Product:
 
         sku = stripe.SKU.retrieve(
             product_id,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         all_skus = stripe.SKU.list(
             active=True,
             product=sku.get('product'),
             limit=100,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         sku_metadata = sku.get('metadata', {})
@@ -672,14 +672,14 @@ class Product:
                 stripe.SKU.modify(
                     current_sku['id'],
                     metadata=current_sku_metadata,
-                    api_key=os.environ["STRIPE_SECRET"]
+                    api_key=os.environ["STRIPE_TEST_SECRET"]
                 )
 
             sku_metadata['display_order'] = current_position + 1
             stripe.SKU.modify(
                 sku['id'],
                 metadata=sku_metadata,
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
         else:
             for current_sku in all_skus:
@@ -695,14 +695,14 @@ class Product:
                 stripe.SKU.modify(
                     current_sku['id'],
                     metadata=current_sku_metadata,
-                    api_key=os.environ["STRIPE_SECRET"]
+                    api_key=os.environ["STRIPE_TEST_SECRET"]
                 )
 
             sku_metadata['display_order'] = current_position - 1
             stripe.SKU.modify(
                 sku['id'],
                 metadata=sku_metadata,
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
         
         cls.list_products(None, response_url, sku['product'])
