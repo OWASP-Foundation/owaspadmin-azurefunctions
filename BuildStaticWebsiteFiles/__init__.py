@@ -71,6 +71,16 @@ def build_committee_json(gh):
     for repo in repos: #change to use title in project repo.....
         repo['name'] = repo['name'].replace('www-committee-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
 
     repos.sort(key=lambda x: x['name'])
     repos.sort(key=lambda x: x['level'], reverse=True)
@@ -99,6 +109,16 @@ def build_project_json(gh):
     for repo in repos: #change to use title in project repo.....
         repo['name'] = repo['name'].replace('www-project-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
 
     repos.sort(key=lambda x: x['name'])
     repos.sort(key=lambda x: x['level'], reverse=True)
@@ -123,10 +143,21 @@ def build_chapter_json(gh):
     # store in json
     #write json file out to github.owasp.io _data folder
     repos = gh.GetPublicRepositories('www-chapter')
-    
+    #Thu Sep 12 20:51:21 2019
+    fmt_str = "%a %b %-d %H:%M:%S %Y"
     for repo in repos:
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
 
     repos.sort(key=lambda x: x['name'])
     repos.sort(key=lambda x: x['region'], reverse=True)
@@ -150,6 +181,16 @@ def build_inactive_chapters_json(gh):
     for repo in repos:
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
 
     repos.sort(key=lambda x: x['name'])
     repos.sort(key=lambda x: x['region'], reverse=True)
