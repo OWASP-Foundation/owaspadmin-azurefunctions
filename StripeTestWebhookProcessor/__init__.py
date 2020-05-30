@@ -27,7 +27,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         event = stripe.Event.construct_from(
-            payload, os.environ["STRIPE_SECRET"]
+            payload, os.environ["STRIPE_TEST_SECRET"]
         )
     except ValueError as e:
         return func.HttpResponse(status_code=400)
@@ -61,7 +61,7 @@ def handle_checkout_session_completed(event: Dict):
     if payment_intent is not None:
         payment_intent = stripe.PaymentIntent.retrieve(
             payment_intent,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
     if customer_email is None:
@@ -70,7 +70,7 @@ def handle_checkout_session_completed(event: Dict):
     if setup_intent is not None:
         setup_intent = stripe.SetupIntent.retrieve(
             setup_intent,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         metadata = setup_intent.get('metadata', {})
         customer_id = metadata.get('customer_id', None)
@@ -79,12 +79,12 @@ def handle_checkout_session_completed(event: Dict):
         stripe.PaymentMethod.attach(
             payment_method,
             customer=customer_id,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         stripe.Subscription.modify(
             subscription_id,
             default_payment_method=payment_method,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
     elif payment_intent is not None and payment_intent['metadata'].get('purchase_type') == 'event':
         metadata = payment_intent.get('metadata', {})
@@ -101,7 +101,7 @@ def handle_checkout_session_completed(event: Dict):
         if subscription is not None:
             subscription = stripe.Subscription.retrieve(
                 subscription,
-                api_key=os.environ["STRIPE_SECRET"]
+                api_key=os.environ["STRIPE_TEST_SECRET"]
             )
             metadata = subscription.get('metadata', {})
             purchase_type = metadata.get('purchase_type', 'donation')
@@ -128,7 +128,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
         customer = stripe.Customer.retrieve(
             customer_id,
             expand=['subscriptions'],
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         existing_subscriptions = customer.get('subscriptions')
@@ -136,7 +136,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
             if subscription['plan']['nickname'] is not None and "Membership" in subscription['plan']['nickname'] and subscription['id'] != subscription_data['subscription_id']:
                 stripe.Subscription.delete(
                     subscription['id'],
-                    api_key=os.environ["STRIPE_SECRET"]
+                    api_key=os.environ["STRIPE_TEST_SECRET"]
                 )
 
 
@@ -155,13 +155,13 @@ def update_customer_record(customer_id, metadata, subscription_data):
                             subscription_data['subscription_id'],
                             trial_end=int(new_end_date.timestamp()),
                             prorate=False,
-                            api_key=os.environ["STRIPE_SECRET"]
+                            api_key=os.environ["STRIPE_TEST_SECRET"]
                         )
                 else:
                     if subscription_data['subscription_id'] is not None:
                         stripe.Subscription.delete(
                             subscription_data['subscription_id'],
-                            api_key=os.environ["STRIPE_SECRET"]
+                            api_key=os.environ["STRIPE_TEST_SECRET"]
                         )
                         recurring="no"
 
@@ -172,7 +172,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
                 "membership_end": subscription_data['membership_end'],
                 "membership_recurring": recurring
             },
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
 
@@ -264,7 +264,7 @@ def add_event_registrant_to_mailing_list(email, metadata):
 
     product = stripe.Product.retrieve(
         metadata.get('event_id'),
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
 
     event_date = product['metadata'].get('event_date', None)
@@ -351,7 +351,7 @@ def get_merge_fields(metadata, subscription_data, customer_id):
 
         customer = stripe.Customer.retrieve(
             customer_id,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         customer_metadata = customer.get('metadata', {})
 
@@ -440,7 +440,7 @@ def handle_product_created(event_data):
 def handle_sku_updated(event_data):
     product = stripe.Product.retrieve(
         event_data.get('product', None),
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     product_metadata = product.get('metadata', {})
 
@@ -482,31 +482,31 @@ def handle_sku_updated(event_data):
 
 
 def handle_order_created(event_data):
-    order = stripe.Order.retrieve(event_data['id'], api_key=os.environ['STRIPE_SECRET'])
+    order = stripe.Order.retrieve(event_data['id'], api_key=os.environ['STRIPE_TEST_SECRET'])
 
     for item in order['items']:
         if item['type'] != 'sku':
             continue
 
-        sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_SECRET'])
+        sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_TEST_SECRET'])
         inventory = sku['metadata'].get('inventory', None)
 
         if inventory is None or inventory == 0:
             continue
 
         inventory = int(inventory) - 1
-        stripe.SKU.modify(sku['id'], metadata={'inventory': inventory}, api_key=os.environ['STRIPE_SECRET'])
+        stripe.SKU.modify(sku['id'], metadata={'inventory': inventory}, api_key=os.environ['STRIPE_TEST_SECRET'])
 
     discount_code = order['metadata'].get('discount_code', None)
 
     if discount_code is not None:
         discount_code = discount_code.strip().upper()
-        coupon = stripe.Coupon.retrieve(discount_code, api_key=os.environ['STRIPE_SECRET'])
+        coupon = stripe.Coupon.retrieve(discount_code, api_key=os.environ['STRIPE_TEST_SECRET'])
         inventory = coupon['metadata'].get('inventory', None)
 
         if inventory is not None and inventory != 0:
             inventory = int(inventory) - 1
-            stripe.Coupon.modify(discount_code, metadata={'inventory': inventory}, api_key=os.environ['STRIPE_SECRET'])
+            stripe.Coupon.modify(discount_code, metadata={'inventory': inventory}, api_key=os.environ['STRIPE_TEST_SECRET'])
 
     registrant.add_order(order)
             
@@ -515,7 +515,7 @@ def handle_order_created(event_data):
 def handle_sku_created(event_data):
     product = stripe.Product.retrieve(
         event_data.get('product', None),
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     product_metadata = product.get('metadata', {})
     sku_attributes = event_data.get('attributes', {})
@@ -563,7 +563,7 @@ def create_order_from_payment_intent(payment_intent):
     for sku in skus:
         stripe_sku = stripe.SKU.retrieve(
             sku,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         order_total += stripe_sku.get('price', 0)
         order_items.append({
@@ -592,7 +592,7 @@ def create_order_from_payment_intent(payment_intent):
         customer=payment_intent['customer'],
         metadata=metadata,
         items=order_items,
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
 
     if metadata.get('discount_code', None) is not None:
@@ -604,14 +604,14 @@ def increment_discount_code(discount_code):
         discount_code = discount_code.strip().upper()
         coupon = stripe.Coupon.retrieve(
             discount_code,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         metadata = coupon.get('metadata', {})
         uses = int(metadata.get('uses', 0)) + 1
         stripe.Coupon.modify(
             discount_code,
             metadata={"uses": uses},
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
     except Exception as exception:
         pass
@@ -620,6 +620,6 @@ def increment_discount_code(discount_code):
 def get_customer_email_from_id(customer_id):
     customer = stripe.Customer.retrieve(
         customer_id,
-        api_key=os.environ["STRIPE_SECRET"]
+        api_key=os.environ["STRIPE_TEST_SECRET"]
     )
     return customer.email

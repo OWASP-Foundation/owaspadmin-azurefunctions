@@ -21,7 +21,7 @@ class Event:
                 "currency": payload.get('currency'),
                 "event_date": payload.get('event_date')
             },
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
 
         response_message = SlackResponse.message(response_url, 'Event created successfully')
@@ -119,7 +119,7 @@ class Event:
         stripe_products = stripe.Product.list(
             active=True,
             limit=10,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         for event in stripe_products:
             metadata = event.get('metadata', {})
@@ -206,7 +206,7 @@ class Event:
     def show_event(cls, response_url, product_id):
         product = stripe.Product.retrieve(
             product_id,
-            api_key=os.environ["STRIPE_SECRET"]
+            api_key=os.environ["STRIPE_TEST_SECRET"]
         )
         response_message = SlackResponse.message(response_url, text='Manage Event')
         response_message.add_block({
