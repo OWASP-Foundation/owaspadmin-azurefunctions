@@ -67,7 +67,7 @@ def build_leaders_json(gh):
 
 def build_committee_json(gh):
     repos = gh.GetPublicRepositories('www-committee')
-
+    fmt_str = "%a %b %-d %H:%M:%S %Y"
     for repo in repos: #change to use title in project repo.....
         repo['name'] = repo['name'].replace('www-committee-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
@@ -105,7 +105,7 @@ def build_project_json(gh):
     # store in json
     #write json file out to github.owasp.io _data folder
     repos = gh.GetPublicRepositories('www-project')
-
+    fmt_str = "%a %b %-d %H:%M:%S %Y"
     for repo in repos: #change to use title in project repo.....
         repo['name'] = repo['name'].replace('www-project-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
@@ -177,7 +177,7 @@ def build_chapter_json(gh):
 
 def build_inactive_chapters_json(gh):
     repos = gh.GetInactiveRepositories('www-chapter')
-    
+    fmt_str = "%a %b %-d %H:%M:%S %Y"
     for repo in repos:
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
