@@ -45,9 +45,9 @@ def create_spreadsheet(event):
 
 def add_order(order):
     event = stripe.Product.retrieve(order['metadata'].get('event_id'), api_key=os.environ['STRIPE_TEST_SECRET'])
-
     sheet = get_google_sheet(get_spreadsheet_name(event))
-    row_data = get_base_row_data_for_order(order)
+    headers = sheet.row_values(1)
+    row_data = get_base_row_data_for_order(order, headers)
 
     for item in order['items']:
         if item['type'] != 'sku':
@@ -55,9 +55,17 @@ def add_order(order):
 
         sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_TEST_SECRET'])
         sku_row = row_data.copy()
-        sku_row.extend([sku['id'], sku['attributes'].get('name', '')])
 
-        sheet.append_row(sku_row)
+        sku_data = {
+            'SKU': sku['id'],
+            'Session': sku['attributes'].get('name', '')
+        }
+
+        for column_name in sku_data:
+            column_index = headers.index(column_name)
+            sku_row[column_index] = sku_data[column_name]
+
+        sheet.append_row(sku_row, table_range='A1')
 
 
 def add_refund(charge_id, amount_refunded):
@@ -70,10 +78,13 @@ def add_refund(charge_id, amount_refunded):
     event = stripe.Product.retrieve(charge['metadata'].get('event_id'), api_key=os.environ['STRIPE_TEST_SECRET'])
 
     sheet = get_google_sheet(get_spreadsheet_name(event))
+    headers = sheet.row_values(1)
     cell_list = sheet.findall(charge_id)
 
+    refund_cell = headers.index('Refund Amount') + 1
+
     for cell in cell_list:
-        sheet.update_cell(cell.row, 21, amount_refunded / 100)
+        sheet.update_cell(cell.row, refund_cell, amount_refunded / 100)
 
 
 def get_google_sheet(sheet_name):
@@ -86,7 +97,7 @@ def get_google_sheet(sheet_name):
     return sheet
 
 
-def get_base_row_data_for_order(order):
+def get_base_row_data_for_order(order, headers):
     dietary_restrictions = order['metadata'].get('dietary_restrictions', '').strip().split('|')
     charge_id = order['metadata'].get('charge_id', None)
 
@@ -97,31 +108,39 @@ def get_base_row_data_for_order(order):
     else:
         payment_fee = ''
 
-    row_data = [
-        order['customer'],
-        order['metadata'].get('name', '').strip().split(' ')[0],
-        ' '.join((order['metadata'].get('name', '') + ' ').split(' ')[1:]).strip(),
-        order['metadata'].get('company', ''),
-        order['metadata'].get('title', ''),
-        order['email'],
-        order['metadata'].get('discount_code', ''),
-        order['metadata'].get('country', ''),
-        order['metadata'].get('city', ''),
-        'YES' if 'Gluten-Free' in dietary_restrictions else '',
-        'YES' if 'Halal' in dietary_restrictions else '',
-        'YES' if 'Kosher' in dietary_restrictions else '',
-        'YES' if 'Nut Allergy' in dietary_restrictions else '',
-        'YES' if 'Shellfish Allergy' in dietary_restrictions else '',
-        'YES' if 'Vegan' in dietary_restrictions else '',
-        'YES' if 'Vegetarian' in dietary_restrictions else '',
-        order['metadata'].get('experience', ''),
-        order['metadata'].get('persona', ''),
-        datetime.fromtimestamp(order['created']).strftime("%m/%d/%Y"),
-        order['amount'] / 100,
-        '',
-        order['metadata'].get('charge_id', ''),
-        order['id'],
-        payment_fee
-    ]
+    row_data = headers.copy()
+
+    for i in range(len(row_data)):
+        row_data[i] = ''
+
+    order_row = {
+        'Customer ID': order['customer'],
+        'First Name': order['metadata'].get('name', '').strip().split(' ')[0],
+        'Last Name': ' '.join((order['metadata'].get('name', '') + ' ').split(' ')[1:]).strip(),
+        'Company/Organization': order['metadata'].get('company', ''),
+        'Title': order['metadata'].get('title', ''),
+        'Email': order['email'],
+        'Discount Code': order['metadata'].get('discount_code', ''),
+        'Country': order['metadata'].get('country', ''),
+        'City': order['metadata'].get('city', ''),
+        'Gluten-Free': 'YES' if 'Gluten-Free' in dietary_restrictions else '',
+        'Halal': 'YES' if 'Halal' in dietary_restrictions else '',
+        'Kosher': 'YES' if 'Kosher' in dietary_restrictions else '',
+        'Nut Allergy': 'YES' if 'Nut Allergy' in dietary_restrictions else '',
+        'Shellfish Allergy': 'YES' if 'Shellfish Allergy' in dietary_restrictions else '',
+        'Vegan': 'YES' if 'Vegan' in dietary_restrictions else '',
+        'Vegetarian': 'YES' if 'Vegan' in dietary_restrictions else '',
+        'Experience': order['metadata'].get('experience', ''),
+        'Persona': order['metadata'].get('persona', ''),
+        'Payment Date': datetime.fromtimestamp(order['created']).strftime("%m/%d/%Y"),
+        'Payment Amount': order['amount'] / 100,
+        'Payment ID': order['metadata'].get('charge_id', ''),
+        'Order ID': order['id'],
+        'Payment Fees': payment_fee
+    }
+
+    for column_name in order_row:
+        column_index = headers.index(column_name)
+        row_data[column_index] = order_row[column_name]
 
     return row_data
