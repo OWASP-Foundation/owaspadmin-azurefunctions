@@ -272,7 +272,7 @@ def add_event_registrant_to_mailing_list(email, metadata):
         event_year = datetime.now().year
     else:
         event_year = datetime.strptime(event_date, '%Y-%m-%d').year
-    segment_name = event_year + ' ' + product['name']
+    segment_name = str(event_year) + ' ' + str(product['name'])
 
     segments = mailchimp.lists.segments.all(os.environ['MAILCHIMP_LIST_ID'], True)
     segment_id = None
@@ -491,7 +491,7 @@ def handle_order_created(event_data):
         sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_SECRET'])
         inventory = sku['metadata'].get('inventory', None)
 
-        if inventory is None or inventory == 0:
+        if inventory is None or int(inventory) == 0:
             continue
 
         inventory = int(inventory) - 1
@@ -504,7 +504,7 @@ def handle_order_created(event_data):
         coupon = stripe.Coupon.retrieve(discount_code, api_key=os.environ['STRIPE_SECRET'])
         inventory = coupon['metadata'].get('inventory', None)
 
-        if inventory is not None and inventory != 0:
+        if inventory is not None and int(inventory) != 0:
             inventory = int(inventory) - 1
             stripe.Coupon.modify(discount_code, metadata={'inventory': inventory}, api_key=os.environ['STRIPE_SECRET'])
 
