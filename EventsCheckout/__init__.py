@@ -28,7 +28,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         line_items = get_line_items(request)
     except Exception as error:
-        errors['sku'] = ['Invalid ticket option selected']
+        errors['product'] = ['The ticket option that you selected is no longer available.']
 
     if not bool(errors):
         is_comp_order = is_order_comped(line_items)
@@ -47,7 +47,7 @@ def validate_request(request: Dict) -> Dict:
     errors = {}
 
     if request.get('sku', None) is None:
-        errors['sku'] = ['Please select the ticket option that you would like to purchase']
+        errors['product'] = ['Please select the ticket option that you would like to purchase']
     if request.get('name', None) is None:
         errors['name'] = ['Name is required']
     if request.get('email', None) is None:
