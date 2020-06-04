@@ -373,7 +373,7 @@ class Product:
             },
             "optional": True
         })
-        if product.get('discountable', False) == 'True':
+        if product.get('discountable', 'True') == 'True':
             modal_response.add_block({
                 "type": "input",
                 "block_id": "product_discountable_input",
