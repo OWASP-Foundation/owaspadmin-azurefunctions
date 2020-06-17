@@ -59,6 +59,7 @@ def validate_request(request: Dict) -> Dict:
                 request.get('discount_code').strip().upper(),
                 api_key=os.environ["STRIPE_SECRET"]
             )
+            logging.info(coupon)
             metadata = coupon.get('metadata', {})
             product = stripe.Product.retrieve(
                 metadata.get('event_id'),
@@ -88,6 +89,7 @@ def get_line_items(request):
     total_discount = 0
     available_discount = 0
     comp_discount = False
+    full_comp = False
 
     if request.get('discount_code', None) is not None:
         try:
@@ -100,6 +102,8 @@ def get_line_items(request):
             if coupon.get('percent_off', 0) == 100:
                 comp_discount = True
                 available_discount = 0
+            if metadata.get('full_comp', False) == 'True':
+                full_comp = True
         except Exception as exception:
             pass
 
@@ -140,7 +144,7 @@ def get_line_items(request):
         product_name = stripe_sku['attributes']['name']
         product_price = stripe_sku['price']
 
-        if bool(sku_metadata.get('discountable', False)) is True:
+        if bool(sku_metadata.get('discountable', False)) is True or full_comp:
             if available_discount > 0 or comp_discount is True:
                 if comp_discount is True:
                     product_price = 0

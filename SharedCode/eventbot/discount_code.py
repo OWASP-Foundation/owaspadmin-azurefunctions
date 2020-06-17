@@ -21,6 +21,9 @@ class DiscountCode:
         if event_payload.get('inventory', None) is not None:
             metadata['inventory'] = event_payload.get('inventory')
 
+        if event_payload.get('full_comp', False) is True:
+            metadata['full_comp'] = True
+
         if event_payload.get('amount_off', None) is not None:
             new_discount_code = stripe.Coupon.create(
                 duration='forever',
@@ -216,6 +219,13 @@ class DiscountCode:
                                 "text": "This is a comp (100% off) discount code"
                             },
                             "value": "comp"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "This discount code can be applied to all products - even products marked not discountable"
+                            },
+                            "value": "full_comp"
                         }
                     ]
                 },
@@ -338,7 +348,12 @@ class DiscountCode:
             elif input_field['input_id'] == 'discount_code_inventory_input' and input_field.get('value', '') != '':
                 queue_data['payload']['inventory'] = input_field['value']
             elif input_field['input_id'] == 'discount_code_comp_input' and input_field.get('value', '') != '':
-                queue_data['payload']['percent_off'] = 100
+                input_array = input_field.get('value').split('|')
+                for comp_input in input_array:
+                    if comp_input == 'comp':
+                        queue_data['payload']['percent_off'] = 100
+                    if comp_input == 'full_comp':
+                        queue_data['payload']['full_comp'] = True
 
         queue.set(json.dumps(queue_data))
 
