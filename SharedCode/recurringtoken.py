@@ -1,24 +1,27 @@
 import os
 import sys
-from simplecrypt import encrypt, decrypt
+from cryptography.fernet import Fernet
 from base64 import b64encode, b64decode
 from datetime import datetime
 from datetime import timedelta
 
 def make_token(message):
-    password = os.environ["BILLING_ENCRYPTION_KEY"]
+    fernet_key = os.environ["BILLING_ENCRYPTION_KEY"]
     expiration = datetime.now() + timedelta(days=1)
     expiration = expiration.strftime('%m/%d/%Y')
-    cipher = encrypt(password, message + '|' + expiration)
-    encoded_cipher = b64encode(cipher)
-    return encoded_cipher.decode('utf-8')
+
+    token_unencrypted = message + '|' + expiration
+
+    f = Fernet(fernet_key)
+    token = f.encrypt(token_unencrypted.encode())
+
+    return token
 
 
 def decode_token(token):
-    password = os.environ["BILLING_ENCRYPTION_KEY"]
+    fernet_key = os.environ["BILLING_ENCRYPTION_KEY"]
+    f = Fernet(fernet_key)
+    unencrypted = f.decrypt(token.encode())
 
-    cipher = b64decode(token)
-    plaintext = decrypt(password, cipher)
-    plaintext = plaintext.decode('utf-8')
-    text_array = plaintext.split('|')
+    text_array = unencrypted.decode().split('|')
     return text_array[0]
