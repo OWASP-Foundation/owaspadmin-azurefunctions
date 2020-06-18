@@ -4,7 +4,7 @@ import stripe
 import gspread
 import logging
 from datetime import datetime
-from googleapiclient.discovery import build
+#from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -21,26 +21,27 @@ def get_spreadsheet_name(event):
 
 
 def create_spreadsheet(event):
-    scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-    client_secret = json.loads(os.environ['GOOGLE_CREDENTIALS'], strict=False)
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(client_secret, scope)
-    drive = build('drive', 'v3', credentials=creds, cache_discovery=False)
-    sheet_name = get_spreadsheet_name(event)
+    pass
+    # scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+    # client_secret = json.loads(os.environ['GOOGLE_CREDENTIALS'], strict=False)
+    # creds = ServiceAccountCredentials.from_json_keyfile_dict(client_secret, scope)
+    # drive = build('drive', 'v3', credentials=creds, cache_discovery=False)
+    # sheet_name = get_spreadsheet_name(event)
 
-    file_metadata = {
-        'name': sheet_name,
-        'parents': [os.environ['EVENT_REGISTRATION_FOLDER']],
-        'mimeType': 'application/vnd.google-apps.spreadsheet',
-    }
+    # file_metadata = {
+    #     'name': sheet_name,
+    #     'parents': [os.environ['EVENT_REGISTRATION_FOLDER']],
+    #     'mimeType': 'application/vnd.google-apps.spreadsheet',
+    # }
 
-    drive.files().create(body=file_metadata, supportsAllDrives=True).execute()
+    # drive.files().create(body=file_metadata, supportsAllDrives=True).execute()
 
-    client = gspread.authorize(creds)
-    sheet = client.open(sheet_name).sheet1
+    # client = gspread.authorize(creds)
+    # sheet = client.open(sheet_name).sheet1
 
-    row_headers = ['Customer ID', 'First Name', 'Last Name', 'Company/Organization', 'Title', 'Email', 'Discount Code', 'Country', 'City', 'Gluten-Free', 'Halal', 'Kosher', 'Nut Allergy', 'Shellfish Allergy', 'Vegan', 'Vegetarian', 'Experience', 'Persona', 'Payment Date', 'Payment Amount', 'Refund Amount', 'Payment ID', 'Order ID', 'Payment Fees', 'SKU', 'Session']
+    # row_headers = ['Customer ID', 'First Name', 'Last Name', 'Company/Organization', 'Title', 'Email', 'Discount Code', 'Country', 'City', 'Gluten-Free', 'Halal', 'Kosher', 'Nut Allergy', 'Shellfish Allergy', 'Vegan', 'Vegetarian', 'Experience', 'Persona', 'Payment Date', 'Payment Amount', 'Refund Amount', 'Payment ID', 'Order ID', 'Payment Fees', 'SKU', 'Session']
 
-    sheet.append_row(row_headers)
+    # sheet.append_row(row_headers)
 
 
 def add_order(order):
