@@ -354,6 +354,7 @@ class DiscountCode:
                         queue_data['payload']['percent_off'] = 100
                     if comp_input == 'full_comp':
                         queue_data['payload']['full_comp'] = True
+                        queue_data['payload']['percent_off'] = 100
 
         queue.set(json.dumps(queue_data))
 
