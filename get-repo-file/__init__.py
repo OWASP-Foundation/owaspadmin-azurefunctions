@@ -2,13 +2,14 @@ import logging
 
 import azure.functions as func
 from ..SharedCode import github
+from googleapiclient.discovery import build
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('get-repo-file triggered')
     
     origin = req.headers.get("Origin")
     if not origin:
-        origin = "http://localhost"
+        origin = "http://localhost" 
         
     if req.method == "OPTIONS": # just return the headers
         response = func.HttpResponse(status_code=200)
@@ -20,7 +21,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         response.headers["Access-Control-Allow-Headers"] = "*"
         
         return response
-        
+    if req.params.get('test') == 'true':
+        return func.HttpResponse(
+             "A most excellent test.",
+             status_code=200
+        )  
+
     fpath = req.params.get('filepath')
     repo = req.params.get('repo')
     if not fpath or repo:
