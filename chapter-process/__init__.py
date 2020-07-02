@@ -23,12 +23,15 @@ def process_form(values, view_id, function_directory):
     chapter_name = values["cname-id"]["cname-value"]["value"]
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
+    git_users = values["github-id"]["github-value"]["value"]
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]
     
     leaders = leader_names.splitlines()
     emails = leader_emails.splitlines()
+    gitusers = git_users.splitlines()
+
     emaillinks = []
     
     if len(leaders) == len(emails):
@@ -39,7 +42,7 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding chapter leader...")
             emaillinks.append(f'[{leader}](mailto:{email})')
         logging.info("Creating github repository")
-        resString = CreateGithubStructure(chapter_name,function_directory, region, emaillinks)
+        resString = CreateGithubStructure(chapter_name,function_directory, region, emaillinks, gitusers)
         # do copper integration here
         if not 'Failed' in resString:
             resString = CreateCopperObjects(chapter_name, leaders, emails, region, country)
@@ -89,7 +92,7 @@ def CreateCopperObjects(chapter_name, leaders, emails, region, country):
 
     return resString
 
-def CreateGithubStructure(chapter_name, func_dir, region, emaillinks):
+def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
     resString = "Chapter created."
@@ -102,9 +105,14 @@ def CreateGithubStructure(chapter_name, func_dir, region, emaillinks):
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {chapter_name}."
             logging.error(resString + " : " + r.text)
+    
+    repoName = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
 
+    if resString.find("Failed") < 0 and len(gitusers) > 0:
+        for user in gitusers:
+            gh.AddPersonToRepo(user, repoName)
+        
     if resString.find("Failed") < 0:
-        repoName = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
         r = gh.GetFile(repoName, 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)

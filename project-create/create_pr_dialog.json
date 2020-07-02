@@ -69,6 +69,20 @@
         },
         {
             "type": "input",
+            "block_id": "github-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "github-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Project Leader GitHub Usernames (one per line)",
+                "emoji": false
+            }
+        },
+        {
+            "type": "input",
             "block_id": "summary-id",
             "element": {
                 "type": "plain_text_input",

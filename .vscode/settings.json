@@ -4,8 +4,9 @@
   "azureFunctions.projectLanguage": "Python",
   "azureFunctions.projectRuntime": "~2",
   "debug.internalConsoleOptions": "neverOpen",
-  "azureFunctions.preDeployTask": "func: pack --build-native-deps",
+  //"azureFunctions.preDeployTask": "func: pack --build-native-deps",
   "python.pythonPath": ".venv/bin/python",
   "python.linting.pylintEnabled": true,
   "python.linting.enabled": true
 }
+    
