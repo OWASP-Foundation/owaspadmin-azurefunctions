@@ -88,7 +88,7 @@ def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gituser
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
-    repoName = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+    repoName = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
 
     if resString.find("Failed") < 0 and len(gitusers) > 0:
         for user in gitusers:

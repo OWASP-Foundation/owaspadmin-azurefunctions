@@ -45,6 +45,58 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         status_code=200
     )
 
+def contact_lookup2(text, response_url):
+    customers = stripe.Customer.list(
+        email=text,
+        limit=1
+    )
+
+    customers.append(stripe.Customer.list(name=text))
+
+    response_text = {
+        "blocks": []
+    }
+
+    if len(customers) > 0:
+        for customer in customers:
+            response_text['blocks'].append({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "*Name*\n" + customer.name
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Email*\n" + customer.email
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Membership Type*\n" + customer.metadata['membership_type']
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Membership Start*\n" + customer.metadata['membership_start']
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Membership End*\n" + customer.metadata['membership_end']
+                }
+            ]
+        })
+    else:
+        response_text['blocks'].append({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "No customer records found for " + text
+                }
+            ]
+        })
+
+
+    return send_response(response_text, response_url)
 
 def contact_lookup(text, response_url):
     returned_fields = 'email_address'

@@ -70,6 +70,7 @@
         {
             "type": "input",
             "block_id": "github-id",
+            "optional": true,
             "element": {
                 "type": "plain_text_input",
                 "action_id": "github-value",
