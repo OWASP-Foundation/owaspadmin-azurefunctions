@@ -23,7 +23,9 @@ def process_form(values, view_id, function_directory):
     chapter_name = values["cname-id"]["cname-value"]["value"]
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
-    git_users = values["github-id"]["github-value"]["value"]
+    git_users = ''
+    if 'github-id' in values:
+        git_users = values["github-id"]["github-value"]["value"]
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]

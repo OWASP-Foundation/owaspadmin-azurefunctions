@@ -23,7 +23,10 @@ def process_form(values, view_id, function_directory):
     project_name = values["cname-id"]["cname-value"]["value"]
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
-    git_users = values["github-id"]["github-value"]["value"]
+    git_users = ''
+    if 'github-id' in values:
+        git_users = values["github-id"]["github-value"]["value"]
+    
     summary = values["summary-id"]["summary-value"]["value"]
     description = values["desc-id"]["desc-value"]["value"]
     roadmap = values["roadmap-id"]["roadmap-value"]["value"]
