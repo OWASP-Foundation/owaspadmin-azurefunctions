@@ -30,7 +30,10 @@ class Product:
         if event_payload.get('discountable', None) is True:
             metadata["discountable"] = event_payload["discountable"]
 
-        metadata["display_order"] = cls.get_new_product_position(event_payload.get('event_id'))
+        if event_payload.get('display_order', None) is not None:
+            metadata["display_order"] = event_payload["display_order"]
+        else:
+            metadata["display_order"] = cls.get_new_product_position(event_payload.get('event_id'))
 
         sku = stripe.SKU.create(
             attributes={
@@ -85,6 +88,8 @@ class Product:
             metadata["inventory"] = event_payload["inventory"]
         if event_payload.get('description', None) is not None:
             metadata["description"] = event_payload["description"]
+        if event_payload.get('display_order', None) is not None:
+            metadata["display_order"] = event_payload["display_order"]
 
         if event_payload.get('discountable', None) is True:
             metadata["discountable"] = event_payload["discountable"]
@@ -145,6 +150,7 @@ class Product:
             'description': product_metadata.get('description'),
             'amount': int(product['price'] / 100),
             'inventory': product_metadata.get('inventory', ''),
+            'display_order': product_metadata.get('display_order', ''),
             'display_start': product_metadata.get('display_start', ''),
             'display_end': product_metadata.get('display_end', ''),
             'discountable': product_metadata.get('discountable', False)
@@ -190,22 +196,6 @@ class Product:
                         "value": "edit"
                     }
                 ]
-                if inc != 0:
-                    product_options.append({
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Move Up"
-                        },
-                        "value": "move_up"
-                    })
-                if inc != len(product_list) - 1 and len(product_list):
-                    product_options.append({
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Move Down"
-                        },
-                        "value": "move_down"
-                    })
                 product_options.append({
                     "text": {
                         "type": "plain_text",
@@ -217,6 +207,8 @@ class Product:
                 sub_text = product['id']
                 if (product['metadata'].get('inventory', None) is not None):
                     sub_text += ' | ' + str(product['metadata']['inventory']) + ' remaining'
+
+                sub_text += ' | Display Order ' + str(product['metadata']['display_order'])
 
                 response_message.add_block({
                     "type": "section",
@@ -354,6 +346,24 @@ class Product:
                 "type": "plain_text",
                 "text": "Enter a whole number or decimal number. Do not include a currency sign or commas."
             }
+        })
+        modal_response.add_block({
+            "type": "input",
+            "block_id": "product_display_order_input",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "product_display_order_input",
+                "initial_value": product.get('display_order', '')
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Display Order"
+            },
+            "hint": {
+                "type": "plain_text",
+                "text": "Leave blank to display the product in the last position. Products are displayed in ascending display order."
+            },
+            "optional": True
         })
         modal_response.add_block({
             "type": "input",
@@ -555,6 +565,8 @@ class Product:
                 queue_data["payload"]["display_start"] = input_value["value"]
             elif input_value["input_id"] == "product_display_end_input" and input_value["value"] is not None:
                 queue_data["payload"]["display_end"] = input_value["value"]
+            elif input_value["input_id"] == "product_display_order_input" and input_value["value"] is not None:
+                queue_data["payload"]["display_order"] = input_value["value"]
             elif input_value["input_id"] == "product_discountable_input" and input_value["value"] is not None and input_value["value"] != '':
                 queue_data["payload"]["discountable"] = True
 
@@ -605,6 +617,8 @@ class Product:
                 queue_data["payload"]["display_end"] = input_value["value"]
             elif input_value["input_id"] == "product_discountable_input" and input_value["value"] is not None and input_value["value"] != '':
                 queue_data["payload"]["discountable"] = True
+            elif input_value["input_id"] == "product_display_order_input" and input_value["value"] is not None and input_value["value"] != '':
+                queue_data["payload"]["display_order"] = input_value["value"]
 
         queue.set(json.dumps(queue_data))
 
@@ -617,13 +631,16 @@ class Product:
             api_key=os.environ["STRIPE_SECRET"]
         )
         
-        max_position = 1
+        max_position = 0
 
         for product in products:
             product_metadata = product.get('metadata', {})
             display_position = int(product_metadata.get('display_order', 0))
             if display_position >= max_position:
-                max_position = display_position + 1
+                max_position = display_position
+
+        if max_position > 0:
+            max_position += 10
 
         return max_position
 
