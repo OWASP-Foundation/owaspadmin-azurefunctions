@@ -24,7 +24,7 @@ def process_form(values, view_id, function_directory):
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
     git_users = ''
-    if 'github-id' in values:
+    if 'github-id' in values and 'github-value' in values['github-id'] and 'value' in values['github-id']['github-value']:
         git_users = values["github-id"]["github-value"]["value"]
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
