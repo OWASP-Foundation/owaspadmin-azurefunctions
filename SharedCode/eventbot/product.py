@@ -174,7 +174,7 @@ class Product:
         )
 
         if len(product_list):
-            product_list = sorted(product_list, key = lambda i: i['metadata'].get('display_order', 0))
+            product_list = sorted(product_list, key = lambda i: int(i['metadata'].get('display_order', 0)))
             response_message.add_block({
                 "type": "section",
                 "text": {
