@@ -134,7 +134,7 @@ def make_donation_api_request(request: Dict) -> Dict:
     project_title = request.get('project_title')
     restricted = request.get('restricted')
     attribution = request.get('attribution')
-    email = request.get('email')
+    email = request.get('email').lower()
     name = request.get('name')
     source = request.get('source')
 
@@ -201,7 +201,7 @@ def make_subscription_api_request(request: Dict) -> Dict:
     country = request.get('country')['name']
     postal_code = request.get('postal_code')
     name = request.get('name')
-    email = request.get('email')
+    email = request.get('email').lower()
     company = request.get('company')
     student = request.get('student')
     university = request.get('university')

@@ -218,12 +218,12 @@ def create_checkout_session(request: Dict, line_items: Dict) -> Dict:
     }
 
     stripe_customer_id = get_stripe_customer_id(
-        request.get('email')
+        request.get('email').lower()
     )
     if (stripe_customer_id is not None):
         api_request['customer'] = stripe_customer_id
     else:
-        api_request['customer_email'] = request.get('email')
+        api_request['customer_email'] = request.get('email').lower()
 
     product_array = []
     for product in line_items:
@@ -338,11 +338,11 @@ def create_comp_order(request, line_items):
     })
 
     stripe_customer_id = get_stripe_customer_id(
-        request.get('email')
+        request.get('email').lower()
     )
     if (stripe_customer_id is None):
         customer_request = stripe.Customer.create(
-            email=request.get('email'),
+            email=request.get('email').lower(),
             name=request.get('name'),
             api_key=os.environ["STRIPE_SECRET"]
         )
