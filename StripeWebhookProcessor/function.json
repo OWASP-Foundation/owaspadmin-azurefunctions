@@ -15,6 +15,13 @@
       "type": "http",
       "direction": "out",
       "name": "$return"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "chmsg",
+      "queueName": "stripequeue",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }

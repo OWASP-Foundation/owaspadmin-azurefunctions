@@ -21,7 +21,7 @@ from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
 mailchimp = MailChimp(mc_api=os.environ["MAILCHIMP_API_KEY"])
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest, chmsg: func.Out[func.QueueMessage]) -> func.HttpResponse:
     payload = req.get_json()
     event = None
 
@@ -43,9 +43,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     elif event.type == 'sku.updated':
         handle_sku_updated(event_data)
     elif event.type == 'order.created':
-        handle_order_created(event_data)
+        chmsg.set(json.dumps({ 'job_type': event.type, 'payload': event_data }))
     elif event.type == 'charge.refunded':
-        handle_charge_refunded(event_data)
+        chmsg.set(json.dumps({ 'job_type': event.type, 'payload': event_data }))
 
     return func.HttpResponse(status_code=200)
 
@@ -481,37 +481,6 @@ def handle_sku_updated(event_data):
             gh.UpdateFile(repo_name, product_file, file_contents, sha)
 
 
-def handle_order_created(event_data):
-    order = stripe.Order.retrieve(event_data['id'], api_key=os.environ['STRIPE_SECRET'])
-
-    for item in order['items']:
-        if item['type'] != 'sku':
-            continue
-
-        sku = stripe.SKU.retrieve(item['parent'], api_key=os.environ['STRIPE_SECRET'])
-        inventory = sku['metadata'].get('inventory', None)
-
-        if inventory is None or int(inventory) == 0:
-            continue
-
-        inventory = int(inventory) - 1
-        stripe.SKU.modify(sku['id'], metadata={'inventory': inventory}, api_key=os.environ['STRIPE_SECRET'])
-
-    discount_code = order['metadata'].get('discount_code', None)
-
-    if discount_code is not None:
-        discount_code = discount_code.strip().upper()
-        coupon = stripe.Coupon.retrieve(discount_code, api_key=os.environ['STRIPE_SECRET'])
-        inventory = coupon['metadata'].get('inventory', None)
-
-        if inventory is not None and int(inventory) != 0:
-            inventory = int(inventory) - 1
-            stripe.Coupon.modify(discount_code, metadata={'inventory': inventory}, api_key=os.environ['STRIPE_SECRET'])
-
-    registrant.add_order(order)
-            
-
-
 def handle_sku_created(event_data):
     product = stripe.Product.retrieve(
         event_data.get('product', None),
@@ -549,10 +518,6 @@ def handle_sku_created(event_data):
                 indent=4
             )
             gh.UpdateFile(repo_name, product_file, file_contents, sha)
-
-
-def handle_charge_refunded(event_data):
-    registrant.add_refund(event_data['id'], event_data['amount_refunded'])
 
 
 def create_order_from_payment_intent(payment_intent):
