@@ -49,6 +49,11 @@ def add_order(order):
     headers = sheet.row_values(1)
     row_data = get_base_row_data_for_order(order, headers)
 
+    cell_list = sheet.findall(order['id'])
+
+    if len(cell_list) > 0:
+        return
+
     for item in order['items']:
         if item['type'] != 'sku':
             continue
