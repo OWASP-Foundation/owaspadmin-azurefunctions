@@ -299,6 +299,23 @@ class OWASPGitHub:
                             else:
                                 gtype = 'More info soon...' 
                             addrepo['pitch'] = gtype.strip()
+                            ndx = content.find('meetup.com/')
+                            if ndx > -1:
+                                ndx += 11
+                                eolfs = content.find('/', ndx)
+                                eolp = content.find(')', ndx)
+                                eols = content.find(' ', ndx)
+                                eol = eolfs
+                                if eolp > -1 and eolp < eol:
+                                    eol = eolp
+                                if eols > -1 and eols < eol:
+                                    eol = eols
+
+                                mu = content[ndx:eol]
+                                if '/' in mu:
+                                    mu = mu.replace('/','')
+                                if len(mu.strip()) > 0:
+                                    addrepo['meetup-group'] = mu.strip()
 
                             results.append(addrepo)
 
