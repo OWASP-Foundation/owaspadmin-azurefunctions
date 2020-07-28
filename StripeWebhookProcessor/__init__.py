@@ -14,6 +14,7 @@ from typing import Dict
 
 from ..SharedCode import github
 from ..SharedCode.eventbot import registrant
+from ..SharedCode import copper
 
 import stripe
 
@@ -175,6 +176,17 @@ def update_customer_record(customer_id, metadata, subscription_data):
             api_key=os.environ["STRIPE_SECRET"]
         )
 
+#         create_copper_opportunity(customer.get('name'), customer.get_customer_email_from_id(customer_id), subscription_data, recurring)
+
+# def create_copper_opportunity(name, email, subscription_data, recurring):
+#     # do some copper stuff
+#     cop = copper.OWASPCopper()
+#     person = cop.FindPersonByEmail(email)
+#     if person == '':
+#         person = cop.CreatePerson(name, email)
+    
+#     if person:
+#         copper.CreateOpportunity()
 
 def get_subscription_data_from_event(event):
     description = event["display_items"][0]["custom"]["description"]
