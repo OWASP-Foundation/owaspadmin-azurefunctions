@@ -4,6 +4,8 @@ import json
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import helperfuncs
+from ..SharedCode import meetup
+
 import base64
 
 def parse_leaderline(line):
@@ -240,6 +242,64 @@ def update_corp_members(gh):
     else:
         logging.error(f"Failed to update assets/sitedata/corp_members.yml: {r.text}")
 
+def add_to_events(mue, events):
+    
+    if len(mue) <= 0 or 'errors' in mue:
+        return events
+    
+    for mevent in mue:
+        event = {}
+        today = datetime.datetime.today()
+        eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
+        tdelta = eventdate - today
+        if tdelta.days >= 0 and tdelta.days < 6:
+            event['name'] = mevent['name']
+            event['date'] = mevent['local_date']
+            event['time'] = mevent['local_time']
+            event['link'] = mevent['link']
+            event['timezone'] = mevent['group']['timezone']
+            if 'description' in mevent:
+                event['description'] = mevent['description']
+            else:
+                event['description'] = ''
+                
+            events.append(event)
+
+    return events
+
+def create_chapter_events(gh, mu):
+    repos = gh.GetPublicRepositories('www-chapter')
+    
+    ch_events = []
+    for repo in repos:
+        events = []
+        if 'meetup-group' in repo and repo['meetup-group']:
+            if mu.Login():
+                mue = mu.GetGroupEvents(repo['meetup-group'])
+                events = add_to_events(mue, events)
+                if len(events) > 0:
+                    chapter = repo['name'].replace('www-chapter-','').replace('-', ' ')
+                    chapter = " ".join(w.capitalize() for w in chapter.split())
+                    ch_event = {}
+                    ch_event['chapter'] = chapter
+                    ch_event['events'] = events
+                    ch_events.append(ch_event)
+
+    if len(ch_events) <= 0:
+        return
+        
+    r = gh.GetFile('owasp.github.io', '_data/chapter_events.json')
+    sha = ''
+    if r.ok:
+        doc = json.loads(r.text)
+        sha = doc['sha']
+    
+    contents = json.dumps(ch_events)
+    r = gh.UpdateFile('owasp.github.io', '_data/chapter_events.json', contents, sha)
+    if r.ok:
+        logging.info('Updated _data/chapter_events.json successfully')
+    else:
+        logging.error(f"Failed to update _data/chapter_events.json: {r.text}")
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -268,6 +328,10 @@ def main(mytimer: func.TimerRequest) -> None:
     
     logging.info('Building leaders json file')
     build_leaders_json(gh)
+
+    logging.info('Updating chapter events')
+    mu = meetup.OWASPMeetup()
+    create_chapter_events(gh, mu)
 
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
