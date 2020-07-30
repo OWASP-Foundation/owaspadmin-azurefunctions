@@ -25,5 +25,5 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     else:
         return func.HttpResponse(
              "No group name provided",
-             status_code=200
+             status_code=404
         )

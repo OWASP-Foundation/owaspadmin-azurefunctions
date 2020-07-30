@@ -252,7 +252,7 @@ def add_to_events(mue, events):
         today = datetime.datetime.today()
         eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
         tdelta = eventdate - today
-        if tdelta.days >= 0 and tdelta.days < 6:
+        if tdelta.days >= 0 and tdelta.days < 30:
             event['name'] = mevent['name']
             event['date'] = mevent['local_date']
             event['time'] = mevent['local_time']
