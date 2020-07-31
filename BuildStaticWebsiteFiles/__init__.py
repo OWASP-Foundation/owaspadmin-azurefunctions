@@ -250,20 +250,23 @@ def add_to_events(mue, events):
     for mevent in mue:
         event = {}
         today = datetime.datetime.today()
-        eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
-        tdelta = eventdate - today
-        if tdelta.days >= 0 and tdelta.days < 30:
-            event['name'] = mevent['name']
-            event['date'] = mevent['local_date']
-            event['time'] = mevent['local_time']
-            event['link'] = mevent['link']
-            event['timezone'] = mevent['group']['timezone']
-            if 'description' in mevent:
-                event['description'] = mevent['description']
-            else:
-                event['description'] = ''
-                
-            events.append(event)
+        try:
+            eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
+            tdelta = eventdate - today
+            if tdelta.days >= 0 and tdelta.days < 6:
+                event['name'] = mevent['name']
+                event['date'] = mevent['local_date']
+                event['time'] = mevent['local_time']
+                event['link'] = mevent['link']
+                event['timezone'] = mevent['group']['timezone']
+                if 'description' in mevent:
+                    event['description'] = mevent['description']
+                else:
+                    event['description'] = ''
+                    
+                events.append(event)
+        except:
+            pass
 
     return events
 
@@ -300,6 +303,7 @@ def create_chapter_events(gh, mu):
         logging.info('Updated _data/chapter_events.json successfully')
     else:
         logging.error(f"Failed to update _data/chapter_events.json: {r.text}")
+
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
