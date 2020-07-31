@@ -287,6 +287,7 @@ def create_chapter_events(gh, mu):
                     chapter = " ".join(w.capitalize() for w in chapter.split())
                     ch_event = {}
                     ch_event['chapter'] = chapter
+                    ch_event['repo'] = repo['name']
                     ch_event['events'] = events
                     ch_events.append(ch_event)
 
