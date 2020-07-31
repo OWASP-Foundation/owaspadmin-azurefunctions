@@ -244,54 +244,48 @@ def update_corp_members(gh):
     else:
         logging.error(f'Failed to update assets/sitedata/corp_members.yml: {r.text}')
 
-def add_to_events(mue, events):
+def add_to_events(mue, events, repo):
     
     if len(mue) <= 0 or 'errors' in mue:
         return events
     
+    chapter = repo.replace('www-chapter-','').replace('-', ' ')
+    chapter = " ".join(w.capitalize() for w in chapter.split())
+                
     for mevent in mue:
         event = {}
         today = datetime.datetime.today()
-        try:
-            eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
-            tdelta = eventdate - today
-            if tdelta.days >= 0 and tdelta.days < 6:
-                event['name'] = mevent['name']
-                event['date'] = mevent['local_date']
-                event['time'] = mevent['local_time']
-                event['link'] = mevent['link']
-                event['timezone'] = mevent['group']['timezone']
-                if 'description' in mevent:
-                    event['description'] = mevent['description']
-                else:
-                    event['description'] = ''
-                    
-                events.append(event)
-        except:
-            pass
+        eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
+        tdelta = eventdate - today
+        if tdelta.days >= 0 and tdelta.days < 30:
+            event['chapter'] = chapter
+            event['repo'] = repo
+            event['name'] = mevent['name']
+            event['date'] = mevent['local_date']
+            event['time'] = mevent['local_time']
+            event['link'] = mevent['link']
+            event['timezone'] = mevent['group']['timezone']
+            if 'description' in mevent:
+                event['description'] = mevent['description']
+            else:
+                event['description'] = ''
+                
+            events.append(event)
 
     return events
 
 def create_chapter_events(gh, mu):
     repos = gh.GetPublicRepositories('www-chapter')
     
-    ch_events = []
+    events = []
     for repo in repos:
-        events = []
         if 'meetup-group' in repo and repo['meetup-group']:
             if mu.Login():
                 mue = mu.GetGroupEvents(repo['meetup-group'])
-                events = add_to_events(mue, events)
-                if len(events) > 0:
-                    chapter = repo['name'].replace('www-chapter-','').replace('-', ' ')
-                    chapter = " ".join(w.capitalize() for w in chapter.split())
-                    ch_event = {}
-                    ch_event['chapter'] = chapter
-                    ch_event['repo'] = repo['name']
-                    ch_event['events'] = events
-                    ch_events.append(ch_event)
+                add_to_events(mue, events, repo['name'])
+                
 
-    if len(ch_events) <= 0:
+    if len(events) <= 0:
         return
         
     r = gh.GetFile('owasp.github.io', '_data/chapter_events.json')
@@ -300,7 +294,7 @@ def create_chapter_events(gh, mu):
         doc = json.loads(r.text)
         sha = doc['sha']
     
-    contents = json.dumps(ch_events)
+    contents = json.dumps(events)
     r = gh.UpdateFile('owasp.github.io', '_data/chapter_events.json', contents, sha)
     if r.ok:
         logging.info('Updated _data/chapter_events.json successfully')
