@@ -226,21 +226,23 @@ def update_corp_members(gh):
 
     if gh.TestResultCode(r.status_code):
         doc = json.loads(r.text)
+        contents = base64.b64decode(doc['content']).decode()
+    
 
-    contents = base64.b64decode(doc['content']).decode()
+        gh = github.OWASPGitHub()
+        r = gh.GetFile('owasp.github.io', 'assets/sitedata/corp_members.yml')
 
-    gh = github.OWASPGitHub()
-    r = gh.GetFile('owasp.github.io', 'assets/sitedata/corp_members.yml')
+        if gh.TestResultCode(r.status_code):
+            doc = json.loads(r.text)
+            sha = doc['sha']
 
-    if gh.TestResultCode(r.status_code):
-        doc = json.loads(r.text)
-        sha = doc['sha']
-
-    r = gh.UpdateFile('owasp.github.io', 'assets/sitedata/corp_members.yml', contents, sha)
-    if gh.TestResultCode(r.status_code):
-        logging.info('Updated assets/sitedata/corp_members.yml successfully')
+        r = gh.UpdateFile('owasp.github.io', 'assets/sitedata/corp_members.yml', contents, sha)
+        if gh.TestResultCode(r.status_code):
+            logging.info('Updated assets/sitedata/corp_members.yml successfully')
+        else:
+            logging.error(f"Failed to update assets/sitedata/corp_members.yml: {r.text}")
     else:
-        logging.error(f"Failed to update assets/sitedata/corp_members.yml: {r.text}")
+        logging.error(f'Failed to update assets/sitedata/corp_members.yml: {r.text}')
 
 def add_to_events(mue, events):
     
