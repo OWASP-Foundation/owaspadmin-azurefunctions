@@ -55,5 +55,5 @@ class OWASPMeetup:
         res = requests.get(event_url, headers=headers)
         json_res = []
         if res.ok:
-            json_res = json.loads(res)
+            json_res = json.loads(res.text)
         return json_res
