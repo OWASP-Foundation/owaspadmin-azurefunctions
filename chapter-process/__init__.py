@@ -29,7 +29,23 @@ def process_form(values, view_id, function_directory):
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]
-    
+    valid_regions = ['Unknown', 'Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America']
+    if region not in valid_regions:
+        if region == 'North Americ':
+            region = 'North America'
+        elif region == 'South Americ':
+            region = 'South America'
+        elif region == 'Europ':
+            region = 'Europe'
+        elif region == 'Asi':
+            region = 'Asia'
+        elif region == 'Afric':
+            region = 'Africa'
+        elif region == 'Oceani':
+            region = 'Oceania'
+        else:
+            region = 'Unknown'
+            
     leaders = leader_names.splitlines()
     emails = leader_emails.splitlines()
     gitusers = git_users.splitlines()
