@@ -20,7 +20,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if len(strbody) < 10 or strbody.find('&') < 0 or strbody.find('=') < 0:
         return func.HttpResponse(
             'Call not valid (100)',
-            status_code = 200
+            status_code = 401
         )
 
     names = dict(x.split('=') for x in strbody.split('&'))
@@ -28,7 +28,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not spotchk.spotchk().validate_query(names):
         return func.HttpResponse(
             'Call not valid (101)',
-            status_code = 200
+            status_code = 404
         )
     # validation complete...let's do something...
     
