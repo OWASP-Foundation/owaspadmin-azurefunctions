@@ -5,7 +5,7 @@
   "azureFunctions.projectRuntime": "~2",
   "debug.internalConsoleOptions": "neverOpen",
   "azureFunctions.preDeployTask": "func: pack --build-native-deps",
-  "python.pythonPath": ".venv/bin/python",
+  "python.pythonPath": "C:\\Users\\thewa\\AppData\\Local\\Programs\\Python\\Python36\\python.exe",
   "python.linting.pylintEnabled": true,
   "python.linting.enabled": true
 }
