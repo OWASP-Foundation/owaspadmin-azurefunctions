@@ -75,13 +75,13 @@ def CreateGithubStructure(project_name, func_dir, emaillinks, githubs):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_COMMITTEE)
     resString = "Committee created."
-    if not gh.TestResultCode(r.status_code):
+    if not r.ok:
         resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
     
     if resString.find("Failed") < 0:
         r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_COMMITTEE, basedir = func_dir)
-        if not gh.TestResultCode(r.status_code):
+        if not r.ok:
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
