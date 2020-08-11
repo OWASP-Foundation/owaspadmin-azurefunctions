@@ -16,10 +16,11 @@ from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
 def main(msg: func.QueueMessage) -> None:
+    datastr = msg.get_body().decode('utf-8')
+    
     logging.info('Python queue trigger function processed a queue item: %s',
-                 msg.get_body().decode('utf-8'))
+                 datastr)
 
-    datastr = json.loads(msg.get_body().decode('utf-8'))
     data = urllib.parse.parse_qs(datastr)
     gh = OWASPGitHub()
     gr = gh.GetFile('owasp.github.io', '_data/chapters.json')
@@ -29,7 +30,7 @@ def main(msg: func.QueueMessage) -> None:
         content = base64.b64decode(doc['content']).decode(encoding='utf-8')
         ch_json = json.loads(content)
         sres = create_spreadsheet()
-        f_id = sres[0]
+        f_url = sres[0]
         sheet = sres[1]
         headers = sheet.row_values(1)
         rows = []
@@ -53,6 +54,8 @@ def main(msg: func.QueueMessage) -> None:
 
                 add_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr)
         sheet.append_rows(rows)
+        msgtext = 'Your chapter report is ready at ' + f_url
+        requests.post(data['response_url'], data='{"text": "' + msgtext + '"}')
 
 
 def get_repo_name(urlstr):
@@ -75,7 +78,7 @@ def create_spreadsheet():
     }
 
     rfile = drive.files().create(body=file_metadata, supportsAllDrives=True).execute()
-    fileid = rfile.get('id')
+    fileurl = rfile.get('url')
     client = gspread.authorize(creds)
     sheet = client.open(sheet_name).sheet1
 
@@ -98,7 +101,7 @@ def create_spreadsheet():
         }
     }
     sheet.format('A1:E1', header_format)
-    return fileid, sheet
+    return fileurl, sheet
 
 def get_spreadsheet_name():
     report_name = 'chapter-report'
