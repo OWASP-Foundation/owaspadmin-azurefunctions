@@ -53,7 +53,13 @@ def main(msg: func.QueueMessage) -> None:
                 add_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr)
         sheet.append_rows(rows)
         msgtext = 'Your chapter report is ready at ' + sheet.url
-        requests.post(data['response_url'], data='{"text": "' + msgtext + '"}')
+        response_url = data['response_url']
+        headers = { 'Content-type':'application/json'}
+        msgdata = {
+            'text':msgtext,
+            'response_type':'ephemeral'
+        }
+        requests.post(response_url, data=json.dumps(msgdata), headers = headers)
 
 
 def get_repo_name(urlstr):
