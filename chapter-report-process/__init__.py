@@ -53,7 +53,7 @@ def main(msg: func.QueueMessage) -> None:
                 add_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr)
         sheet.append_rows(rows)
         msgtext = 'Your chapter report is ready at ' + sheet.url
-        response_url = data['response_url']
+        response_url = data['response_url'][0]
         headers = { 'Content-type':'application/json'}
         msgdata = {
             'text':msgtext,
