@@ -29,7 +29,9 @@ def main(msg: func.QueueMessage) -> None:
         sha = doc['sha']
         content = base64.b64decode(doc['content']).decode(encoding='utf-8')
         ch_json = json.loads(content)
-        sheet = create_spreadsheet()
+        ret = create_spreadsheet()
+        sheet = ret[0]
+        file_id = ret[1]
         headers = sheet.row_values(1)
         rows = []
         for ch in ch_json:
@@ -52,7 +54,7 @@ def main(msg: func.QueueMessage) -> None:
 
                 add_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr)
         sheet.append_rows(rows)
-        msgtext = 'Your chapter report is ready at https://docs.google.com/spreadsheets/d/' + sheet.id
+        msgtext = 'Your chapter report is ready at https://docs.google.com/spreadsheets/d/' + file_id
         response_url = data['response_url'][0]
         headers = { 'Content-type':'application/json'}
         msgdata = {
@@ -82,6 +84,8 @@ def create_spreadsheet():
     }
 
     rfile = drive.files().create(body=file_metadata, supportsAllDrives=True).execute()
+    file_id = rfile.get('id')
+
     client = gspread.authorize(creds)
     sheet = client.open(sheet_name).sheet1
 
@@ -104,7 +108,7 @@ def create_spreadsheet():
         }
     }
     sheet.format('A1:E1', header_format)
-    return sheet
+    return sheet, file_id
 
 def get_spreadsheet_name():
     report_name = 'chapter-report'
