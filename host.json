@@ -5,9 +5,14 @@
       "version": "[1.*, 2.0.0)"
   },
   "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true
+      }
+    },
     "fileLoggingMode": "always",
     "logLevel": {
-        "default": "Information",
+        "Default": "Information",
         "Host.Results": "Error",
         "Function": "Trace",
         "Host.Aggregator": "Trace"
