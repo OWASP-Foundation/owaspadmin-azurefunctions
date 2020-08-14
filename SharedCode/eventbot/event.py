@@ -118,7 +118,7 @@ class Event:
         event_list = []
         stripe_products = stripe.Product.list(
             active=True,
-            limit=10,
+            limit=100,
             api_key=os.environ["STRIPE_SECRET"]
         )
         for event in stripe_products:
