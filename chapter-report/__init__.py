@@ -28,11 +28,9 @@ def main(req: func.HttpRequest, rpmsg: func.Out[func.QueueMessage]) -> func.Http
             'Call not valid (101)',
             status_code = 200
         )
-    jsonstr = strbody[strbody.find('=') + 1 :]
+    jsonstr = strbody
     # validation complete...let's do something...
-    resp = '{"response_action": "update","view": {"type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"blocks": [{"type": "section","text": {"type": "plain_text","text": "'
-    #resp += strbody
-    resp += 'Report request received. You will receive a message when available."} }]} }' 
+    resp = 'Report request received. You will receive a message when available.' 
     
     #add this to the queue, it will be picked up by the chapter-process function
     if 'chapter-report' in jsonstr:

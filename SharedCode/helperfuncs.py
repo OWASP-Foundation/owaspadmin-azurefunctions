@@ -183,7 +183,7 @@ def build_staff_project_json(gh):
     if gh.TestResultCode(r.status_code):
         files = files + rfiles
     else: 
-        print(f'Failed to get files: {r.text}')
+        logging.error(f'Failed to get files: {r.text}')
         
     projects = []
     for pfile in files:
