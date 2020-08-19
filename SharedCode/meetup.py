@@ -53,7 +53,7 @@ class OWASPMeetup:
         }
         event_url = self.meetup_api_url + f'/{groupname}/events?desc=true&sign=true'
         res = requests.get(event_url, headers=headers)
-        json_res = []
+        json_res = '{[]}'
         if res.ok:
-            json_res = json.loads(res.text)
+            json_res = res.text
         return json_res
