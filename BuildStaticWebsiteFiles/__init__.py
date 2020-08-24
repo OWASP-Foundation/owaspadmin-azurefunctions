@@ -281,8 +281,8 @@ def create_chapter_events(gh, mu):
     for repo in repos:
         if 'meetup-group' in repo and repo['meetup-group']:
             if mu.Login():
-                mue = mu.GetGroupEvents(repo['meetup-group'])
-                add_to_events(mue, events, repo['name'])
+                muej = json.loads(mue) = mu.GetGroupEvents(repo['meetup-group'])
+                add_to_events(muej, events, repo['name'])
                 
 
     if len(events) <= 0:
