@@ -211,6 +211,7 @@ def get_subscription_data_from_event(event):
         membership_type = 'lifetime'
         period_end = None
         add_days = None
+    # no need to worry with complimentary here as it isn't an option to pay for in Stripe
 
     return {
         "membership_end": period_end,
