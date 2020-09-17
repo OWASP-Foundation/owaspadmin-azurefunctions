@@ -63,6 +63,7 @@ class OWASPCopper:
     cp_person_membership_option_lifetime = 674398
     cp_person_membership_option_oneyear = 674395
     cp_person_membership_option_twoyear = 674396
+    cp_person_membership_option_complimentary = 1506889
     cp_person_membership_start = 394883
     cp_person_membership_end = 394884
     cp_person_github_username = 395220
@@ -520,6 +521,8 @@ class OWASPCopper:
             return
 
         opp_name = subscription_data['membership_type'].capitalize()
+        if opp_name == "Honorary":
+            opp_name = "Complimentary One"
         if subscription_data['membership_type'] != 'lifetime':
             opp_name += f" Year Membership until {subscription_data['membership_end']}"
         else:
