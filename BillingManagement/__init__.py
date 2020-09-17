@@ -40,6 +40,7 @@ def get_member_info(customer_id):
 
     membership_type = metadata.get('membership_type', None)
 
+    membership_name = 'Unknown Membership Type'
     if membership_type is not None:
         if membership_type == 'one':
             membership_name = 'One Year Membership'
@@ -49,6 +50,8 @@ def get_member_info(customer_id):
             membership_name = 'Two Year Membership'
         elif membership_type == 'lifetime':
             membership_name = 'Lifetime Membership'
+        elif membership_type == 'honorary':
+            membership_name = 'Honorary Membership'
 
         recurring = metadata.get('membership_recurring', 'no')
 
