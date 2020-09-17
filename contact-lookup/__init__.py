@@ -7,6 +7,7 @@ from ..SharedCode import salesforce
 from ..SharedCode import spotchk
 from urllib.parse import unquote_plus
 
+## THIS IS A DEPRECATED CONTACT LOOKUP
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpResponse:
 
     # first check for a valid call

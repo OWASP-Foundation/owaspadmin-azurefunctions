@@ -59,28 +59,32 @@ def contact_lookup2(text, response_url):
 
     if len(customers) > 0:
         for customer in customers:
+            metadata = customer.get('metadata')
+            membership_type = metadata.get('membership_type')
+            if membership_type == 'honorary':
+                membership_type = 'complimentary'
             response_text['blocks'].append({
             "type": "section",
             "fields": [
                 {
                     "type": "mrkdwn",
-                    "text": "*Name*\n" + customer.name
+                    "text": "*Name*\n" + customer.get('name')
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "*Email*\n" + customer.email
+                    "text": "*Email*\n" + customer.get('email')
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "*Membership Type*\n" + customer.metadata['membership_type']
+                    "text": "*Membership Type*\n" + membership_type
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "*Membership Start*\n" + customer.metadata['membership_start']
+                    "text": "*Membership Start*\n" + metadata.get('membership_start')
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "*Membership End*\n" + customer.metadata['membership_end']
+                    "text": "*Membership End*\n" + metadata.get('membership_end')
                 }
             ]
         })
@@ -131,6 +135,11 @@ def contact_lookup(text, response_url):
         })
 
     for member in returned_members:
+        #modifying name of honorary membership to reflect truth
+        membership_type = member['merge_fields']['MEMTYPE']
+        if membership_type == 'honorary':
+            membership_type = 'complimentary'
+
         response_text['blocks'].append({
             "type": "section",
             "fields": [
