@@ -1,3 +1,4 @@
+from SharedCode.copper import OWASPCopper
 import logging
 
 import azure.functions as func
@@ -58,7 +59,7 @@ def handle_checkout_session_completed(event: Dict):
     customer_email = event.get('customer_email', None)
     setup_intent = event.get('setup_intent', None)
     subscription_data = {}
-
+    metadata = {}
     if payment_intent is not None:
         payment_intent = stripe.PaymentIntent.retrieve(
             payment_intent,
@@ -112,7 +113,7 @@ def handle_checkout_session_completed(event: Dict):
 
         update_customer_record(customer_id, metadata, subscription_data)
         add_to_mailing_list(customer_email, metadata, subscription_data, customer_id)
-
+        
         attribution = metadata.get('attribution', 'False')
         if attribution == 'True':
             attribute_donation(metadata)
@@ -143,6 +144,17 @@ def update_customer_record(customer_id, metadata, subscription_data):
 
         customer_metadata = customer.get('metadata', {})
         membership_end = customer_metadata.get('membership_end', None)
+        membership_start = customer_metadata.get('membership_start', None)
+        if membership_start == None:
+            membership_start = datetime.now()
+        else:
+            try:
+                membership_start = datetime.strptime(membership_start, "%d/%m/%Y")
+            except:
+                try:
+                    membership_start = datetime.strptim(membership_start, "%Y-%m-%d")
+                except:
+                    pass
 
         if membership_end is not None:
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
@@ -165,43 +177,37 @@ def update_customer_record(customer_id, metadata, subscription_data):
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
-
+        subscription_data['membership_start'] = membership_start.strftime("%m/%d/%Y")
         stripe.Customer.modify(
             customer_id,
             metadata={
+                "membership_start": subscription_data['membership_start'],
                 "membership_type": subscription_data['membership_type'],
                 "membership_end": subscription_data['membership_end'],
                 "membership_recurring": recurring
             },
             api_key=os.environ["STRIPE_SECRET"]
         )
-
-#         create_copper_opportunity(customer.get('name'), customer.get_customer_email_from_id(customer_id), subscription_data, recurring)
-
-# def create_copper_opportunity(name, email, subscription_data, recurring):
-#     # do some copper stuff
-#     cop = copper.OWASPCopper()
-#     person = cop.FindPersonByEmail(email)
-#     if person == '':
-#         person = cop.CreatePerson(name, email)
-    
-#     if person:
-#         copper.CreateOpportunity()
+        try:
+            cop = OWASPCopper()
+            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer.get('email'), subscription_data)
+        except:
+            logging.error('Failed to create Copper data')
 
 def get_subscription_data_from_event(event):
     description = event["display_items"][0]["custom"]["description"]
-
+    
     if "One Year" in description:
         membership_type = 'one'
         period_end = datetime.now() + timedelta(days=365)
         period_end = period_end.strftime('%m/%d/%Y')
         add_days = 365
-    if "Two Year" in description:
+    elif "Two Year" in description:
         membership_type = 'two'
         period_end = datetime.now() + timedelta(days=730)
         period_end = period_end.strftime('%m/%d/%Y')
         add_days = 730
-    if "Lifetime" in description:
+    elif "Lifetime" in description:
         membership_type = 'lifetime'
         period_end = None
         add_days = None

@@ -1,12 +1,15 @@
 import requests
 import json
 import os
+import logging
+from datetime import datetime
 
 class OWASPCopper:
 
     cp_base_url = "https://api.prosperworks.com/developer_api/v1/"
     cp_projects_fragment = "projects/"
     cp_opp_fragment = "opportunities/"
+    cp_pipeline_fragment = "pipelines/"
     cp_people_fragment = "people/"
     cp_related_fragment = ':entity/:entity_id/related'
     cp_custfields_fragment = 'custom_field_definitions/'
@@ -44,6 +47,32 @@ class OWASPCopper:
     cp_project_chapter_region_option_southamerica = 899470
     cp_project_chapter_country = 399738
     cp_project_chapter_postal_code = 399737
+    #person specific
+    #inactive cp_person_group_url = 394184
+    #inactive cp_person_group_type = 394186
+    #inactive cp_person_group_type_option_chapter=672528
+    #inactive cp_person_group_type_option_project=672529
+    #inactive cp_person_group_type_option_committee=672530
+    #inactive cp_person_group_participant_type = 394187
+    #inactive cp_person_group_participant_type_option_participant = 672531
+    #inactive cp_person_group_participant_type_option_leader = 672532
+    #inactive cp_person_member_checkbox = 394880
+    #inactive cp_person_leader_checkbox = 394881
+    cp_person_membership = 394882
+    cp_person_membership_option_student = 674397
+    cp_person_membership_option_lifetime = 674398
+    cp_person_membership_option_oneyear = 674395
+    cp_person_membership_option_twoyear = 674396
+    cp_person_membership_start = 394883
+    cp_person_membership_end = 394884
+    cp_person_github_username = 395220
+    #inactive cp_person_membership_number = 397651
+    cp_person_external_id = 400845 #old Salesforce id
+    cp_person_stripe_number = 440584
+    #opportunity specific
+    cp_opportunity_end_date = 400119
+    cp_opportunity_autorenew_checkbox = 419575
+    cp_opportunity_invoice_no = 407333  # can be the URL to the stripe payment for membership
 
     def GetHeaders(self):
         headers = {
@@ -114,7 +143,7 @@ class OWASPCopper:
         
         return ''
 
-    def CreatePerson(self, name, email):
+    def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
         # Needs Name
         data = {
             'name':name,
@@ -125,8 +154,140 @@ class OWASPCopper:
                 }
             ]
         }
+        if subscription_data != None:
+            fields = []
+            if subscription_data['membership_type'] == 'lifetime':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_lifetime
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': None
+                    })
+            elif subscription_data['membership_type'] == 'one':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_oneyear
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'honorary':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_complimentary
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'two':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_twoyear
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'student':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_student
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+
+            fields.append({
+                        'custom_field_definition_id' : self.cp_person_stripe_number, 
+                        'value': f"https://dashboard.stripe.com/customers/{stripe_id}"
+                    })
+
+            fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_start, 
+                        'value': datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })        
+            data['custom_fields'] = fields
+
         url = f'{self.cp_base_url}{self.cp_people_fragment}'
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        pid = None
+        if r.ok:
+            person = json.loads(r.text)
+            pid = person['id']
+        
+        return pid
+
+    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None):
+        
+        data = {
+        }
+
+        if subscription_data != None:
+            fields = []
+            if subscription_data['membership_type'] == 'lifetime':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_lifetime
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': None
+                    })
+            elif subscription_data['membership_type'] == 'one':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_oneyear
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'honorary':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_complimentary
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'two':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_twoyear
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'student':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_student
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+
+            fields.append({
+                        'custom_field_definition_id' : self.cp_person_stripe_number, 
+                        'value': f"https://dashboard.stripe.com/customers/{stripe_id}"
+                    })
+
+            fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_start, 
+                        'value': datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })        
+            data['custom_fields'] = fields
+
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
+        r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
         pid = None
         if r.ok:
             person = json.loads(r.text)
@@ -147,6 +308,61 @@ class OWASPCopper:
             'name': 'opp_name',
             'primary_contact_id': people[0]['id']
         }
+
+        url = f'{self.cp_base_url}{self.cp_opp_fragment}'
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        if r.ok:
+            return r.text
+        
+        return ''
+    
+    def CreateMemberOpportunity(self, opp_name, pid, subscription_data):
+        # there is a delay before FindPerson shows up...let's pass the ID instead....
+        
+        pipeline = self.GetPipeline('Individual Membership')
+        if pipeline == None:
+            return ''
+
+        pipeline_id = pipeline['id']
+        pipeline_stage_id = 0
+        for stage in pipeline['stages']:
+            if stage['name'] == 'Won':
+                pipeline_stage_id = stage['id']
+                break
+
+        data = {
+            'name': opp_name,
+            'primary_contact_id': pid,
+            'pipeline_id': pipeline_id,
+            'pipeline_stage_id': pipeline_stage_id,
+            'status': 'Won'
+        }
+        
+        if subscription_data != None:
+            fields = []
+            if subscription_data['membership_type'] == 'lifetime':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_opportunity_end_date, 
+                        'value': None
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_opportunity_autorenew_checkbox, 
+                        'value': False
+                    })
+            else:
+                fields.append({
+                        'custom_field_definition_id' : self.cp_opportunity_end_date, 
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                    })
+                renew = False
+                if subscription_data['membership_recurring'] == 'yes':
+                    renew = True
+                fields.append({
+                        'custom_field_definition_id' : self.cp_opportunity_autorenew_checkbox, 
+                        'value': renew
+                    })
+            # if this were not complimentary, we would need the invoice number for the opportunity as well (payment url in Stripe)
+            data['custom_fields'] = fields
 
         url = f'{self.cp_base_url}{self.cp_opp_fragment}'
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
@@ -270,3 +486,43 @@ class OWASPCopper:
             return r.text
         
         return ''
+
+    def GetPipeline(self, pipeline_name):
+        url = f'{self.cp_base_url}{self.cp_pipeline_fragment}'
+        r = requests.get(url, headers=self.GetHeaders())
+        
+        if r.ok:
+            pipelines = json.loads(r.text)
+            for pipeline in pipelines:
+                if pipeline['name'] == pipeline_name:
+                    return pipeline
+            
+        
+        return None
+
+    def CreateOWASPMembership(self, stripe_id, name, email, subscription_data):
+        # Multiple steps here
+        # CreatePerson
+        # CreateOpportunity
+        contact_json = self.FindPersonByEmail(email)
+        pid = None
+        if contact_json != '':
+            jsonp = json.loads(contact_json)
+            if len(jsonp) > 0:
+                pid = json.loads(contact_json)[0]['id']
+        if pid == None or pid <= 0:
+            pid = self.CreatePerson(name, email, subscription_data, stripe_id)
+        else:
+            self.UpdatePerson(pid, subscription_data, stripe_id)
+
+        if pid <= 0:
+            logging.error(f'Failed to create person for {email}')
+            return
+
+        opp_name = subscription_data['membership_type'].capitalize()
+        if subscription_data['membership_type'] != 'lifetime':
+            opp_name += f" Year Membership until {subscription_data['membership_end']}"
+        else:
+            opp_name += " Membership"
+
+        self.CreateMemberOpportunity(opp_name, pid, subscription_data)
