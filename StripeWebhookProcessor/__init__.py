@@ -152,7 +152,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
                 membership_start = datetime.strptime(membership_start, "%d/%m/%Y")
             except:
                 try:
-                    membership_start = datetime.strptim(membership_start, "%Y-%m-%d")
+                    membership_start = datetime.strptime(membership_start, "%Y-%m-%d")
                 except:
                     pass
 
