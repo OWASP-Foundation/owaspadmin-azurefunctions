@@ -161,7 +161,7 @@ def contact_lookup(text, response_url):
                 },
                 {
                     "type": "mrkdwn",
-                    "text": "*Membership Type*\n" + member['merge_fields']['MEMTYPE']
+                    "text": "*Membership Type*\n" + membership_type
                 },
                 {
                     "type": "mrkdwn",
