@@ -156,7 +156,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
                 except:
                     pass
 
-        if membership_end is not None:
+        if membership_end is not None and subscription_data['membership_type'] != 'lifetime':
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
             if end_object > datetime.now():
                 new_end_date = end_object + timedelta(days=subscription_data['days_added'])
@@ -177,7 +177,9 @@ def update_customer_record(customer_id, metadata, subscription_data):
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
+
         subscription_data['membership_start'] = membership_start.strftime("%m/%d/%Y")
+
         stripe.Customer.modify(
             customer_id,
             metadata={
