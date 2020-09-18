@@ -369,6 +369,8 @@ class OWASPCopper:
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
         if r.ok:
             return r.text
+        else:
+            logging.error(f'Failed to create {opp_name}: {r.text}')
         
         return ''
 
