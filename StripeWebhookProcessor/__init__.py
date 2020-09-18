@@ -158,7 +158,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
 
         if membership_end is not None and subscription_data['membership_type'] != 'lifetime':
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
-            if end_object > datetime.now():
+            if end_object > datetime.now() and subscription_data['days_added'] != None:
                 new_end_date = end_object + timedelta(days=subscription_data['days_added'])
                 subscription_data['membership_end'] = new_end_date.strftime('%m/%d/%Y')
 
