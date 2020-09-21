@@ -195,7 +195,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
         )
         
         customer_email = customer.get('email')
-
+        owasp_email = customer_email
         try:
             if '@owasp.org' not in customer_email: # check if already an owasp email address
                 customer_name = customer.get('name')
@@ -205,6 +205,8 @@ def update_customer_record(customer_id, metadata, subscription_data):
                 res = og.CreateEmailAddress(customer_email, first_name, last_name)
                 if not 'Failed' in res:
                     logging.info(res)
+                    owasp_email = first_name + '.' + last_name + '@owasp.org'
+                    owasp_email = owasp_email.lower()
                 else:
                     logging.error(res)
         except:
@@ -214,7 +216,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
             # get the updated metadata
             customer_metadata = customer.get('metadata', {})
             cop = OWASPCopper()
-            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, customer_metadata)
+            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, owasp_email, customer_metadata)
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err.message}')
 

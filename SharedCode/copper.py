@@ -144,7 +144,7 @@ class OWASPCopper:
         
         return ''
 
-    def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
+    def CreatePerson(self, name, email, subscription_data = None, stripe_id = None, owasp_email = None):
         # Needs Name
         data = {
             'name':name,
@@ -155,6 +155,9 @@ class OWASPCopper:
                 }
             ]
         }
+        if owasp_email != None:
+            data['emails'].append({ 'email': owasp_email, 'category': 'other'})
+
         if subscription_data != None:
             fields = []
             if subscription_data['membership_type'] == 'lifetime':
@@ -223,7 +226,7 @@ class OWASPCopper:
         
         return pid
 
-    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None):
+    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None, owasp_email = None):
         
         data = {
         }
@@ -286,6 +289,9 @@ class OWASPCopper:
                         'value': datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d").strftime("%m/%d/%Y")
                     })        
             data['custom_fields'] = fields
+
+        if owasp_email != None:
+            data['emails'] = [{ 'email': owasp_email, 'category': 'other'}]
 
         url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
         r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
@@ -503,7 +509,7 @@ class OWASPCopper:
         
         return None
 
-    def CreateOWASPMembership(self, stripe_id, name, email, subscription_data):
+    def CreateOWASPMembership(self, stripe_id, name, email, owasp_email, subscription_data):
         # Multiple steps here
         # CreatePerson
         # CreateOpportunity
@@ -514,9 +520,9 @@ class OWASPCopper:
             if len(jsonp) > 0:
                 pid = json.loads(contact_json)[0]['id']
         if pid == None or pid <= 0:
-            pid = self.CreatePerson(name, email, subscription_data, stripe_id)
+            pid = self.CreatePerson(name, email, subscription_data, stripe_id, owasp_email)
         else:
-            self.UpdatePerson(pid, subscription_data, stripe_id)
+            self.UpdatePerson(pid, subscription_data, stripe_id, owasp_email)
 
         if pid <= 0:
             logging.error(f'Failed to create person for {email}')
