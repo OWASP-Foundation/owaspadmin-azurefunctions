@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 from google.oauth2 import service_account
 from httplib2 import http
 import json
-
+from datetime import datetime
 
 class OWASPGoogle:
     def CreateEmailAddress(self, altemail, first, last, fail_if_exists=True):
@@ -22,7 +22,7 @@ class OWASPGoogle:
             },
             "primaryEmail": first + '.' + last + '@owasp.org',
             "recoveryEmail": altemail,
-            "password": "@123OWASP123@"
+            "password": datetime.now().strftime('%m%d%Y')
         }
         
         if fail_if_exists:
