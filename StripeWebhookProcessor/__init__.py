@@ -16,6 +16,7 @@ from typing import Dict
 from ..SharedCode import github
 from ..SharedCode.eventbot import registrant
 from ..SharedCode import copper
+from ..SharedCode.googleapi import OWASPGoogle
 
 import stripe
 
@@ -190,11 +191,30 @@ def update_customer_record(customer_id, metadata, subscription_data):
             },
             api_key=os.environ["STRIPE_SECRET"]
         )
+        
+        customer_email = customer.get('email')
+
+        try:
+            if '@owasp.org' not in customer_email: # check if already an owasp email address
+                customer_name = customer.get('name')
+                first_name = customer_name.lower().strip().split(' ')[0]
+                last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
+                og = OWASPGoogle()
+                res = og.CreateEmailAddress(customer_email, first_name, last_name)
+                if not 'Failed' in res:
+                    logging.info(res)
+                else:
+                    logging.error(res)
+        except:
+            logging.error('Failed to create OWASP email address for user')
+        
         try:
             cop = OWASPCopper()
-            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer.get('email'), subscription_data)
+            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, subscription_data)
         except:
             logging.error('Failed to create Copper data')
+
+        
 
 def get_subscription_data_from_event(event):
     description = event["display_items"][0]["custom"]["description"]
