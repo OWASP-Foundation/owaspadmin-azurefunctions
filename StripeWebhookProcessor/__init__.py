@@ -178,9 +178,11 @@ def update_customer_record(customer_id, metadata, subscription_data):
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
+        elif subscription_data['membership_type'] == 'lifetime':
+            membership_end = None
 
         subscription_data['membership_start'] = membership_start.strftime("%m/%d/%Y")
-
+        
         stripe.Customer.modify(
             customer_id,
             metadata={
@@ -209,10 +211,12 @@ def update_customer_record(customer_id, metadata, subscription_data):
             logging.error('Failed to create OWASP email address for user')
         
         try:
+            # get the updated metadata
+            customer_metadata = customer.get('metadata', {})
             cop = OWASPCopper()
-            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, subscription_data)
-        except:
-            logging.error('Failed to create Copper data')
+            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, customer_metadata)
+        except Exception as err:
+            logging.error(f'Failed to create Copper data: {err.message}')
 
         
 
