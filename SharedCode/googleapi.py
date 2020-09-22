@@ -15,7 +15,7 @@ class OWASPGoogle:
 
         self.admin = build('admin', 'directory_v1', credentials=creds, cache_discovery=False)
 
-    def CreateEmailAddress(self, altemail, first, last, email_address, fail_if_exists=True):
+    def CreateSpecificEmailAddress(self, altemail, first, last, email_address, fail_if_exists=True):
         
         user = {
             "name": {
