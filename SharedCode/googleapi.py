@@ -41,7 +41,7 @@ class OWASPGoogle:
 
     def GetPossibleEmailAddresses(self, preferred_email):
         emails = []
-        results = self.admin.users().list(domain='owasp.org', query=f"email={user['primaryEmail']}").execute()
+        results = self.admin.users().list(domain='owasp.org', query=f"email={preferred_email}").execute()
         if 'users' in results and len(results['users']) > 0:
             # come up with alternates...
             random.seed()
