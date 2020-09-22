@@ -27,10 +27,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     first_name = customer.get('name')
     last_name = customer.get('name')
     respb = True
-    response = og.CreateEmailAddress(customer.get('email'), first_name, last_name, True)
+    response = og.CreateEmailAddress(customer.get('email'), first_name, last_name, email, True)
     if 'Failed' in response:
         respb = False
-        
+
     return_response(response, respb)
 
 def return_response(response, success):

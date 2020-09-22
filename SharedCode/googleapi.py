@@ -15,6 +15,30 @@ class OWASPGoogle:
 
         self.admin = build('admin', 'directory_v1', credentials=creds, cache_discovery=False)
 
+    def CreateEmailAddress(self, altemail, first, last, email_address, fail_if_exists=True):
+        
+        user = {
+            "name": {
+                "familyName": last,
+                "givenName": first,
+                "fullName": first + ' ' + last
+            },
+            "primaryEmail": email_address,
+            "recoveryEmail": altemail,
+            "password": datetime.now().strftime('%m%d%Y')
+        }
+        
+        if fail_if_exists:
+            results = self.admin.users().list(domain='owasp.org', query=f"email={user['primaryEmail']}").execute()
+            if 'users' in results and len(results['users']) > 0:
+                return f"User {user['primaryEmail']} already exists."
+
+        result = f"User {user['primaryEmail']} created"
+        results = self.admin.users().insert(body = user).execute()
+        if 'primaryEmail' not in results:
+            result = f"Failed to create User {user['primaryEmail']}."
+        return results
+
     def CreateEmailAddress(self, altemail, first, last, fail_if_exists=True):
         
         user = {
