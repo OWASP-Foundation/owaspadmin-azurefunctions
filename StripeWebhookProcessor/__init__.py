@@ -146,7 +146,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
         customer_metadata = customer.get('metadata', {})
         membership_end = customer_metadata.get('membership_end', None)
         membership_start = customer_metadata.get('membership_start', None)
-        if membership_start == None:
+        if membership_start == None or membership_start == '':
             membership_start = datetime.now()
         else:
             try:
@@ -156,6 +156,8 @@ def update_customer_record(customer_id, metadata, subscription_data):
                     membership_start = datetime.strptime(membership_start, "%Y-%m-%d")
                 except:
                     pass
+        if type(membership_start) == str:
+            membership_start = datetime.now()
 
         if membership_end is not None and subscription_data['membership_type'] != 'lifetime':
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
@@ -181,7 +183,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
         elif subscription_data['membership_type'] == 'lifetime':
             membership_end = None
 
-        subscription_data['membership_start'] = membership_start.strftime("%m/%d/%Y")
+        subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
         
         stripe.Customer.modify(
             customer_id,
