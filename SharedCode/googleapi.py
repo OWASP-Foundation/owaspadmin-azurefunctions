@@ -49,11 +49,11 @@ class OWASPGoogle:
             results = self.admin.users().list(domain='owasp.org', query=f"email={alternate}").execute()
             if not 'users' in results:
                 emails.append(alternate)
-            alternate = preferred_email[0:preferred_email.find('@'):] + datetime.datetime.now().strftime("%d%m") + preferred_email[preferred_email.find('@'):]
+            alternate = preferred_email[0:preferred_email.find('@'):] + datetime.now().strftime("%d%m") + preferred_email[preferred_email.find('@'):]
             results = self.admin.users().list(domain='owasp.org', query=f"email={alternate}").execute()
             if not 'users' in results:
                 emails.append(alternate)
-            alternate = preferred_email[0:preferred_email.find('@'):] + datetime.datetime.now().strftime("%Y%m") + preferred_email[preferred_email.find('@'):]
+            alternate = preferred_email[0:preferred_email.find('@'):] + datetime.now().strftime("%Y%m") + preferred_email[preferred_email.find('@'):]
             results = self.admin.users().list(domain='owasp.org', query=f"email={alternate}").execute()
             if not 'users' in results:
                 emails.append(alternate)
