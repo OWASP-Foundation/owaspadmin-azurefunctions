@@ -13,7 +13,7 @@ class OWASPGoogle:
         creds = service_account.Credentials.from_service_account_info(client_secret, scopes=scopes)
         creds = creds.with_subject(os.environ['GOOGLE_ADMIN'])
 
-        self.admin = build('admin', 'directory_v1', credentials=creds)
+        self.admin = build('admin', 'directory_v1', credentials=creds, cache_discovery=False)
 
     def CreateEmailAddress(self, altemail, first, last, fail_if_exists=True):
         
