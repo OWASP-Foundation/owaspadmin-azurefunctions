@@ -13,6 +13,7 @@ import stripe
 stripe.api_key = os.environ["STRIPE_SECRET"]
 
 from ..SharedCode import recurringtoken
+from ..SharedCode.googleapi import OWASPGoogle
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     request = req.get_json()
@@ -113,11 +114,24 @@ def get_member_info(customer_id):
                     "last_4": card_last_4
                 }
             })
+    email_list = []
+    email = customer.get('email')
+    if email != None and 'owasp.org' not in email.lower() and metadata.get('owasp_email', None) == None: 
+        og = OWASPGoogle()
+        customer_name = customer.get('name')
+        first_name = customer_name.lower().strip().split(' ')[0]
+        last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
+        preferred_email = first_name + '.' + last_name + '@owasp.org'
+        
+        email_list = og.GetPossibleEmailAddresses(preferred_email)
 
-    return {
+    retdata = {
         "membership": membership,
-        "subscriptions": subscription_list
+        "subscriptions": subscription_list,
+        "emaillist": email_list
     }
+
+    return retdata
 
 
 def return_response(response, success):
