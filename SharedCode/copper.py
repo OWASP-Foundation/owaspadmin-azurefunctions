@@ -355,7 +355,7 @@ class OWASPCopper:
             else:
                 fields.append({
                         'custom_field_definition_id' : self.cp_opportunity_end_date, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': subscription_data['membership_end']
                     })
                 renew = False
                 if subscription_data['membership_recurring'] == 'yes':
