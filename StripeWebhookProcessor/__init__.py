@@ -221,7 +221,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
             cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, customer_metadata)
             
         except Exception as err:
-            logging.error(f'Failed to create Copper data: {err.message}')
+            logging.error(f'Failed to create Copper data: {err}')
 
         
 
