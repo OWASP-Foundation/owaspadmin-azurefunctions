@@ -31,7 +31,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if 'Failed' in response:
         respb = False
 
-    return_response(response, respb)
+    return_response({response}, respb)
 
 def return_response(response, success):
     if success:

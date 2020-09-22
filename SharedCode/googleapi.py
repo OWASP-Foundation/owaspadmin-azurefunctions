@@ -20,8 +20,7 @@ class OWASPGoogle:
         user = {
             "name": {
                 "familyName": last,
-                "givenName": first,
-                "fullName": first + ' ' + last
+                "givenName": first
             },
             "primaryEmail": email_address,
             "recoveryEmail": altemail,
