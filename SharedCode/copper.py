@@ -147,14 +147,24 @@ class OWASPCopper:
 
     def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
         try:
-            membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
-        except Exception:
             membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+        except:
+            try:
+                membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+            except:
+                logging.error(f'Membership end is {membership_end}')
+                pass
+            pass
 
         try:
-            membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
-        except Exception:
             membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
+        except:
+            try:
+                membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
+            except:
+                logging.error(f'Membership start is {membership_start}')
+                pass
+            pass
 
         # Needs Name
         data = {
@@ -239,14 +249,24 @@ class OWASPCopper:
 
     def UpdatePerson(self, pid, subscription_data = None, stripe_id = None):
         try:
-            membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
-        except Exception:
             membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+        except:
+            try:
+                membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+            except:
+                logging.error(f'Membership end is {membership_end}')
+                pass
+            pass
 
         try:
-            membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
-        except Exception:
             membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
+        except:
+            try:
+                membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
+            except:
+                logging.error(f'Membership start is {membership_start}')
+                pass
+            pass
             
         data = {
         }
