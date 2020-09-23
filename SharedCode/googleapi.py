@@ -36,7 +36,7 @@ class OWASPGoogle:
         results = self.admin.users().insert(body = user).execute()
         if 'primaryEmail' not in results:
             result = f"Failed to create User {user['primaryEmail']}."
-        return results
+        return result
 
     def CreateEmailAddress(self, altemail, first, last, fail_if_exists=True):
         
@@ -60,7 +60,7 @@ class OWASPGoogle:
         results = self.admin.users().insert(body = user).execute()
         if 'primaryEmail' not in results:
             result = f"Failed to create User {user['primaryEmail']}."
-        return results
+        return result
 
     def GetPossibleEmailAddresses(self, preferred_email):
         emails = []
