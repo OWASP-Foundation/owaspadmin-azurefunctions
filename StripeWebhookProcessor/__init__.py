@@ -197,22 +197,6 @@ def update_customer_record(customer_id, metadata, subscription_data):
         )
         
         customer_email = customer.get('email')
-        # owasp_email = customer_email
-        # try:
-        #     if '@owasp.org' not in customer_email: # check if already an owasp email address
-        #         customer_name = customer.get('name')
-        #         first_name = customer_name.lower().strip().split(' ')[0]
-        #         last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
-        #         og = OWASPGoogle()
-        #         res = og.CreateEmailAddress(customer_email, first_name, last_name)
-        #         if not 'Failed' in res:
-        #             logging.info(res)
-        #             owasp_email = first_name + '.' + last_name + '@owasp.org'
-        #             owasp_email = owasp_email.lower()
-        #         else:
-        #             logging.error(res)
-        # except:
-        #     logging.error('Failed to create OWASP email address for user')
         
         try:
             # get the updated metadata

@@ -3,6 +3,7 @@ import json
 import os
 import logging
 from datetime import datetime
+import time
 
 class OWASPCopper:
 
@@ -145,6 +146,16 @@ class OWASPCopper:
         return ''
 
     def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
+        try:
+            membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+        except Exception:
+            membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+
+        try:
+            membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
+        except Exception:
+            membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
+
         # Needs Name
         data = {
             'name':name,
@@ -174,7 +185,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
             elif subscription_data['membership_type'] == 'honorary':
                 fields.append({
@@ -183,7 +194,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
             elif subscription_data['membership_type'] == 'two':
                 fields.append({
@@ -192,7 +203,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
             elif subscription_data['membership_type'] == 'student':
                 fields.append({
@@ -201,7 +212,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
 
             fields.append({
@@ -211,7 +222,7 @@ class OWASPCopper:
 
             fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_start, 
-                        'value': datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_start.strftime("%m/%d/%Y")
                     })        
             data['custom_fields'] = fields
 
@@ -221,11 +232,22 @@ class OWASPCopper:
         if r.ok:
             person = json.loads(r.text)
             pid = person['id']
-        
+            # When a person is created, Copper occasionally requires time to realize it before you can use a Relationship record on it...
+            time.sleep(7.0)
+
         return pid
 
     def UpdatePerson(self, pid, subscription_data = None, stripe_id = None):
-        
+        try:
+            membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+        except Exception:
+            membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+
+        try:
+            membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
+        except Exception:
+            membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
+            
         data = {
         }
 
@@ -247,7 +269,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
             elif subscription_data['membership_type'] == 'honorary':
                 fields.append({
@@ -256,7 +278,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
             elif subscription_data['membership_type'] == 'two':
                 fields.append({
@@ -265,7 +287,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
             elif subscription_data['membership_type'] == 'student':
                 fields.append({
@@ -274,7 +296,7 @@ class OWASPCopper:
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_end.strftime("%m/%d/%Y")
                     })
 
             fields.append({
@@ -284,7 +306,7 @@ class OWASPCopper:
 
             fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_start, 
-                        'value': datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': membership_start.strftime("%m/%d/%Y")
                     })        
             data['custom_fields'] = fields
 
@@ -532,4 +554,5 @@ class OWASPCopper:
         else:
             opp_name += " Membership"
 
+        
         self.CreateMemberOpportunity(opp_name, pid, subscription_data)
