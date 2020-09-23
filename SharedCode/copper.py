@@ -365,7 +365,7 @@ class OWASPCopper:
         
         return ''
     
-    def CreateMemberOpportunity(self, opp_name, pid, subscription_data):
+    def CreateMemberOpportunity(self, opp_name, pid, payment_id, subscription_data):
         logging.info('Copper CreateMemberOpportunity')
         
         pipeline = self.GetPipeline('Individual Membership')
@@ -404,12 +404,17 @@ class OWASPCopper:
                         'value': subscription_data['membership_end']
                     })
                 renew = False
-                if subscription_data['membership_recurring'] == 'yes':
-                    renew = True
+            if subscription_data['membership_recurring'] == 'yes':
+                renew = True
                 fields.append({
-                        'custom_field_definition_id' : self.cp_opportunity_autorenew_checkbox, 
-                        'value': renew
-                    })
+                    'custom_field_definition_id' : self.cp_opportunity_autorenew_checkbox, 
+                    'value': renew
+                })
+            if payment_id != None:
+                fields.append({
+                    'custom_field_definition_id' : self.cp_opportunity_invoice_no,
+                    'value': f"https://dashboard.stripe.com/payments/{payment_id}"
+                })
             # if this were not complimentary, we would need the invoice number for the opportunity as well (payment url in Stripe)
             data['custom_fields'] = fields
 
@@ -551,7 +556,7 @@ class OWASPCopper:
         
         return None
 
-    def CreateOWASPMembership(self, stripe_id, name, email, subscription_data):
+    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data):
         logging.info('Copper CreateOWASPMembership')
     
         contact_json = self.FindPersonByEmail(email)
@@ -578,4 +583,4 @@ class OWASPCopper:
             opp_name += " Membership"
 
         
-        self.CreateMemberOpportunity(opp_name, pid, subscription_data)
+        self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data)

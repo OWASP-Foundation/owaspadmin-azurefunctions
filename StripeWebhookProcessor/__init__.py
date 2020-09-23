@@ -94,7 +94,9 @@ def handle_checkout_session_completed(event: Dict):
         create_order_from_payment_intent(payment_intent)
         add_event_registrant_to_mailing_list(customer_email, metadata)
     else:
+        payment_id = None
         if payment_intent is not None:
+            payment_id = payment_intent.get('id', None)
             metadata = payment_intent.get('metadata', {})
             purchase_type = metadata.get('purchase_type', 'donation')
             
@@ -112,7 +114,7 @@ def handle_checkout_session_completed(event: Dict):
             if purchase_type == 'membership':
                 subscription_data = get_subscription_data(subscription)
 
-        update_customer_record(customer_id, metadata, subscription_data)
+        update_customer_record(customer_id, metadata, subscription_data, payment_id)
         add_to_mailing_list(customer_email, metadata, subscription_data, customer_id)
         
         attribution = metadata.get('attribution', 'False')
@@ -120,7 +122,7 @@ def handle_checkout_session_completed(event: Dict):
             attribute_donation(metadata)
 
 
-def update_customer_record(customer_id, metadata, subscription_data):
+def update_customer_record(customer_id, metadata, subscription_data, payment_id):
     if metadata.get('purchase_type') == 'membership':
 
         if (metadata.get('recurring', 'False') == 'True'):
@@ -202,7 +204,7 @@ def update_customer_record(customer_id, metadata, subscription_data):
             # get the updated metadata
             customer_metadata = customer.get('metadata', {})
             cop = OWASPCopper()
-            cop.CreateOWASPMembership(customer_id, customer.get('name'), customer_email, customer_metadata)
+            cop.CreateOWASPMembership(customer_id, payment_id, customer.get('name'), customer_email, customer_metadata)
             
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err}')
