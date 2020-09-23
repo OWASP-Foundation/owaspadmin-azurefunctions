@@ -119,11 +119,12 @@ def get_member_info(customer_id):
     if email != None and 'owasp.org' not in email.lower() and metadata.get('owasp_email', None) == None: 
         og = OWASPGoogle()
         customer_name = customer.get('name')
-        first_name = customer_name.lower().strip().split(' ')[0]
-        last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
-        preferred_email = first_name + '.' + last_name + '@owasp.org'
-        
-        email_list = og.GetPossibleEmailAddresses(preferred_email)
+        if customer_name != None:
+            first_name = customer_name.lower().strip().split(' ')[0]
+            last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
+            if first_name != None and last_name != None:
+                preferred_email = first_name + '.' + last_name + '@owasp.org'    
+                email_list = og.GetPossibleEmailAddresses(preferred_email)
 
     retdata = {
         "membership": membership,
