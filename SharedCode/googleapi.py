@@ -90,6 +90,6 @@ class OWASPGoogle:
                 emails.append('Could not find a suitable alternate email.  Please submit a ticket at https://contact.owasp.org')
                 
         else: # email not in list, just give that one
-            emails.append[preferred_email]
+            emails.append(preferred_email)
 
         return emails
