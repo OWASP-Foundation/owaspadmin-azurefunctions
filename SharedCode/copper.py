@@ -146,25 +146,7 @@ class OWASPCopper:
         return ''
 
     def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
-        try:
-            membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
-        except:
-            try:
-                membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
-            except:
-                logging.error(f'Membership end is {membership_end}')
-                pass
-            pass
-
-        try:
-            membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
-        except:
-            try:
-                membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
-            except:
-                logging.error(f'Membership start is {membership_start}')
-                pass
-            pass
+        logging.info('Copper CreatePerson')
 
         # Needs Name
         data = {
@@ -178,6 +160,26 @@ class OWASPCopper:
         }
         
         if subscription_data != None:
+            membership_end = None
+            try:
+                membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+            except:
+                try:
+                    membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+                except:
+                    logging.error(f'Membership end is {membership_end}')
+                    pass
+                pass
+
+            try:
+                membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
+            except:
+                try:
+                    membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
+                except:
+                    logging.error(f'Membership start is {membership_start}')
+                    pass
+                pass
             fields = []
             if subscription_data['membership_type'] == 'lifetime':
                 fields.append({
@@ -248,30 +250,32 @@ class OWASPCopper:
         return pid
 
     def UpdatePerson(self, pid, subscription_data = None, stripe_id = None):
-        try:
-            membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
-        except:
-            try:
-                membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
-            except:
-                logging.error(f'Membership end is {membership_end}')
-                pass
-            pass
-
-        try:
-            membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
-        except:
-            try:
-                membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
-            except:
-                logging.error(f'Membership start is {membership_start}')
-                pass
-            pass
+        logging.info('Copper UpdatePerson')
             
         data = {
         }
 
         if subscription_data != None:
+            membership_end = None
+            try:
+                membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+            except:
+                try:
+                    membership_end = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+                except:
+                    logging.error(f'Membership end is {membership_end}')
+                    pass
+                pass
+
+            try:
+                membership_start = datetime.strptime(subscription_data['membership_start'], "%m/%d/%Y")
+            except:
+                try:
+                    membership_start = datetime.strptime(subscription_data['membership_start'], "%Y-%m-%d")
+                except:
+                    logging.error(f'Membership start is {membership_start}')
+                    pass
+                pass
             fields = []
             if subscription_data['membership_type'] == 'lifetime':
                 fields.append({
@@ -362,7 +366,7 @@ class OWASPCopper:
         return ''
     
     def CreateMemberOpportunity(self, opp_name, pid, subscription_data):
-        # there is a delay before FindPerson shows up...let's pass the ID instead....
+        logging.info('Copper CreateMemberOpportunity')
         
         pipeline = self.GetPipeline('Individual Membership')
         if pipeline == None:
@@ -548,9 +552,8 @@ class OWASPCopper:
         return None
 
     def CreateOWASPMembership(self, stripe_id, name, email, subscription_data):
-        # Multiple steps here
-        # CreatePerson
-        # CreateOpportunity
+        logging.info('Copper CreateOWASPMembership')
+    
         contact_json = self.FindPersonByEmail(email)
         pid = None
         if contact_json != '':
