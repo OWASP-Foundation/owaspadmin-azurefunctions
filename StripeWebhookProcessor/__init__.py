@@ -149,18 +149,17 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
         membership_end = customer_metadata.get('membership_end', None)
         membership_start = customer_metadata.get('membership_start', None)
         if membership_start == None or membership_start == '':
-            membership_start = datetime.now()
+            membership_start = subscription_data['membership_start']
         else:
             try:
-                membership_start = datetime.strptime(membership_start, "%d/%m/%Y")
+                membership_start = datetime.strptime(membership_start, "%m/%d/%Y")
             except:
                 try:
                     membership_start = datetime.strptime(membership_start, "%Y-%m-%d")
                 except:
                     pass
-        if type(membership_start) == str:
-            membership_start = datetime.now()
 
+        # if already a membership, we must add the days to the end
         if membership_end is not None and subscription_data['membership_type'] != 'lifetime':
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
             if end_object > datetime.now() and subscription_data['days_added'] != None:
@@ -182,8 +181,6 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
-        elif subscription_data['membership_type'] == 'lifetime':
-            membership_end = None
 
         subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
         
@@ -208,9 +205,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
             
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err}')
-
-        
-
+    
 def get_subscription_data_from_event(event):
     description = event["display_items"][0]["custom"]["description"]
     
@@ -231,6 +226,7 @@ def get_subscription_data_from_event(event):
     # no need to worry with complimentary here as it isn't an option to pay for in Stripe
 
     return {
+        "membership_start": datetime.now(),
         "membership_end": period_end,
         "membership_type": membership_type,
         "days_added": add_days,
@@ -244,6 +240,7 @@ def get_subscription_data(subscription):
     add_days = 365
 
     return {
+        "membership_start": datetime.now(),
         "membership_end": period_end,
         "membership_type": membership_type,
         "days_added": add_days,
