@@ -21,6 +21,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         }
         return return_response(errors, False)
 
+    if email is None:
+        errors = {
+            'email': ['Email is required']
+        }
+        return return_response(errors, False)
+
     customer_id = recurringtoken.decode_token(token)
     customer = stripe.Customer.retrieve(
         customer_id
