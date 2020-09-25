@@ -33,8 +33,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     )
     metadata = customer.get('metadata', {})
     og = OWASPGoogle()
-    first_name = customer.get('name')
-    last_name = customer.get('name')
+    customer_name = customer.get('name')
+    if customer_name is None:
+        errors = {
+            'name': ['No first or last name.  Unable to auto-provision email']
+        }
+        return return_response(errors, False)
+    first_name = customer_name.lower().strip().split(' ')[0]
+    last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
     respb = True
     response = og.CreateSpecificEmailAddress(customer.get('email'), first_name, last_name, email, True)
 
