@@ -181,7 +181,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
-
+        subscription_data['membership_recurring'] = recurring
         subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
         
         stripe.Customer.modify(
@@ -190,7 +190,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
                 "membership_start": subscription_data['membership_start'],
                 "membership_type": subscription_data['membership_type'],
                 "membership_end": subscription_data['membership_end'],
-                "membership_recurring": recurring
+                "membership_recurring": subscription_data['membership_recurring']
             },
             api_key=os.environ["STRIPE_SECRET"]
         )
@@ -198,10 +198,8 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
         customer_email = customer.get('email')
         
         try:
-            # get the updated metadata
-            customer_metadata = customer.get('metadata', {})
             cop = OWASPCopper()
-            cop.CreateOWASPMembership(customer_id, payment_id, customer.get('name'), customer_email, customer_metadata)
+            cop.CreateOWASPMembership(customer_id, payment_id, customer.get('name'), customer_email, subscription_data)
             
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err}')

@@ -246,6 +246,8 @@ class OWASPCopper:
             pid = person['id']
             # When a person is created, Copper occasionally requires time to realize it before you can use a Relationship record on it...
             time.sleep(7.0)
+        else:
+            logging.error(f'Copper Failed CreatePerson: {r.text}')
 
         return pid
 
@@ -341,7 +343,9 @@ class OWASPCopper:
         if r.ok:
             person = json.loads(r.text)
             pid = person['id']
-        
+        else:
+            logging.error(f'Copper Failed UpdatePerson: {r.text}')
+
         return pid
 
     def CreateOpportunity(self, opp_name, contact_email):
@@ -362,7 +366,9 @@ class OWASPCopper:
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
         if r.ok:
             return r.text
-        
+        else:
+            logging.error(f'Copper Failed CreateOpportunity: {r.text}')
+
         return ''
     
     def CreateMemberOpportunity(self, opp_name, pid, payment_id, subscription_data):
@@ -570,7 +576,7 @@ class OWASPCopper:
         else:
             self.UpdatePerson(pid, subscription_data, stripe_id)
 
-        if pid <= 0:
+        if pid == None or pid <= 0:
             logging.error(f'Failed to create person for {email}')
             return
 
