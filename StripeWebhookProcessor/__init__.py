@@ -221,7 +221,7 @@ def get_subscription_data_from_event(event):
     elif "Two Year" in description:
         membership_type = 'two'
         period_end = datetime.now() + timedelta(days=730)
-        period_end = period_end.strftime('%m/%d/%Y')ustomer_email
+        period_end = period_end.strftime('%m/%d/%Y')
         add_days = 730
     elif "Lifetime" in description:
         membership_type = 'lifetime'
