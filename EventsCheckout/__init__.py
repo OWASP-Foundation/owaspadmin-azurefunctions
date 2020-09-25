@@ -277,7 +277,7 @@ def normalize_line_items(line_items):
 def create_comp_order(request, line_items):
     metadata = {
         "name": request.get('name', None),
-        "email": request.get('email', None),
+        "email": request.get('email', None).lower(),
         "skus": '|'.join(request.get('sku', [])),
         "company": request.get('company', None),
         "title": request.get('title', None),

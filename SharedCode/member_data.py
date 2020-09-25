@@ -21,7 +21,7 @@ class MemberData:
                             metadata=metadata
                         )
     def CreateCustomer(self):
-        stripe.Customer.create(email=self.email, 
+        stripe.Customer.create(email=self.email.lower(), 
                                        name=self.name,
                                        metadata = {
                                            'membership_type':self.type,

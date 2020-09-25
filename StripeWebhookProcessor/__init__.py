@@ -146,6 +146,12 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
 
 
         customer_metadata = customer.get('metadata', {})
+        customer_name = metadata.get('name')
+        if customer_name == None:
+            customer_name = customer.get('name')
+        if customer_name == None:
+            customer_name = customer.get('email')
+
         membership_end = customer_metadata.get('membership_end', None)
         membership_start = customer_metadata.get('membership_start', None)
         if membership_start == None or membership_start == '':
@@ -199,7 +205,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id)
         
         try:
             cop = OWASPCopper()
-            cop.CreateOWASPMembership(customer_id, payment_id, customer.get('name'), customer_email, subscription_data)
+            cop.CreateOWASPMembership(customer_id, payment_id, customer_name, customer_email, subscription_data)
             
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err}')
@@ -215,7 +221,7 @@ def get_subscription_data_from_event(event):
     elif "Two Year" in description:
         membership_type = 'two'
         period_end = datetime.now() + timedelta(days=730)
-        period_end = period_end.strftime('%m/%d/%Y')
+        period_end = period_end.strftime('%m/%d/%Y')ustomer_email
         add_days = 730
     elif "Lifetime" in description:
         membership_type = 'lifetime'
