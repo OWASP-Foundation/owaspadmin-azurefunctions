@@ -18,7 +18,7 @@ class OWASPMailchimp:
     def AddToMailingList(self, email, metadata, subscription_data, customer_id):
         subscriber_hash = self.GetMailchimpSubscriberHash(email)
         request_data = {
-            "email_address": email,
+            "email_address": email.lower(),
             "status_if_new": "subscribed",
             "status": "subscribed",
             "merge_fields": self.GetMergeFields(metadata, subscription_data, customer_id),
