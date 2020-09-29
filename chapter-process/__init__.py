@@ -64,6 +64,7 @@ def process_form(values, view_id, function_directory):
         # do copper integration here
         if not 'Failed' in resString:
             resString = CreateCopperObjects(chapter_name, leaders, emails, region, country)
+
     else:
         resString = "Failed due to non matching leader names with emails"
 
@@ -147,5 +148,12 @@ def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers):
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to enable pages for {chapter_name}."
             logging.error(resString + " : " + r.text)
+            
+    if not 'Failed' in resString:
+            team_id = gh.GetTeamId('chapter-administration')
+            if team_id:
+                r = gh.AddRepoToTeam(str(team_id), repoName)
+                if not r.ok:
+                    logging.info(f'Failed to add repo: {r.text}')
 
     return resString
