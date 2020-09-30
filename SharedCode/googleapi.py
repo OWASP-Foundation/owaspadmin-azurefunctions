@@ -24,7 +24,20 @@ class OWASPGoogle:
             },
             "primaryEmail": email_address,
             "recoveryEmail": altemail,
-            "password": datetime.now().strftime('%m%d%Y')
+            "password": datetime.now().strftime('%m%d%Y'),
+            "emails": [{
+                    "address": altemail,
+                    "type": "home",
+                    "customType": "",
+                    "primary": False
+                },
+                {
+                    "address": email_address,
+                    "type": "home",
+                    "customType": "",
+                    "primary": True
+                }
+            ]
         }
         
         if fail_if_exists:
@@ -48,7 +61,20 @@ class OWASPGoogle:
             },
             "primaryEmail": first + '.' + last + '@owasp.org',
             "recoveryEmail": altemail,
-            "password": datetime.now().strftime('%m%d%Y')
+            "password": datetime.now().strftime('%m%d%Y'),
+            "emails": [{
+                    "address": altemail,
+                    "type": "home",
+                    "customType": "",
+                    "primary": False
+                },
+                {
+                    "address": first + '.' + last + '@owasp.org',
+                    "type": "home",
+                    "customType": "",
+                    "primary": True
+                }
+            ]
         }
         
         if fail_if_exists:
