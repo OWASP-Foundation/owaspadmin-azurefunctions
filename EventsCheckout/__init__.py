@@ -356,7 +356,7 @@ def create_comp_order(request, line_items):
         api_key=os.environ["STRIPE_SECRET"]
     )
 
-    add_event_registrant_to_mailing_list(request.get('email'), metadata)
+    add_event_registrant_to_mailing_list(request.get('email').lower(), metadata)
     send_comp_receipt(metadata, line_items)
 
     if metadata.get('discount_code', None) is not None:
