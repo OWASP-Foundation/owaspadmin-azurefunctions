@@ -16,12 +16,18 @@ def parse_leaderline(line):
 
 def add_to_leaders(repo, content, all_leaders, stype):
     lines = content.split('\n')
+    in_leaders = False
     for line in lines:
-        fstr = line.find('[')
         testline = line.lower()
-        if(testline.startswith('###') and 'leader' not in testline):
+        if in_leaders and not testline.startswith('*'):
             break
         
+        if(testline.startswith('###') and 'leader' not in testline):
+            break
+        else:
+            in_leaders = True
+
+        fstr = line.find('[')
         if(line.startswith('*') and fstr > -1 and fstr < 4):
             name, email = parse_leaderline(line)
             leader = {}
