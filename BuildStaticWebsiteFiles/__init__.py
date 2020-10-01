@@ -1,6 +1,7 @@
 import datetime
 import logging
 import json
+import re
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import helperfuncs
@@ -250,6 +251,16 @@ def update_corp_members(gh):
     else:
         logging.error(f'Failed to update assets/sitedata/corp_members.yml: {r.text}')
 
+def deEmojify(text):
+    regrex_pattern = re.compile(pattern = "["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           "]+", flags = re.UNICODE)
+                           
+    return regrex_pattern.sub(r'',text)
+
 def add_to_events(mue, events, repo):
     
     if len(mue) <= 0 or 'errors' in mue:
@@ -272,7 +283,7 @@ def add_to_events(mue, events, repo):
             event['link'] = mevent['link']
             event['timezone'] = mevent['group']['timezone']
             if 'description' in mevent:
-                event['description'] = mevent['description']
+                event['description'] = deEmojify(mevent['description'])
             else:
                 event['description'] = ''
                 
