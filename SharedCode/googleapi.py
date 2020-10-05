@@ -93,3 +93,7 @@ class OWASPGoogle:
             emails.append(preferred_email)
 
         return emails
+
+    def GetActiveUsers(self, next_page_token):
+        results = self.admin.users().list(domain='owasp.org', pageToken=next_page_token).execute()
+        return results
