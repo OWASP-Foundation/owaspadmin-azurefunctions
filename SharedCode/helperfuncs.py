@@ -16,9 +16,11 @@ def send_onetime_secret(emails, secret):
             r = requests.post(f"https://onetimesecret.com/api/v1/share/?secret={secret}&recipient={email}", headers=headers)
             if not r.ok:
                 logging.error(f'Failed to send secret: {r.text}')
+            else:
+                logging.info(f"Secret sent to {email}: {r.text}")
     else:
         logging.error(f"No emails to send")
-        
+
 def get_page_name(content):
     sndx = content.find('title:') + 7
     endx = content.find('\n', sndx)
