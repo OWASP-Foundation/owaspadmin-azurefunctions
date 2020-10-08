@@ -203,3 +203,7 @@ class OWASPGoogle:
             self.SetGroupSettings(group_name, self.GetInitialGroupSettings())
 
         return result
+        
+    def GetActiveUsers(self, next_page_token):
+        results = self.admin.users().list(domain='owasp.org', pageToken=next_page_token).execute()
+        return results
