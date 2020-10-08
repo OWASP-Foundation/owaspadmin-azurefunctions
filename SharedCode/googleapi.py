@@ -14,6 +14,7 @@ class OWASPGoogle:
         creds = creds.with_subject(os.environ['GOOGLE_ADMIN'])
 
         self.admin = build('admin', 'directory_v1', credentials=creds, cache_discovery=False)
+        self.groupSettings = build('groupssettings', 'v1', credentials=creds, cache_discovery=False)
 
     def CreateSpecificEmailAddress(self, altemail, first, last, email_address, fail_if_exists=True):
         
@@ -119,3 +120,86 @@ class OWASPGoogle:
             emails.append(preferred_email)
 
         return emails
+
+    def FindGroup(self, group_name):
+        # test if group exists...
+        try:
+            results = self.admin.groups().get(groupKey=group_name).execute()
+            if 'name' in results:
+                return results
+        except:
+            pass
+        
+        return None
+
+    def GetGroupSettings(self, group_name):
+        val = ''
+        try:
+            val = self.groupSettings.groups().get(groupUniqueId=group_name).execute()
+        except:
+            pass
+
+        return val
+
+    def SetGroupSettings(self, group_name, group_settings):
+        val = ''
+        try:
+            val = self.groupSettings.groups().update(groupUniqueId=group_name, body=group_settings).execute()
+        except:
+            pass
+
+        return val
+
+    def GetGroupMembers(self, group_name):
+        val = ''
+        try:
+            val = self.admin.members().list(groupKey=group_name).execute()
+        except:
+            pass
+
+        return val
+
+    def AddMemberToGroup(self, group_name, email, role='MANAGER', member_type='USER'):
+        data = { 'email': email, 'role': role, 'type':member_type }
+        val = ''
+        try:
+            val = self.admin.members().insert(groupKey=group_name, body=data).execute()
+        except:
+            pass
+
+        return val
+        
+
+    def GetInitialGroupSettings(self):
+        gs = {  'whoCanJoin': 'INVITED_CAN_JOIN', 
+                'whoCanViewMembership': 'ALL_IN_DOMAIN_CAN_VIEW', 
+                'whoCanViewGroup': 'ALL_MEMBERS_CAN_VIEW', 
+                'whoCanInvite': 'ALL_OWNERS_CAN_INVITE', 
+                'whoCanAdd': 'ALL_OWNERS_CAN_ADD', 
+                'allowExternalMembers': 'true', 
+                'whoCanPostMessage': 'ANYONE_CAN_POST', 
+                'allowWebPosting': 'true' } 
+        return gs
+    
+    def CreateGroup(self, group_name):
+        group = {
+            "adminCreated": True,
+            "description": "Group Created by Automation",
+            "email": group_name,
+            "kind": "admin#directory#group",
+            "name": "Leader Group For " + group_name
+        }
+
+        result = f"Group {group['email']} created"
+        results = ''
+        try:
+            results = self.admin.groups().insert(body = group).execute()
+        except:
+            pass
+
+        if 'name' not in results:
+            result = f"Failed to create Group {group['email']}."
+        else:
+            self.SetGroupSettings(group_name, self.GetInitialGroupSettings())
+
+        return result

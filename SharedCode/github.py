@@ -390,3 +390,43 @@ class OWASPGitHub:
         r = requests.put(url = url, headers=headers, data=jsonData)
 
         return r
+
+    def ParseLeaderline(self, line):
+        ename = line.find(']')
+        name = line[line.find('[') + 1:line.find(']')]
+        email = line[line.find('(', ename) + 1:line.find(')', ename)]
+        return name, email
+    
+    def GetLeadersForRepo(self, repo):
+        repo_leaders = []
+        r = self.GetFile(repo, 'leaders.md')
+        if r.ok:
+            doc = json.loads(r.text)
+            content = base64.b64decode(doc['content']).decode(encoding='utf-8')
+            lines = content.split('\n')
+            in_leaders = False
+            for line in lines:
+                testline = line.lower()
+                if in_leaders and '###' in testline:
+                    in_leaders = False
+                    break
+                
+                if in_leaders and not testline.startswith('*'):
+                    continue
+                
+                if(testline.startswith('###') and 'leader' not in testline):
+                    continue
+                elif(testline.startswith('###') and 'leader' in testline):
+                    in_leaders = True
+                    continue
+                if in_leaders:
+                    fstr = line.find('[')
+                    if(line.startswith('*') and fstr > -1 and fstr < 4):
+                        name, email = self.ParseLeaderline(line)
+                        leader = {}
+                        leader['name'] = name
+                        leader['email'] = email.replace('mailto://','').replace('mailto:','')
+                        
+                        repo_leaders.append(leader)
+
+        return repo_leaders
