@@ -82,7 +82,7 @@ def create_zoom_account(chapter_url):
             result = og.FindGroup(zoom_accounts[0])
             if result != None and not 'Failed' in result:
                 logging.info(f"Adding {leadersemail} to {zoom_accounts[0]}")
-                og.AddMemberToGroup(zoom_accounts[0], leadersemail)
+                og.AddMemberToGroup(zoom_accounts[0], leadersemail, 'MEMBER', 'GROUP')
             else:
                 logging.error(f"Failed to find group for {zoom_accounts[0]}")
 
