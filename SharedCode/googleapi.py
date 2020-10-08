@@ -8,7 +8,7 @@ import random
 
 class OWASPGoogle:
     def __init__(self):
-        scopes = ['https://www.googleapis.com/auth/admin.directory.user']
+        scopes = ['https://www.googleapis.com/auth/admin.directory.user', 'https://www.googleapis.com/auth/admin.directory.group', 'https://www.googleapis.com/auth/apps.groups.settings']
         client_secret = json.loads(os.environ['GOOGLE_CREDENTIALS'], strict=False)
         creds = service_account.Credentials.from_service_account_info(client_secret, scopes=scopes)
         creds = creds.with_subject(os.environ['GOOGLE_ADMIN'])
