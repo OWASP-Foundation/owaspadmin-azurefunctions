@@ -10,12 +10,15 @@ def send_onetime_secret(emails, secret):
     headers = {
         'Authorization':f"Basic {base64.b64encode((os.environ['OTS_USER'] + ':' + os.environ['OTS_API_KEY']).encode()).decode()}"
     }
-
-    for email in emails:
-        r = requests.post(f"https://onetimesecret.com/api/v1/share/?secret={secret}&recipient={email}", headers=headers)
-        if not r.ok:
-            logging.error(f'Failed to send secret: {r.text}')
-
+    if len(emails) > 0:
+        for email in emails:
+            logging.info(f"Sending to {email}")
+            r = requests.post(f"https://onetimesecret.com/api/v1/share/?secret={secret}&recipient={email}", headers=headers)
+            if not r.ok:
+                logging.error(f'Failed to send secret: {r.text}')
+    else:
+        logging.error(f"No emails to send")
+        
 def get_page_name(content):
     sndx = content.find('title:') + 7
     endx = content.find('\n', sndx)
