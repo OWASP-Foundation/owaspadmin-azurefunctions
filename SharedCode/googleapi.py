@@ -187,7 +187,7 @@ class OWASPGoogle:
             "description": "Group Created by Automation",
             "email": group_name,
             "kind": "admin#directory#group",
-            "name": "Leader Group For " + group_name
+            "name": group_name + " Leader Group for Shared Access"
         }
 
         result = f"Group {group['email']} created"

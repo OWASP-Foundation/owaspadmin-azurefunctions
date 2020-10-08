@@ -32,6 +32,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if action == 'info':
         return return_response(get_member_info(customer_id), True)
 
+def IsExpired(metadata):
+    expired = True
+    membership_type = metadata.get('membership_type', None)
+    if membership_type != None:
+        membership_end = metadata.get('membership_end', None)
+        if membership_end == None and membership_type == 'lifetime':
+            expired = False
+        if expired:
+            try:
+                memend_date = datetime.strptime("%d/%m/YY", membership_end)
+                if membership_end > datetime.now():
+                    expired = False
+            except:
+                memend_date = None
+                # no end date and not lifetime = no membership
+
+    return expired
+
 def get_member_info(customer_id):
     customer = stripe.Customer.retrieve(
         customer_id,
@@ -116,7 +134,7 @@ def get_member_info(customer_id):
             })
     email_list = []
     email = customer.get('email')
-    if email != None and 'owasp.org' not in email.lower() and metadata.get('owasp_email', None) == None: 
+    if email != None and 'owasp.org' not in email.lower() and metadata.get('owasp_email', None) == None and not IsExpired(metadata): 
         og = OWASPGoogle()
         customer_name = customer.get('name')
         if customer_name != None:
