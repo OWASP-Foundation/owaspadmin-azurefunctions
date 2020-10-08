@@ -27,13 +27,17 @@ def main(mytimer: func.TimerRequest) -> None:
             last_customer_id = None
         
         customers = stripe.Customer.list(limit=100, starting_after=last_customer_id)
+        num_processed = 0
         for customer in customers.auto_paging_iter():
             removed = RemoveInvalidCustomer(customer)
             if not removed:
                 FixEmailCasing(customer)
             with open('stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
                 processed_file.write(customer['id'])
-            logging.info("done processing customer: " + customer['id'])
+            num_processed = num_processed + 1
+            #with open('stripe-customer-cleanup-number-processed.txt', 'w') as processed_file:
+            #    processed_file.write('processed ' + str(num_processed) + ' customers')
+            logging.info('done processing customer: ' + customer['id'] + 'count up to ' + str(num_processed))
         
         logging.info("finished processing all customers.  Cleaning up last processed file.")
         with open('stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
@@ -112,7 +116,8 @@ def RemoveInvalidCustomer(customer):
         logging.info("delete " + customer_id)
         return True
 
-    except APIConnectionError as ex:
+    except stripe.error.APIConnectionError as ex:
+        logging.error("Error connecting to Stripe API.  Moving on to next customer and trying again.")
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
         logging.exception(message)
@@ -122,9 +127,7 @@ def RemoveInvalidCustomer(customer):
         template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)
         logging.exception(message)
-        return False
-
-    
+        raise
 
 
 def FixEmailCasing(customer):
