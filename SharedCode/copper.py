@@ -119,7 +119,7 @@ class OWASPCopper:
         data = { 'email': lstxt }
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
         if r.ok and r.text != '[]':
-            return [r.text]
+            return f"[{r.text}]"
 
         data = {
             'page_size': 5,
