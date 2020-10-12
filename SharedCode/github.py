@@ -106,7 +106,7 @@ class OWASPGitHub:
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(":repo", repoName)
 
-        data = { "source" : { "branch" : "master" }}
+        data = { "source" : { "branch" : "main" }}
         r = requests.post(url = url, headers=headers, data=json.dumps(data))
 
         return r
