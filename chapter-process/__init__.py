@@ -26,6 +26,9 @@ def process_form(values, view_id, function_directory):
     git_users = ''
     if 'github-id' in values and 'github-value' in values['github-id'] and 'value' in values['github-id']['github-value']:
         git_users = values["github-id"]["github-value"]["value"]
+    if git_users == None:
+        git_users = ''
+        
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]
