@@ -27,6 +27,9 @@ def process_form(values, view_id, function_directory):
     if 'github-id' in values and 'github-value' in values['github-id'] and 'value' in values['github-id']['github-value']:
         git_users = values["github-id"]["github-value"]["value"]
     
+    if git_users == None:
+        git_users = ''
+    
     summary = values["summary-id"]["summary-value"]["value"]
     description = values["desc-id"]["desc-value"]["value"]
     roadmap = values["roadmap-id"]["roadmap-value"]["value"]
