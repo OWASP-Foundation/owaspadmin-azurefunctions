@@ -165,7 +165,7 @@ def make_donation_api_request(request: Dict) -> Dict:
         "payment_method_types": ["card"],
     }
 
-    stripe_customer_id = get_stripe_customer_id(email)
+    stripe_customer_id = get_stripe_customer_id(email, name)
     if (stripe_customer_id is not None):
         api_request['customer'] = stripe_customer_id
     else:
@@ -244,7 +244,7 @@ def make_subscription_api_request(request: Dict) -> Dict:
         "payment_method_types": ["card"],
     }
 
-    stripe_customer_id = get_stripe_customer_id(email)
+    stripe_customer_id = get_stripe_customer_id(email, name)
     if (stripe_customer_id is not None):
         api_request['customer'] = stripe_customer_id
     else:
@@ -340,11 +340,17 @@ def return_response(response, success):
     )
 
 
-def get_stripe_customer_id(email):
+def get_stripe_customer_id(email, name=''):
     customers = stripe.Customer.list(email=email)
     if len(customers) > 0:
         for customer in customers:
             if customer.email == email:
                 return customer.id
+    else: # create the customer first
+        customer_request = stripe.Customer.create(email=email.lower(), 
+                                                  name=name,
+                                                  api_key=os.environ["STRIPE_SECRET"]
+                                                )
+        return customer_request['id']
 
     return None
