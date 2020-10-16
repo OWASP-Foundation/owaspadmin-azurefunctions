@@ -90,8 +90,8 @@ def get_leader_emails():
             doc = json.loads(gr.text)
             content = base64.b64decode(doc['content']).decode()
             data = json.loads(content)
-            # with open('data.json', 'w') as outfile:
-            #    json.dump(data, outfile)
+            with open('github-leaders-data.json', 'w') as outfile:
+                json.dump(data, outfile)
         else:
             logging.error('Error retreiving leaders file from Github')
             return
@@ -113,7 +113,7 @@ def SendResultsEmail(deleted_emails_count, errors_count):
     try:
         message = Mail(
             from_email='noreply@owasp.org',
-            to_emails='ccapellan@gmail.com',
+            to_emails='admin@owasp.com',
             subject='Daily Email Cleanup, ' + str(errors_count) + ' errors, ' + str(deleted_emails_count) + '  addresses disabled',
             html_content='<strong>Please find the results attached.</strong>')
 
