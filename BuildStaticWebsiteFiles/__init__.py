@@ -31,33 +31,38 @@ def add_to_leaders(repo, content, all_leaders, stype):
         fstr = line.find('[')
         if(line.startswith('*') and fstr > -1 and fstr < 4):
             name, email = parse_leaderline(line)
-            leader = {}
-            leader['name'] = name
-            leader['email'] = email
-            leader['group'] = repo['title']
-            leader['group-type'] = stype
-            leader['group_url'] = repo['url']
-            
-            all_leaders.append(leader)
+            if 'leader.email@owasp.org' not in email: # default
+                leader = {}
+                leader['name'] = name
+                leader['email'] = email.replace('mailto://', '').replace('mailto:','').lower()
+                leader['group'] = repo['title']
+                leader['group-type'] = stype
+                leader['group_url'] = repo['url']
+                
+                all_leaders.append(leader)
 
 
 def build_leaders_json(gh):
     all_leaders = []
     repos = gh.GetPublicRepositories('www-')
     for repo in repos:
+        stype = ''
+        if repo['name'] == 'www-projectchapter-example':
+            continue
+        
+        if 'www-chapter' in repo['name']:
+            stype = 'chapter'
+        elif 'www-committee' in repo['name']:
+            stype = 'committee'
+        elif 'www-project' in repo['name']:
+            stype = 'project'
+        else:
+            continue
+
         r = gh.GetFile(repo['name'], 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)
             content = base64.b64decode(doc['content']).decode(encoding='utf-8')
-            stype = ''
-            if 'www-chapter' in repo['name']:
-                stype = 'chapter'
-            elif 'www-committee' in repo['name']:
-                stype = 'committee'
-            elif 'www-project' in repo['name']:
-                stype = 'project'
-            else:
-                continue
 
             add_to_leaders(repo, content, all_leaders, stype)
     
