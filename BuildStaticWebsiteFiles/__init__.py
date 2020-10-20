@@ -361,6 +361,9 @@ def main(mytimer: func.TimerRequest) -> None:
     mu = meetup.OWASPMeetup()
     create_chapter_events(gh, mu)
 
+    logging.info('Updating inactive chapters')
+    build_inactive_chapters_json(gh)
+
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
 class Leader:
