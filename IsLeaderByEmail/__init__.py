@@ -30,7 +30,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 if email == leader['email']:
                     is_leader = True
                     break
-            return func.HttpResponse(f"{{'leader': {is_leader}}}")
+            return func.HttpResponse(f"{{'leader': {is_leader}, 'url':{leader['group_url']}, 'group':{leader['group']}}}")
         else:
             return func.HttpResponse(
                 "{'error': 'Unable to verify.  Try again later.'}",
