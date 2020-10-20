@@ -32,14 +32,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     gleader = leader
                     is_leader = True
                     break
-            return func.HttpResponse(f"{{'leader': {is_leader}, 'url':'{gleader['group_url']}', 'group':'{gleader['group']}'}}")
+            result = {
+                'leader': is_leader,
+                'url': gleader['group_url'],
+                'group': gleader['group']
+            }
+
+            return func.HttpResponse(body = json.dumps(result))
         else:
+            error = {
+                'error': 'Unable to verify.  Try again later.'
+            }
             return func.HttpResponse(
-                "{'error': 'Unable to verify.  Try again later.'}",
+                body=json.dumps(error),
                 status_code=404
             )
     else:
+        error = {
+                'error': 'Missing required paramter - email'
+            }
         return func.HttpResponse(
-             "{'error':'Missing required paramter - email'}",
+             body=json.dumps(error),
              status_code=404
         )
