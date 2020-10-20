@@ -17,6 +17,8 @@ def parse_leaderline(line):
 
 def add_to_leaders(repo, content, all_leaders, stype):
     lines = content.split('\n')
+    max_leaders = 5
+    leader_count = 0
     in_leaders = False
     for line in lines:
         testline = line.lower()
@@ -31,7 +33,7 @@ def add_to_leaders(repo, content, all_leaders, stype):
         fstr = line.find('[')
         if(line.startswith('*') and fstr > -1 and fstr < 4):
             name, email = parse_leaderline(line)
-            if 'leader.email@owasp.org' not in email: # default
+            if 'leader.email@owasp.org' not in email and leader_count < max_leaders: # default
                 leader = {}
                 leader['name'] = name
                 leader['email'] = email.replace('mailto://', '').replace('mailto:','').lower()
@@ -40,6 +42,7 @@ def add_to_leaders(repo, content, all_leaders, stype):
                 leader['group_url'] = repo['url']
                 
                 all_leaders.append(leader)
+                leader_count = leader_count + 1
 
 
 def build_leaders_json(gh):
