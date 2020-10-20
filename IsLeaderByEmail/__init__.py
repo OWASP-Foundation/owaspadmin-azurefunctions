@@ -32,7 +32,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     gleader = leader
                     is_leader = True
                     break
-            return func.HttpResponse(f"{{'leader': {is_leader}, 'url':{gleader['group_url']}, 'group':{gleader['group']}}}")
+            return func.HttpResponse(f"{{'leader': {is_leader}, 'url':'{gleader['group_url']}', 'group':'{gleader['group']}'}}")
         else:
             return func.HttpResponse(
                 "{'error': 'Unable to verify.  Try again later.'}",
