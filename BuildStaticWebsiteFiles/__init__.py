@@ -22,13 +22,14 @@ def add_to_leaders(repo, content, all_leaders, stype):
     in_leaders = False
     for line in lines:
         testline = line.lower()
-        if in_leaders and not testline.startswith('*'):
+        if in_leaders and leader_count > 0 and not testline.startswith('*'):
             break
         
         if(testline.startswith('###') and 'leader' not in testline):
             break
-        else:
+        elif testline.startswith('###') and 'leader' in testline:
             in_leaders = True
+            continue
 
         fstr = line.find('[')
         if(line.startswith('*') and fstr > -1 and fstr < 4):
@@ -53,11 +54,11 @@ def build_leaders_json(gh):
         if repo['name'] == 'www-projectchapter-example':
             continue
         
-        if 'www-chapter' in repo['name']:
+        if 'www-chapter' in repo['url']:
             stype = 'chapter'
-        elif 'www-committee' in repo['name']:
+        elif 'www-committee' in repo['url']:
             stype = 'committee'
-        elif 'www-project' in repo['name']:
+        elif 'www-project' in repo['url']:
             stype = 'project'
         else:
             continue
