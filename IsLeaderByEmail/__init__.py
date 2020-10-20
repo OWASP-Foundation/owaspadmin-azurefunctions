@@ -26,11 +26,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             content = base64.b64decode(doc['content']).decode(encoding='utf-8')
             leaders = json.loads(content)
             is_leader = False
+            gleader = {'group_url':'', 'group':''}
             for leader in leaders:
                 if email == leader['email']:
+                    gleader = leader
                     is_leader = True
                     break
-            return func.HttpResponse(f"{{'leader': {is_leader}, 'url':{leader['group_url']}, 'group':{leader['group']}}}")
+            return func.HttpResponse(f"{{'leader': {is_leader}, 'url':{gleader['group_url']}, 'group':{gleader['group']}}}")
         else:
             return func.HttpResponse(
                 "{'error': 'Unable to verify.  Try again later.'}",
