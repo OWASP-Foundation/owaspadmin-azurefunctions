@@ -1,10 +1,118 @@
-import datetime
+from datetime import datetime
+from datetime import timedelta
 import logging
 import json
 import azure.functions as func
 import base64
 import os
 import requests
+import stripe
+from ..SharedCode.github import OWASPGitHub
+from ..SharedCode.owaspmailchimp import OWASPMailchimp
+from ..SharedCode.copper import OWASPCopper
+
+# for leaders, the check should exist in the azure function to not allow 
+# complimentary membership if already a member unless within some number 
+# of days prior to expiry
+# startdate and enddate should be 2020-06-10 format strings
+def create_complimentary_member(firstname, lastname, email, company, country, zipcode, startdate, enddate, memtype, mailing_list, is_leader):
+    stripe.api_key = os.environ['STRIPE_SECRET']
+    cop = OWASPCopper()
+    nstr = f"{firstname} {lastname}"                
+    leader_agreement = None
+    if is_leader:
+        leader_agreement = datetime.today().strftime("%m/%d/%Y")
+    member = MemberData(nstr, email.lower(), company, country, zipcode, startdate, enddate, memtype, 'no', leader_agreement)
+    customers = stripe.Customer.list(email=member.email)
+    stripe_id = None
+            
+    if len(customers.data) > 0: # exists
+        customer_id = customers.data[0].get('id', None)
+        metadata = customers.data[0].get('metadata', {})
+        stripe_member_type = metadata.get('membership_type')
+        if stripe_member_type != 'lifetime': #do not update the membership on lifetime members
+            membership_type = member.type
+            mendstr = metadata.get('membership_end', None)
+            if mendstr != None:
+                mend_dt = datetime.strptime(mendstr, '%m/%d/%Y')
+                #possible case: has membership already...update end date to be +time
+                if member.end > mend_dt:
+                    add_days = 364
+                    if membership_type == 'two':
+                        add_days = 729
+                        member.end = mend_dt + timedelta(days=add_days)
+
+                    if(is_leader):
+                        member.UpdateMetadata(customer_id,
+                            {
+                                "membership_end": member.end.strftime('%m/%d/%Y'),
+                                "leader_agreement": datetime.today().strftime("%m/%d/%Y")
+                            }
+                        )
+                    else:
+                        member.UpdateMetadata(customer_id,
+                            {
+                                "membership_end": member.end.strftime('%m/%d/%Y'),
+                            }
+                        )
+
+            else: # lifetime-but should never happen here in comp membership
+                if(is_leader):
+                    member.UpdateMetadata(customer_id,
+                            {
+                                "membership_end": "",
+                                "membership_type": "lifetime",
+                                "leader_agreement": datetime.today().strftime("%m/%d/%Y")
+                            }
+                        )
+                else:
+                    member.UpdateMetadata(customer_id,
+                            {
+                                "membership_end": "",
+                                "membership_type": "lifetime"
+                            }
+                        )
+                # also need to update Copper info here...including creating an opportunity for this (even if $0)
+            stripe_id = customer_id #cop.UpdateOWASPMembership(member.stripe_id, member.name, member.email, member.GetSubscriptionData())
+    else: # does not exist
+        stripe_id = member.CreateCustomer()
+            
+    if stripe_id != None:
+        cop.CreateOWASPMembership(stripe_id, None, member.name, member.email, member.GetSubscriptionData(), 0.0)
+        mailchimp = OWASPMailchimp()
+        mailchimpdata = {
+            'name': member.name,
+            'source': 'script import',    
+            'purchase_type': 'membership',
+            'company': member.company,
+            'country': member.country,
+            'postal_code': member.postal_code,
+            'mailing_list': mailing_list
+        }
+
+        mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
+
+            
+# simple true/false function as opposed to the IsLeaderByEmail Azure Function that returns more details
+def is_leader_by_email(email):
+    is_leader = False
+    if email:
+        email = email.lower()
+        gh = OWASPGitHub()
+        r = gh.GetFile('owasp.github.io', '_data/leaders.json')
+        if r.ok:
+            doc = json.loads(r.text)
+            content = base64.b64decode(doc['content']).decode(encoding='utf-8')
+            leaders = json.loads(content)
+            is_leader = False
+            gleader = {'group_url':'', 'group':''}
+            for leader in leaders:
+                if email == leader['email']:
+                    gleader = leader
+                    is_leader = True
+                    break
+
+    return is_leader
 
 def send_onetime_secret(emails, secret):
     headers = {
@@ -282,3 +390,67 @@ class StaffProject:
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, 
             sort_keys=True, indent=4)
+
+
+class MemberData:
+    def __init__(self, name, email, company, country, postal_code, start, end, type, recurring, leader_agreement):
+        self.name = name
+        self.email = email
+        self.company = company
+        self.country = country
+        self.postal_code = postal_code
+        self.leader_agreement = None
+        if leader_agreement:
+          self.leader_agreement = leader_agreement
+
+        try:
+            self.start = datetime.strptime(start, "%Y-%m-%d")
+        except:
+            self.start = datetime.strptime(start, "%m/%d/%Y")
+        try:
+            self.end = datetime.strptime(end, "%Y-%m-%d")
+        except:
+            self.end = datetime.strptime(end, "%m/%d/%Y")
+            
+        self.type = type
+        self.recurring = recurring
+        self.stripe_id = None
+    def UpdateMetadata(self, customer_id, metadata):
+        self.stripe_id = customer_id
+        stripe.Customer.modify(
+                            customer_id,
+                            metadata=metadata
+                        )
+    def CreateCustomer(self):
+        metadata = {
+                                           'membership_type':self.type,
+                                           'membership_start':datetime.strftime(self.start, '%m/%d/%Y'),
+                                           'membership_end':datetime.strftime(self.end, '%m/%d/%Y'),
+                                           'membership_recurring':self.recurring,
+                                           'company':self.company,
+                                           'country':self.country,
+                                       }
+        if self.leader_agreement:
+            metadata['leader_agreement'] = self.leader_agreement
+
+        cust = stripe.Customer.create(email=self.email, 
+                                       name=self.name,
+                                       metadata = metadata)
+        
+        
+        self.stripe_id = cust.get('id')
+        return self.stripe_id
+
+    def GetSubscriptionData(self):
+        metadata = {
+                    'membership_type':self.type,
+                    'membership_start':datetime.strftime(self.start, '%Y-%m-%d'),
+                    'membership_end':datetime.strftime(self.end, '%Y-%m-%d'),
+                    'membership_recurring':self.recurring,
+                    'company':self.company,
+                    'country':self.country,
+                }
+        if(self.leader_agreement):
+            metadata['leader_agreement'] = self.leader_agreement
+
+        return metadata

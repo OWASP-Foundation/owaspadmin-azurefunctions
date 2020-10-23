@@ -61,8 +61,7 @@ def contact_lookup2(text, response_url):
         for customer in customers:
             metadata = customer.get('metadata')
             membership_type = metadata.get('membership_type')
-            if membership_type == 'honorary':
-                membership_type = 'complimentary'
+            
             response_text['blocks'].append({
             "type": "section",
             "fields": [
@@ -135,10 +134,8 @@ def contact_lookup(text, response_url):
         })
 
     for member in returned_members:
-        #modifying name of honorary membership to reflect truth
+        
         membership_type = member['merge_fields']['MEMTYPE']
-        if membership_type == 'honorary':
-            membership_type = 'complimentary'
 
         response_text['blocks'].append({
             "type": "section",

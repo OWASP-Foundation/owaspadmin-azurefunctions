@@ -65,7 +65,7 @@ def create_zoom_account(chapter_url):
         result = og.FindGroup(leadersemail)
         leader_emails = []
         if result == None:
-            result = og.CreateGroup(leadersemail)
+            result = og.CreateGroup(chapter_name, leadersemail)
         if not 'Failed' in result:    
             for leader in leaders:
                 leader_emails.append(leader['email'])

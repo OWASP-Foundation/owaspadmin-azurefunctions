@@ -181,13 +181,13 @@ class OWASPGoogle:
                 'allowWebPosting': 'true' } 
         return gs
     
-    def CreateGroup(self, group_name):
+    def CreateGroup(self, group_name, group_email):
         group = {
             "adminCreated": True,
-            "description": "Group Created by Automation",
-            "email": group_name,
+            "description": "Shared Access Group",
+            "email": group_email,
             "kind": "admin#directory#group",
-            "name": group_name + " Leader Group for Shared Access"
+            "name": group_name + " Leaders"
         }
 
         result = f"Group {group['email']} created"
@@ -200,7 +200,7 @@ class OWASPGoogle:
         if 'name' not in results:
             result = f"Failed to create Group {group['email']}."
         else:
-            self.SetGroupSettings(group_name, self.GetInitialGroupSettings())
+            self.SetGroupSettings(group_email, self.GetInitialGroupSettings())
 
         return result
         

@@ -1,3 +1,4 @@
+from re import sub
 import requests
 import json
 import os
@@ -65,9 +66,11 @@ class OWASPCopper:
     cp_person_membership_option_oneyear = 674395
     cp_person_membership_option_twoyear = 674396
     cp_person_membership_option_complimentary = 1506889
+    cp_person_membership_option_honorary = 1519960
     cp_person_membership_start = 394883
     cp_person_membership_end = 394884
     cp_person_github_username = 395220
+    cp_person_signed_leaderagreement = 448262
     #inactive cp_person_membership_number = 397651
     cp_person_external_id = 400845 #old Salesforce id
     cp_person_stripe_number = 440584
@@ -75,7 +78,8 @@ class OWASPCopper:
     cp_opportunity_end_date = 400119
     cp_opportunity_autorenew_checkbox = 419575
     cp_opportunity_invoice_no = 407333  # can be the URL to the stripe payment for membership
-
+    #leader specific
+    
     def GetHeaders(self):
         headers = {
             'X-PW-AccessToken':os.environ['COPPER_API_KEY'],
@@ -225,10 +229,19 @@ class OWASPCopper:
                         'custom_field_definition_id' : self.cp_person_membership_end, 
                         'value': membership_end.strftime("%m/%d/%Y")
                     })
-            elif subscription_data['membership_type'] == 'honorary':
+            elif subscription_data['membership_type'] == 'complimentary':
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership, 
                         'value': self.cp_person_membership_option_complimentary
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': membership_end.strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'honorary':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_honorary 
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
@@ -251,6 +264,12 @@ class OWASPCopper:
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
                         'value': membership_end.strftime("%m/%d/%Y")
+                    })
+            
+            if 'leader_agreement' in subscription_data:
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_signed_leaderagreement, 
+                        'value': subscription_data['leader_agreement']
                     })
 
             fields.append({
@@ -323,10 +342,19 @@ class OWASPCopper:
                         'custom_field_definition_id' : self.cp_person_membership_end, 
                         'value': membership_end.strftime("%m/%d/%Y")
                     })
-            elif subscription_data['membership_type'] == 'honorary':
+            elif subscription_data['membership_type'] == 'complimentary':
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership, 
                         'value': self.cp_person_membership_option_complimentary
+                    })
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_end, 
+                        'value': membership_end.strftime("%m/%d/%Y")
+                    })
+            elif subscription_data['membership_type'] == 'honorary':
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership, 
+                        'value': self.cp_person_membership_option_honorary
                     })
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
@@ -349,6 +377,12 @@ class OWASPCopper:
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership_end, 
                         'value': membership_end.strftime("%m/%d/%Y")
+                    })
+            
+            if 'leader_agreement' in subscription_data:
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_signed_leaderagreement, 
+                        'value': subscription_data['leader_agreement']
                     })
 
             fields.append({
@@ -397,7 +431,7 @@ class OWASPCopper:
 
         return ''
     
-    def CreateMemberOpportunity(self, opp_name, pid, payment_id, subscription_data):
+    def CreateMemberOpportunity(self, opp_name, pid, payment_id, subscription_data, monetary_value):
         logging.info('Copper CreateMemberOpportunity')
         
         pipeline = self.GetPipeline('Individual Membership')
@@ -416,6 +450,7 @@ class OWASPCopper:
             'primary_contact_id': pid,
             'pipeline_id': pipeline_id,
             'pipeline_stage_id': pipeline_stage_id,
+            'monetary_value': monetary_value,
             'status': 'Won'
         }
         
@@ -433,7 +468,7 @@ class OWASPCopper:
             else:
                 fields.append({
                         'custom_field_definition_id' : self.cp_opportunity_end_date, 
-                        'value': subscription_data['membership_end']
+                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
                     })
                 renew = False
             if subscription_data['membership_recurring'] == 'yes':
@@ -447,7 +482,7 @@ class OWASPCopper:
                     'custom_field_definition_id' : self.cp_opportunity_invoice_no,
                     'value': f"https://dashboard.stripe.com/payments/{payment_id}"
                 })
-            # if this were not complimentary, we would need the invoice number for the opportunity as well (payment url in Stripe)
+           
             data['custom_fields'] = fields
 
         url = f'{self.cp_base_url}{self.cp_opp_fragment}'
@@ -588,7 +623,7 @@ class OWASPCopper:
         
         return None
 
-    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data):
+    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data, monetary_value):
         logging.info('Copper CreateOWASPMembership')
     
         contact_json = self.FindPersonByEmail(email)
@@ -607,12 +642,23 @@ class OWASPCopper:
             return
 
         opp_name = subscription_data['membership_type'].capitalize()
+        memend = None
+        try:
+            memend = datetime.strptime(subscription_data['membership_end'], '%Y-%m-%d')
+        except:
+            try:
+                memend = datetime.strptime(subscription_data['membership_end'], '%m/%d/%Y')
+            except:
+                pass
+
         if opp_name == "Honorary":
+            opp_name = "Honorary One"
+        if opp_name == "Complimentary":
             opp_name = "Complimentary One"
         if subscription_data['membership_type'] != 'lifetime':
-            opp_name += f" Year Membership until {subscription_data['membership_end']}"
+            opp_name += f" Year Membership until {memend.strftime('%Y-%m-%d')}"
         else:
             opp_name += " Membership"
 
         
-        self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data)
+        self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data, monetary_value)

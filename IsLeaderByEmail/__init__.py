@@ -26,16 +26,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             content = base64.b64decode(doc['content']).decode(encoding='utf-8')
             leaders = json.loads(content)
             is_leader = False
-            gleader = {'group_url':'', 'group':''}
+            groups = []
             for leader in leaders:
                 if email == leader['email']:
-                    gleader = leader
                     is_leader = True
-                    break
+                    groups.append(leader['group'])
+
+            
             result = {
                 'leader': is_leader,
-                'url': gleader['group_url'],
-                'group': gleader['group']
+                'groups': groups
             }
 
             return func.HttpResponse(body = json.dumps(result))
