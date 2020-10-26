@@ -98,6 +98,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         s_customer = None
         metadata = None
         end_date = None
+        edate = None
         if len(customers) > 0:
             for customer in customers:
                 if customer.email == email:
@@ -115,12 +116,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
 
         if helperfuncs.is_leader_by_email(email):
-            # steps to create member
-            fname = name[0: name.find(' ')]
-            lname = name[name.find(' ') + 1:]
-            helperfuncs.create_complimentary_member(fname, lname, email, company, country, postal_code, datetime.today().strftime("%Y-%m-%d"), (datetime.today() + timedelta(364)).strftime("%Y-%m-%d"), membership_type, mailing_list, True)
-            status_code = 200
-            result = { "success": "user created"}
+            if edate is not None and edate > datetime.today():
+                result = {"error": "You already have a membership."}
+                status_code = 400
+            else:
+                # steps to create member
+                fname = name[0: name.find(' ')]
+                lname = name[name.find(' ') + 1:]
+                helperfuncs.create_complimentary_member(fname, lname, email, company, country, postal_code, datetime.today().strftime("%Y-%m-%d"), (datetime.today() + timedelta(364)).strftime("%Y-%m-%d"), membership_type, mailing_list, True)
+                status_code = 200
+                result = { "success": "user created"}
         else:
             result = { "error":"email address is not associated with a leader"}
             status_code = 400        
