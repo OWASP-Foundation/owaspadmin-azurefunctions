@@ -46,8 +46,8 @@ def validate_request(request: Dict) -> Dict:
         if checkout_type == 'donation':
             if request.get('currency') is None or request.get('currency') not in ['usd', 'eur', 'gbp']:
                 errors['currency'] = ['currency is required and must be usd, eur, or gbp']
-            if request.get('amount') is None or int(request.get('amount')) < 1:
-                errors['amount'] = ['amount is required']
+            if request.get('amount') is None or int(request.get('amount')) < 10:
+                errors['amount'] = ['amount >= 10 is required']
             if request.get('name') is None:
                 errors['name'] = ['name is required']
             if request.get('email') is None:
