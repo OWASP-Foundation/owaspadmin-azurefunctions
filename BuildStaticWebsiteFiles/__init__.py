@@ -338,32 +338,59 @@ def main(mytimer: func.TimerRequest) -> None:
 
     gh = github.OWASPGitHub()
     logging.info("Building project json file")
-    build_project_json(gh)
+    try:
+        build_project_json(gh)
+    except Exception as err:
+        logging.error(f"Exception building project json: {err}")
 
     logging.info("Building chapter json file")
-    build_chapter_json(gh)
-    
+    try:
+        build_chapter_json(gh)
+    except Exception as err:
+        logging.error(f"Exception building chapter json: {err}")
+
     logging.info("Building staff projects and milestones json files")
-    helperfuncs.build_staff_project_json(gh)
+    try:
+        helperfuncs.build_staff_project_json(gh)
+    except Exception as err:
+        logging.error(f"Exception building staff projects json: {err}")
 
     logging.info('Updating Chapter Administration Team repositories')
-    update_chapter_admin_team(gh)
+    try:
+        update_chapter_admin_team(gh)
+    except Exception as err:
+        logging.error(f"Exception updating Chapter Administration team: {err}")
 
     logging.info('Updating corp_members.yml sitedata from site.data')
-    update_corp_members(gh)
+    try:
+        update_corp_members(gh)
+    except Exception as err:
+        logging.error(f"Exception updating corp_members.yml: {err}")
 
     logging.info('Building committees json file')
-    build_committee_json(gh)
+    try:
+        build_committee_json(gh)
+    except Exception as err:
+        logging.error(f"Exception building committees json file: {err}")
     
     logging.info('Building leaders json file')
-    build_leaders_json(gh)
+    try:
+        build_leaders_json(gh)
+    except Exception as err:
+        logging.error(f"Exception updating leaders json file: {err}")
 
     logging.info('Updating chapter events')
     mu = meetup.OWASPMeetup()
-    create_chapter_events(gh, mu)
+    try:
+        create_chapter_events(gh, mu)
+    except Exception as err:
+        logging.error(f"Exception updating chapter events: {err}")
 
     logging.info('Updating inactive chapters')
-    build_inactive_chapters_json(gh)
+    try:
+        build_inactive_chapters_json(gh)
+    except Exception as err:
+        logging.error(f"Exception updating inactive chapters: {err}")
 
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)
 
