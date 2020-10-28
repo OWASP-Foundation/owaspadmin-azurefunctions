@@ -454,6 +454,7 @@ class OWASPCopper:
             'status': 'Won'
         }
         
+        
         if subscription_data != None:
             fields = []
             if subscription_data['membership_type'] == 'lifetime':
@@ -466,9 +467,15 @@ class OWASPCopper:
                         'value': False
                     })
             else:
+                memend = None
+                try:
+                    memend = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
+                except:
+                    memend = datetime.strptime(subscription_data['membership_end'], "%%m/%d/%Y")
+                    
                 fields.append({
                         'custom_field_definition_id' : self.cp_opportunity_end_date, 
-                        'value': datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").strftime("%m/%d/%Y")
+                        'value': memend.strftime("%m/%d/%Y")
                     })
                 renew = False
             if subscription_data['membership_recurring'] == 'yes':
