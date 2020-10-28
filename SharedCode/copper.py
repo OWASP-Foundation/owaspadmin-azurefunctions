@@ -471,8 +471,8 @@ class OWASPCopper:
                 try:
                     memend = datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d")
                 except:
-                    memend = datetime.strptime(subscription_data['membership_end'], "%%m/%d/%Y")
-                    
+                    memend = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
+
                 fields.append({
                         'custom_field_definition_id' : self.cp_opportunity_end_date, 
                         'value': memend.strftime("%m/%d/%Y")
