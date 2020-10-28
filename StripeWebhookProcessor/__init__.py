@@ -113,8 +113,10 @@ def handle_checkout_session_completed(event: Dict):
 
             if purchase_type == 'membership':
                 subscription_data = get_subscription_data(subscription)
-
-        update_customer_record(customer_id, metadata, subscription_data, payment_id, event['price'])
+        price = event.get('price', None) # this was working
+        if price == None:
+            price = event.get('amount_total', 0)
+        update_customer_record(customer_id, metadata, subscription_data, payment_id, price)
         add_to_mailing_list(customer_email, metadata, subscription_data, customer_id)
         
         attribution = metadata.get('attribution', 'False')
