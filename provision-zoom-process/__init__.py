@@ -77,16 +77,17 @@ def create_zoom_account(chapter_url):
             # if an account is added to SHARED_ZOOM_ACCOUNTS, remember to also add the associated password in the appropriate credential
             # further, if passwords change on the accounts they MUST be changed in Configuration as well
             zoom_accounts = json.loads(os.environ['SHARED_ZOOM_ACCOUNTS'])
-            retrieve_member_counts(zoom_accounts)
+            sorted_accounts = retrieve_member_counts(zoom_accounts)
             # the list is sorted by count so first one is golden..
-            result = og.FindGroup(zoom_accounts[0])
+            use_group = sorted_accounts[0]['account']
+            result = og.FindGroup(use_group)
             if result != None and not 'Failed' in result:
-                logging.info(f"Adding {leadersemail} to {zoom_accounts[0]}")
-                og.AddMemberToGroup(zoom_accounts[0], leadersemail, 'MEMBER', 'GROUP')
+                logging.info(f"Adding {leadersemail} to {use_group}")
+                og.AddMemberToGroup(use_group, leadersemail, 'MEMBER', 'GROUP')
             else:
-                logging.error(f"Failed to find group for {zoom_accounts[0]}")
+                logging.error(f"Failed to find group for {use_group}")
 
-            zoom_account = zoom_accounts[0][0:zoom_accounts[0].find('@')]
+            zoom_account = use_group[0:use_group.find('@')]
             
             logging.info("Sending one time secret to leaders' emails.")
             helperfuncs.send_onetime_secret(leader_emails, os.environ[zoom_account.replace('-', '_') +'_pass'])
