@@ -240,7 +240,7 @@ def get_milestone_parts(milestone):
 def get_milestone_status(datestr):
     status = 'on-time'
     d = parser.parse(datestr)
-    td = datetime.date.today()
+    td = datetime.date().today()
     delta = d - td
     if delta.days <= -1:
         status = 'overdue'
