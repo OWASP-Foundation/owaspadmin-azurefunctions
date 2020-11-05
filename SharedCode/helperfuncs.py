@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+from datetime import date
 from dateutil import parser
 import logging
 import json
@@ -240,7 +241,7 @@ def get_milestone_parts(milestone):
 def get_milestone_status(datestr):
     status = 'on-time'
     d = parser.parse(datestr)
-    td = datetime.date().today()
+    td = date.today()
     delta = d - td
     if delta.days <= -1:
         status = 'overdue'
