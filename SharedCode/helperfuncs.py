@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+from dateutil import parser
 import logging
 import json
 import azure.functions as func
@@ -236,9 +237,9 @@ def get_milestone_parts(milestone):
 
     return date, owner, desc
 
-def get_milestone_status(date):
+def get_milestone_status(datestr):
     status = 'on-time'
-    d = datetime.date(*(int(s) for s in date.split('-')))
+    d = parser.parse(datestr)
     td = datetime.date.today()
     delta = d - td
     if delta.days <= -1:
