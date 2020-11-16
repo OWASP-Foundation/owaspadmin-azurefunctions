@@ -41,7 +41,7 @@ def IsExpired(metadata):
             expired = False
         if expired:
             try:
-                memend_date = datetime.strptime("%d/%m/YY", membership_end)
+                memend_date = datetime.strptime("%d/%m/%Y", membership_end)
                 if membership_end > datetime.now():
                     expired = False
             except:
