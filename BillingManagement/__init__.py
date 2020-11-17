@@ -34,23 +34,25 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
 def IsExpired(metadata):
     expired = True
+    #logging.info(f"Metadata: {metadata}")
     membership_type = metadata.get('membership_type', None)
+    #logging.info(f"Membership Type: {membership_type}")
     if membership_type != None:
         membership_end = metadata.get('membership_end', None)
-        if membership_end == None and membership_type == 'lifetime':
+        if membership_type == 'lifetime':
             expired = False
         if expired:
             try:
-                memend_date = datetime.strptime("%d/%m/%Y", membership_end)
+                memend_date = datetime.strptime(membership_end, "%m/%d/%Y")
                 if memend_date > datetime.now():
                     expired = False
             except:
                 try:
-                    memend_date = datetime.strptime("%Y-%m-%d", membership_end)
+                    memend_date = datetime.strptime(membership_end, "%Y-%m-%d")
                 except:
                     pass
                 memend_date = None
-                logging.warn('Expired membership')
+                #logging.warn('Expired membership')
                 # no end date and not lifetime = no membership
     else:
         logging.warn('Metadata is empty or membership_type is None')
