@@ -45,9 +45,15 @@ def IsExpired(metadata):
                 if memend_date > datetime.now():
                     expired = False
             except:
+                try:
+                    memend_date = datetime.strptime("%Y-%m-%d", membership_end)
+                except:
+                    pass
                 memend_date = None
+                logging.warn('Expired membership')
                 # no end date and not lifetime = no membership
-
+    else:
+        logging.warn('Metadata is empty or membership_type is None')
     return expired
 
 def get_member_info(customer_id):
