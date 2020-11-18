@@ -48,7 +48,7 @@ def retrieve_member_counts(zoom_accounts):
     return sorted(counts, key=lambda group: group['count'])
 
 def send_zoominfo_email(member_email, zoom_email):
-    hcontent = "<strong>Test Hello</strong>"#f"You have been assigned to <strong>{zoom_email}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account password.<br><br>Thank you,<br>OWASP Foundation"
+    hcontent = f"You have been assigned to <strong>{zoom_email}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account password.<br><br>Thank you,<br>OWASP Foundation"
     message = Mail(
 	from_email=From('noreply@owasp.org', 'OWASP'),
 	to_emails=member_email,
