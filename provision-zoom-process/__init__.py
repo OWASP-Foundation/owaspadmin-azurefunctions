@@ -81,7 +81,7 @@ def create_zoom_account(chapter_url):
     leadersemail = f"{chapter_name}-leaders@owasp.org"
     zoom_accounts = json.loads(os.environ['SHARED_ZOOM_ACCOUNTS'])
     if IsAlreadyProvisioned(leadersemail, zoom_accounts):
-        logging.info(f"Account already provisioned for {chapter_url}")
+        logging.info(f"Account {leadersemail} already provisioned for {chapter_url}")
         return "Account Already Provisioned"
 
     logging.info(f"Provisioning Zoom for {chapter_url}")
