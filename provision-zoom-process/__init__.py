@@ -48,7 +48,7 @@ def retrieve_member_counts(zoom_accounts):
     return sorted(counts, key=lambda group: group['count'])
 
 def send_zoominfo_email(member_email, zoom_email):
-    hcontent = f"You have been assigned to <strong>{zoom_email}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account password.<br><br>Thank you,<br>OWASP Foundation"
+    hcontent = f"You have been assigned to <strong>{zoom_email}&#64;owasp.org</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account password.<br><br>Thank you,<br>OWASP Foundation"
     message = Mail(
 	from_email=From('noreply@owasp.org', 'OWASP'),
 	to_emails=member_email,
@@ -125,7 +125,7 @@ def create_zoom_account(chapter_url):
             helperfuncs.send_onetime_secret(leader_emails, os.environ[zoom_account.replace('-', '_') +'_pass'])
 
             # should send email to leaders group indicating which zoom group they are in...
-            send_zoominfo_email(leadersemail, zoom_account + "@owasp.org")
+            send_zoominfo_email(leadersemail, zoom_account)
     else:
         logging.error(f"No leaders found for {chapter_url}")
         return f"No Leaders in {chapter_url}"
