@@ -125,7 +125,7 @@ def create_zoom_account(chapter_url):
             helperfuncs.send_onetime_secret(leader_emails, os.environ[zoom_account.replace('-', '_') +'_pass'])
 
             # should send email to leaders group indicating which zoom group they are in...
-            send_zoominfo_email(leadersemail, zoom_account)
+            send_zoominfo_email(leadersemail + "@owasp.org", zoom_account)
     else:
         logging.error(f"No leaders found for {chapter_url}")
         return f"No Leaders in {chapter_url}"
