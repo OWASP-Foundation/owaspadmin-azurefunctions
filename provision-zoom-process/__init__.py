@@ -51,13 +51,13 @@ def send_zoominfo_email(member_email, zoom_email):
     message = Mail(
 	from_email=From('noreply@owasp.org', 'OWASP'),
 	to_emails=member_email,
-	html_content=f"<p>You have been assigned to <strong>Zoom Account: {zoom_email}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account password.<br><br>Thank you,<br>OWASP Foundation</p>")
+	html_content=f"<p>You have been assigned to <strong>{zoom_email}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account password.<br><br>Thank you,<br>OWASP Foundation</p>")
     
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         sg.send(message)
     except Exception as e:
-        logging.info(str(e))
+        logging.warn(f"Failed to send mail to {member_email}.  Result: {str(e)}")
 
 def IsAlreadyProvisioned(groupemail, zoomaccounts):
     og = OWASPGoogle()
@@ -101,7 +101,7 @@ def create_zoom_account(chapter_url):
         else:
             logging.error(f"Failed to find or create group for {leadersemail}.  Reason:{result}")
             return f"Could not create or find group for {leadersemail}"
-            
+
         if not 'Failed' in result:
             # if an account is added to SHARED_ZOOM_ACCOUNTS, remember to also add the associated password in the appropriate credential
             # further, if passwords change on the accounts they MUST be changed in Configuration as well
