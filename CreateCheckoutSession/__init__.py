@@ -33,7 +33,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         elif checkout_type == 'manage_membership':
             response = start_manage_membership_session(request)
 
-            logging.info(f"Client IP Address: {GetIpFromRequestHeaders(req)}")
+        logging.info(f"Client IP Address: {GetIpFromRequestHeaders(req)}")
 
         return return_response(response, True)
     else:
