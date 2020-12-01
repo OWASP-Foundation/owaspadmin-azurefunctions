@@ -22,7 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     request = req.get_json()
     errors = validate_request(request)
-
+    response = ''
     if not bool(errors):
         checkout_type = request.get('checkout_type')
 
@@ -33,10 +33,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         elif checkout_type == 'manage_membership':
             response = start_manage_membership_session(request)
 
+            logging.info(f"Client IP Address: {GetIpFromRequestHeaders(req)}")
+
         return return_response(response, True)
     else:
         return return_response(errors, False)
 
+def GetIpFromRequestHeaders(req):
+    ipaddr = ''
+    if 'X-Forwarded-For' in req.headers:
+        ipaddrs = req.headers.get('X-Forwarded-For').split(',')
+        if len(ipaddrs) > 0:
+            ipaddr = ipaddrs[0]
+
+    return ipaddr
 
 def validate_request(request: Dict) -> Dict:
     errors = {}
