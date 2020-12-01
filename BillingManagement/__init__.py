@@ -29,9 +29,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     customer_id = recurringtoken.decode_token(token)
 
+    logging.info(f"Client IP Address: {GetIpFromRequestHeaders(req)}")
+
     if action == 'info':
         return return_response(get_member_info(customer_id), True)
 
+def GetIpFromRequestHeaders(req):
+    ipaddr = ''
+    if 'X-Forwarded-For' in req.headers:
+        ipaddrs = req.headers.get('X-Forwarded-For').split(',')
+        if len(ipaddrs) > 0:
+            ipaddr = ipaddrs[0]
+
+    return ipaddr
+    
 def IsExpired(metadata):
     expired = True
     #logging.info(f"Metadata: {metadata}")

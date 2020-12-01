@@ -50,17 +50,8 @@ def main(req: func.HttpRequest, chmsg: func.Out[func.QueueMessage]) -> func.Http
     elif event.type == 'charge.refunded':
         chmsg.set(json.dumps({ 'job_type': event.type, 'payload': event_data }))
 
-    logging.info(f"Client IP Address: {GetIpFromRequestHeaders(req)}")
+    
     return func.HttpResponse(status_code=200)
-
-def GetIpFromRequestHeaders(req):
-    ipaddr = ''
-    if 'X-Forwarded-For' in req.headers:
-        ipaddrs = req.headers.get('X-Forwarded-For').split(',')
-        if len(ipaddrs) > 0:
-            ipaddr = ipaddrs[0]
-
-    return ipaddr
 
 def handle_checkout_session_completed(event: Dict):
     payment_intent = event.get('payment_intent', None)
