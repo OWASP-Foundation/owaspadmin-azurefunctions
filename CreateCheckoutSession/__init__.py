@@ -1,6 +1,8 @@
 import logging
 
 import azure.functions as func
+from azure.cosmosdb.table.tableservice import TableService
+from azure.cosmosdb.table.models import Entity
 
 import os
 import json
@@ -15,10 +17,16 @@ from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import From
 
 from ..SharedCode import recurringtoken
-
+from datetime import datetime, timedelta
 import urllib.parse
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    ip_entry = {
+        'PartitionKey':'billingipentries',
+        'RowKey': GetIpFromRequestHeaders(req),
+        'count': -1,
+        'time': datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    }
 
     request = req.get_json()
     errors = validate_request(request)
@@ -27,24 +35,54 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         checkout_type = request.get('checkout_type')
 
         if checkout_type == 'donation':
+            # this is the only place we currently need the ip restrictions...
+            if throttle_ip_requests(ip_entry):
+                return return_response({'amount':'Invalid Request'}, False) 
             response = start_donation_session(request)
         elif checkout_type == 'membership':
             response = start_membership_session(request)
         elif checkout_type == 'manage_membership':
             response = start_manage_membership_session(request)
 
-        logging.info(f"Client IP Address: {GetIpFromRequestHeaders(req)}")
-
         return return_response(response, True)
     else:
         return return_response(errors, False)
+
+def throttle_ip_requests(ip_entry):
+    table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
+    table_service.create_table(table_name=os.environ['BILLING_TABLE']) #create if it doesn't exist
+    ip_row = None
+    try:
+        ip_row = table_service.get_entity(os.environ['BILLING_TABLE'], ip_entry['PartitionKey'], ip_entry['RowKey'])
+    except:
+        pass
+    if not ip_row:
+        ip_entry['count'] = 1
+        table_service.insert_entity(table_name=os.environ['BILLING_TABLE'], entity=ip_entry)
+        ip_row = ip_entry
+    else:
+        lastdatetime = datetime.strptime(ip_row['time'], "%d/%m/%Y %H:%M:%S")
+        currdatetime = datetime.strptime(ip_entry['time'], "%d/%m/%Y %H:%M:%S")
+        tdelta = currdatetime - lastdatetime
+        if tdelta.days < 1 and ip_row['count'] > 3:
+            return True # throttle this entry..
+        elif tdelta.days > 0: #over 1 day has passed, update the count to 1
+            ip_row['count'] = 1
+            table_service.update_entity(os.environ['BILLING_TABLE'], ip_row)
+        else: # less than 1 day but count is < 3, update the count
+            ip_row['count'] = ip_row['count'] + 1
+            table_service.update_entity(os.environ['BILLING_TABLE'], ip_row)
+
+    # However we got here, do not throttle
+    return False
+
 
 def GetIpFromRequestHeaders(req):
     ipaddr = ''
     if 'X-Forwarded-For' in req.headers:
         ipaddrs = req.headers.get('X-Forwarded-For').split(',')
         if len(ipaddrs) > 0:
-            ipaddr = ipaddrs[0]
+            ipaddr = ipaddrs[0][:ipaddrs[0].find(':')]
 
     return ipaddr
 
