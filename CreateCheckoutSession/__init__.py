@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 import urllib.parse
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    # seems to be the external public ip address
     ip_entry = {
         'PartitionKey':'billingipentries',
         'RowKey': GetIpFromRequestHeaders(req),
@@ -35,9 +36,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         checkout_type = request.get('checkout_type')
 
         if checkout_type == 'donation':
-            # this is the only place we currently need the ip restrictions...
+            #this is the only place we currently need the ip restrictions...
             if throttle_ip_requests(ip_entry):
-                return return_response({'amount':'Invalid Request'}, False) 
+               logging.warn('this request was throttled based on ip')
+               return return_response({'amount':'Invalid Request'}, False) 
             response = start_donation_session(request)
         elif checkout_type == 'membership':
             response = start_membership_session(request)
@@ -49,6 +51,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return return_response(errors, False)
 
 def throttle_ip_requests(ip_entry):
+    max_from_single_ip = 5
     table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
     table_service.create_table(table_name=os.environ['BILLING_TABLE']) #create if it doesn't exist
     ip_row = None
@@ -64,12 +67,12 @@ def throttle_ip_requests(ip_entry):
         lastdatetime = datetime.strptime(ip_row['time'], "%d/%m/%Y %H:%M:%S")
         currdatetime = datetime.strptime(ip_entry['time'], "%d/%m/%Y %H:%M:%S")
         tdelta = currdatetime - lastdatetime
-        if tdelta.days < 1 and ip_row['count'] > 3:
+        if tdelta.days < 1 and ip_row['count'] > max_from_single_ip:
             return True # throttle this entry..
         elif tdelta.days > 0: #over 1 day has passed, update the count to 1
             ip_row['count'] = 1
             table_service.update_entity(os.environ['BILLING_TABLE'], ip_row)
-        else: # less than 1 day but count is < 3, update the count
+        else: # less than 1 day but count is < max_from_single_ip, update the count
             ip_row['count'] = ip_row['count'] + 1
             table_service.update_entity(os.environ['BILLING_TABLE'], ip_row)
 
