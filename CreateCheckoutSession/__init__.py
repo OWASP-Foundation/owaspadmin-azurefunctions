@@ -39,7 +39,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #this is the only place we currently need the ip restrictions...
             if throttle_ip_requests(ip_entry):
                logging.warn('this request was throttled based on ip')
-               return return_response({'amount':'Invalid Request'}, False) 
+               return return_response({'amount':['Invalid Request']}, False) 
             response = start_donation_session(request)
         elif checkout_type == 'membership':
             response = start_membership_session(request)
