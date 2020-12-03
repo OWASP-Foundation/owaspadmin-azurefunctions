@@ -69,8 +69,9 @@ def throttle_ip_requests(ip_entry):
         tdelta = currdatetime - lastdatetime
         if tdelta.days < 1 and ip_row['count'] > max_from_single_ip:
             return True # throttle this entry..
-        elif tdelta.days > 0: #over 1 day has passed, update the count to 1
+        elif tdelta.days > 0: #over 1 day has passed, update the count to 1 and reset time
             ip_row['count'] = 1
+            ip_row['time'] = currdatetime.strftime("%d/%m/%Y %H:%M:%S")
             table_service.update_entity(os.environ['BILLING_TABLE'], ip_row)
         else: # less than 1 day but count is < max_from_single_ip, update the count
             ip_row['count'] = ip_row['count'] + 1
