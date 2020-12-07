@@ -17,8 +17,6 @@ class OWASPGoogle:
         self.groupSettings = build('groupssettings', 'v1', credentials=creds, cache_discovery=False)
 
     def CreateSpecificEmailAddress(self, altemail, first, last, email_address, fail_if_exists=True):
-        
-
         user = {
             "name": {
                 
@@ -45,6 +43,8 @@ class OWASPGoogle:
             user['name']["givenName"] = first
         if last and last != '':
             user['name']["familyName"] = last
+        else:
+            user['name']["familyName"] = first #use first name as family name as well
 
         if fail_if_exists:
             results = self.admin.users().list(domain='owasp.org', query=f"email={user['primaryEmail']}").execute()
