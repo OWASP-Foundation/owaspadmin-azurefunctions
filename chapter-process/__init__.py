@@ -149,14 +149,14 @@ def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers):
     if resString.find("Failed") < 0:
         r = gh.EnablePages(chapter_name, gh.GH_REPOTYPE_CHAPTER)
         if not gh.TestResultCode(r.status_code):
-            resString = f"Failed to enable pages for {chapter_name}."
-            logging.error(resString + " : " + r.text)
+            resString = f"Warning: Could not enable pages for {chapter_name}."
+            logging.warn(f"{resString} - {r.text}")
             
     if not 'Failed' in resString:
             team_id = gh.GetTeamId('chapter-administration')
             if team_id:
                 r = gh.AddRepoToTeam(str(team_id), repoName)
                 if not r.ok:
-                    logging.info(f'Failed to add repo: {r.text}')
+                    logging.warn(f'Warning: Could not add team to repo: {r.text}')
 
     return resString
