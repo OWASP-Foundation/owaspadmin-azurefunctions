@@ -29,25 +29,36 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     customer_id = recurringtoken.decode_token(token)
 
+
+
     if action == 'info':
         return return_response(get_member_info(customer_id), True)
 
+
 def IsExpired(metadata):
     expired = True
+    #logging.info(f"Metadata: {metadata}")
     membership_type = metadata.get('membership_type', None)
+    #logging.info(f"Membership Type: {membership_type}")
     if membership_type != None:
         membership_end = metadata.get('membership_end', None)
-        if membership_end == None and membership_type == 'lifetime':
+        if membership_type == 'lifetime':
             expired = False
         if expired:
             try:
-                memend_date = datetime.strptime("%d/%m/YY", membership_end)
-                if membership_end > datetime.now():
+                memend_date = datetime.strptime(membership_end, "%m/%d/%Y")
+                if memend_date > datetime.now():
                     expired = False
             except:
+                try:
+                    memend_date = datetime.strptime(membership_end, "%Y-%m-%d")
+                except:
+                    pass
                 memend_date = None
+                #logging.warn('Expired membership')
                 # no end date and not lifetime = no membership
-
+    else:
+        logging.warn('Metadata is empty or membership_type is None')
     return expired
 
 def get_member_info(customer_id):
@@ -142,8 +153,12 @@ def get_member_info(customer_id):
         if customer_name != None:
             first_name = customer_name.lower().strip().split(' ')[0]
             last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
-            if first_name != None and last_name != None:
-                preferred_email = first_name + '.' + last_name + '@owasp.org'    
+            if first_name != None:
+                preferred_email = first_name 
+                if last_name != None and last_name != '':
+                    preferred_email = preferred_email + '.' + last_name
+                
+                preferred_email = preferred_email + "@owasp.org"
                 email_list = og.GetPossibleEmailAddresses(preferred_email)
 
     retdata = {
