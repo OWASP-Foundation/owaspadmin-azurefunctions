@@ -12,7 +12,7 @@ def main(mytimer: func.TimerRequest) -> None:
             tzinfo=datetime.timezone.utc).isoformat()
 
         logging.info('Python timer trigger function ran at %s', utc_timestamp)
-        
+
         #check for the last customer processed, if any, and continue from there
         try:
             last_processed_file = open('stripe-customer-cleanup-last-processed.txt', 'r') 
@@ -29,11 +29,15 @@ def main(mytimer: func.TimerRequest) -> None:
         customers = stripe.Customer.list(limit=100, starting_after=last_customer_id)
         num_processed = 0
         for customer in customers.auto_paging_iter():
-            removed = RemoveInvalidCustomer(customer)
+            removed = remove_invalid_customer(customer)
             if not removed:
-                FixEmailCasing(customer)
-            with open('stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
-                processed_file.write(customer['id'])
+                fix_emailing_casing(customer)
+                with open('stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
+                    processed_file.write(customer['id'])
+            else:
+                with open('deletedCustomers.txt', 'a') as deleted_file:
+                    deleted_file.write(customer['email'] + '\r') 
+            
             num_processed = num_processed + 1
             #with open('stripe-customer-cleanup-number-processed.txt', 'w') as processed_file:
             #    processed_file.write('processed ' + str(num_processed) + ' customers')
@@ -50,16 +54,21 @@ def main(mytimer: func.TimerRequest) -> None:
         raise
 
 
-def RemoveInvalidCustomer(customer):
+def remove_invalid_customer(customer):
     try:
         customer_id = customer['id']
 
         # check for metadata
         metadata = customer['metadata']
         if metadata != {}:
-            logging.info("keep " + customer_id +
-                        " since metadata is not empty")
-            return False
+            marked_for_deletion = metadata.get('cleanup_customer', None)
+            if marked_for_deletion:
+                delete_customer(customer_id)
+                return True
+            else:
+                logging.info("keep " + customer_id +
+                            " since metadata is not empty")
+                return False
 
         # check for active subscriptions
         active_subscription_count = customer["subscriptions"]["total_count"]
@@ -109,11 +118,11 @@ def RemoveInvalidCustomer(customer):
             return False
 
         # didn't meet any of the criterias
-        stripe.Customer.modify(customer_id, metadata={
-            "cleanup_customer": "true"},)
-        stripe.Customer.modify(customer_id, metadata={
-            "cleanup_date": datetime.datetime.today().strftime('%Y-%m-%d')},)
-        logging.info("delete " + customer_id)
+        #stripe.Customer.modify(customer_id, metadata={
+        #    "cleanup_customer": "true"},)
+        #stripe.Customer.modify(customer_id, metadata={
+        #    "cleanup_date": datetime.datetime.today().strftime('%Y-%m-%d')},)
+        delete_customer(customer_id)
         return True
 
     except stripe.error.APIConnectionError as ex:
@@ -130,11 +139,13 @@ def RemoveInvalidCustomer(customer):
         raise
 
 
-def FixEmailCasing(customer):
+def fix_emailing_casing(customer):
     email = customer["email"]
     customer_id = customer['id']
 
-    if (any(char.isupper() for char in email)):
+    if(email is None):
+         logging.info("no email found for customer " + customer_id)
+    elif (any(char.isupper() for char in email)):
         stripe.Customer.modify(customer_id, metadata={
             "cleanup_case": "true"},)
         stripe.Customer.modify(customer_id, metadata={
@@ -144,4 +155,15 @@ def FixEmailCasing(customer):
         logging.info("already lowercase " +
                      customer_id + " with email " + email)
 
+    return
+
+def delete_customer(customer_id):
+    try:
+        stripe.Customer.delete(customer_id)
+        logging.info("deleted " + customer_id)
+    except Exception as ex:
+        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        logging.exception(message)
+        raise
     return
