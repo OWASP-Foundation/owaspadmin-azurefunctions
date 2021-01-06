@@ -150,11 +150,16 @@ def start_manage_membership_session(request: Dict) -> Dict:
     customers = stripe.Customer.list(email=member_email)
     if len(customers) > 0:
         for customer in customers:
-            if customer.email == member_email:
+            metadata = customer.get('metadata', None)
+            memtype = None
+            if metadata:
+                memtype = metadata.get('membership_type', None)
+
+            if metadata and memtype: #could have 2 or more with same email, we want the membership one
                 customer_token = recurringtoken.make_token(customer.id)
                 send_subscription_management_email(member_email, customer_token)
                 break
-
+        
     return {}
 
 
