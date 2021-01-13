@@ -183,6 +183,7 @@ def create_checkout_session(request: Dict, line_items: Dict) -> Dict:
         "country": request.get('country', None),
         "city": request.get('city', None),
         "mailing_list": request.get('mailing_list', False),
+        "partner_mailing_list": request.get('partner_mailing_list', False),
         "purchase_type": "event"
     }
 
@@ -286,6 +287,7 @@ def create_comp_order(request, line_items):
         "country": request.get('country', None),
         "city": request.get('city', None),
         "mailing_list": request.get('mailing_list', False),
+        "partner_mailing_list": request.get('partner_mailing_list', False),
         "purchase_type": "event",
     }
 
