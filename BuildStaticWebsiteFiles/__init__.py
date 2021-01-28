@@ -236,6 +236,30 @@ def update_chapter_admin_team(gh):
             if not r.ok:
                 logging.info(f'Failed to add repo: {r.text}')
 
+def update_events_sitedata(gh):
+    # file from _data/event.yml just needs to go in assets/sitedata/
+    r = gh.GetFile('owasp.github.io', '_data/events.yml')
+
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        contents = base64.b64decode(doc['content']).decode()
+    
+
+        gh = github.OWASPGitHub()
+        r = gh.GetFile('owasp.github.io', 'assets/sitedata/events.yml')
+
+        if gh.TestResultCode(r.status_code):
+            doc = json.loads(r.text)
+            sha = doc['sha']
+
+        r = gh.UpdateFile('owasp.github.io', 'assets/sitedata/events.yml', contents, sha)
+        if gh.TestResultCode(r.status_code):
+            logging.info('Updated assets/sitedata/events.yml successfully')
+        else:
+            logging.error(f"Failed to update assets/sitedata/events.yml: {r.text}")
+    else:
+        logging.error(f'Failed to update assets/sitedata/events.yml: {r.text}')
+
 def update_corp_members(gh):
     # file from _data/corp_members.yml just needs to go in assets/sitedata/
     r = gh.GetFile('owasp.github.io', '_data/corp_members.yml')
