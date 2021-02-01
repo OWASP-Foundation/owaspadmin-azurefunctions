@@ -7,6 +7,7 @@ import json
 import stripe
 import os
 import re
+import unicodedata
 from datetime import datetime
 from ..SharedCode import recurringtoken
 from ..SharedCode.googleapi import OWASPGoogle
@@ -42,9 +43,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return return_response(errors, False)
     first_name = customer_name.lower().strip().split(' ')[0]
     last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
+    nfn = unicodedata.normalize('NFD', first_name)
+    nln = unicodedata.normalize('NFD', last_name)
+    nfn = ''.join([c for c in nfn if not unicodedata.combining(c)])
+    nln = ''.join([c for c in nln if not unicodedata.combining(c)])
     r2 = re.compile(r'[^a-zA-Z0-9]')
-    first_name = r2.sub('',first_name)
-    last_name = r2.sub('', last_name)
+    first_name = r2.sub('',nfn)
+    last_name = r2.sub('', nln)
 
     respb = True
     response = og.CreateSpecificEmailAddress(customer.get('email'), first_name, last_name, email, True)
