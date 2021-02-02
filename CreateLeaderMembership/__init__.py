@@ -89,7 +89,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         else:
             leader_agreement = req_body.get('leader_agreement')
 
-    status_code = 400
+    status_code = 215
     result = { "error": "unknown error" }
     if email and name and membership_type and leader_agreement:
         email = email.lower()
@@ -118,7 +118,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if helperfuncs.is_leader_by_email(email):
             if edate is not None and edate > datetime.today():
                 result = {"error": "You already have a membership."}
-                status_code = 402
+                status_code = 214
             else:
                 # steps to create member
                 fname = name[0: name.find(' ')]
@@ -128,7 +128,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 result = { "success": "user created"}
         else:
             result = { "error":"email address is not associated with a leader"}
-            status_code = 401        
+            status_code = 213        
     else:
         result = { "error": f"malformed request : {email}, {name}, {membership_type}, {leader_agreement}" }
     
