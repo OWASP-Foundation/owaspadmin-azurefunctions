@@ -134,3 +134,5 @@ owaspadmin-azurefunctions.zip
 .vscode/
 
 tags
+deletedCustomers.txt
+stripe-customer-cleanup-last-processed.txt

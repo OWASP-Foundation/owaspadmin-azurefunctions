@@ -91,7 +91,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     status_code = 400
     result = { "error": "unknown error" }
-    if email and name and membership_type and leader_agreement ==  'True':
+    if email and name and membership_type and leader_agreement:
         email = email.lower()
         # First Look up stripe customer and, if exists, check if member already...
         customers = stripe.Customer.list(email=email)
@@ -130,7 +130,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result = { "error":"email address is not associated with a leader"}
             status_code = 401        
     else:
-        result = { "error": "malformed request" }
+        result = { "error": f"malformed request : {email}, {name}, {membership_type}, {leader_agreement}" }
     
     return func.HttpResponse(status_code=status_code, body = json.dumps(result))
         
