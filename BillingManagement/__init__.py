@@ -8,7 +8,8 @@ import pathlib
 from typing import Dict
 from datetime import datetime
 import urllib.parse
-
+import re
+import unicodedata
 import stripe
 stripe.api_key = os.environ["STRIPE_SECRET"]
 
@@ -153,6 +154,13 @@ def get_member_info(customer_id):
         if customer_name != None:
             first_name = customer_name.lower().strip().split(' ')[0]
             last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
+            nfn = unicodedata.normalize('NFD', first_name)
+            nln = unicodedata.normalize('NFD', last_name)
+            nfn = ''.join([c for c in nfn if not unicodedata.combining(c)])
+            nln = ''.join([c for c in nln if not unicodedata.combining(c)])
+            r2 = re.compile(r'[^a-zA-Z0-9]')
+            first_name = r2.sub('',nfn)
+            last_name = r2.sub('', nln)
             if first_name != None:
                 preferred_email = first_name 
                 if last_name != None and last_name != '':
