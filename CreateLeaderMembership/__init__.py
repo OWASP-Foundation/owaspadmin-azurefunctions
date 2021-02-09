@@ -125,9 +125,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 lname = name[name.find(' ') + 1:]
                 helperfuncs.create_complimentary_member(fname, lname, email, company, country, postal_code, datetime.today().strftime("%Y-%m-%d"), (datetime.today() + timedelta(364)).strftime("%Y-%m-%d"), membership_type, mailing_list, True)
                 status_code = 200
-                result = { "success": "user created"}
+                result = { "success": "User created."}
         else:
-            result = { "error":"email address is not associated with a leader"}
+            result = { "error":"Email address is not associated with a leader."}
             status_code = 213        
     else:
         result = { "error": f"malformed request : {email}, {name}, {membership_type}, {leader_agreement}" }
