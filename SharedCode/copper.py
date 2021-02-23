@@ -112,7 +112,14 @@ class OWASPCopper:
             return r.text
         
         return ''
-    
+    def GetPerson(self, pid):
+        url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"
+        r = requests.get(url, headers = self.GetHeaders())
+        if r.ok:
+            return r.text
+        
+        return ''
+
     def FindPersonByEmail(self, searchtext):
         lstxt = searchtext.lower()
         if len(lstxt) <= 0:
@@ -296,7 +303,7 @@ class OWASPCopper:
 
         return pid
 
-    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None):
+    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None, other_email = None):
         logging.info('Copper UpdatePerson')
             
         data = {
@@ -396,6 +403,15 @@ class OWASPCopper:
                     })        
             data['custom_fields'] = fields
 
+        if other_email != None:
+            contact_json = self.GetPerson(pid)
+            if contact_json != '':
+                pers = json.loads(contact_json)
+                if 'emails' in pers:
+                    data['emails'] = pers['emails']
+                else:
+                    data['emails'] = []
+                data['emails'].append({ 'email':other_email, 'category':'other'})
 
         url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
         r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))

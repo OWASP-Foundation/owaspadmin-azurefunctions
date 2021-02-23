@@ -24,7 +24,7 @@ def main(req: func.HttpRequest,
     #resp += strbody
     resp += 'Working on it, please wait..."} }]} }' 
     
-    #add this to the queue, it will be picked up by the chapter-process function
+    #add this to the queue, it will be picked up by the appropriate function
     if 'Chapter Name' in jsonstr:
         chmsg.set(jsonstr)
     elif 'Project Name' in jsonstr:

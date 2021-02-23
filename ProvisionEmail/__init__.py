@@ -11,6 +11,7 @@ import unicodedata
 from datetime import datetime
 from ..SharedCode import recurringtoken
 from ..SharedCode.googleapi import OWASPGoogle
+from ..SharedCode.copper import OWASPCopper
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     request = req.get_json()
@@ -61,6 +62,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             customer_id,
                             metadata={'owasp_email': email}
                         )
+        oc = OWASPCopper()
+        contact_json = oc.FindPersonByEmail(customer.get('email'))
+        if contact_json != '':
+            people = json.loads(contact_json)
+            oc.UpdatePerson(people['id'], other_email=email)
+
     return return_response(response, respb)
 
 def return_response(response_str, success):
