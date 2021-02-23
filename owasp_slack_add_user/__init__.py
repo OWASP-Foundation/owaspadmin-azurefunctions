@@ -6,8 +6,10 @@ import os
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
-    request = req.get_json()
-    email = request.get('email', None)
+    email = req.params.get('email')
+    if not email:
+        request = req.get_json()
+        email = request.get('email', None)
 
     invurl = "https://slack.com/api/users.admin.invite"
     data = {
