@@ -66,7 +66,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         contact_json = oc.FindPersonByEmail(customer.get('email'))
         if contact_json != '':
             people = json.loads(contact_json)
-            oc.UpdatePerson(people['id'], other_email=email)
+            oc.UpdatePerson(people[0]['id'], other_email=email)
 
     return return_response(response, respb)
 
