@@ -96,7 +96,8 @@ def get_member_info(customer_id):
         membership = {
             "membership_name": membership_name,
             "membership_recurring": membership_recurring,
-            "membership_end": metadata.get('membership_end', None)
+            "membership_end": metadata.get('membership_end', None),
+            "owasp_email" : metadata.get('owasp_email', None)
         }
     else:
         membership = {}
