@@ -41,7 +41,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     strdata = "{ 'trigger_id': '" + names['trigger_id'] + "'," + "'view': '" + strdialog + "'}"
 
     urldialog = "https://slack.com/api/views.open"
-    headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN"]}' }
+    headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
 
     # respond to caller...
     r = requests.post(url = urldialog, headers=headers, data=strdata)
