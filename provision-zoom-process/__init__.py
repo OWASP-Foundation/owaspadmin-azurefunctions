@@ -61,6 +61,22 @@ def send_zoominfo_email(member_email, zoom_email):
     except Exception as e:
         logging.warn(f"Failed to send mail to {member_email}.  Result: {str(e)}")
 
+def send_zoompw_email(leader_emails, zoom_pw):
+    hcontent = f"To access your shared zoom account, use <strong>{zoom_pw}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account username.<br><br>Thank you,<br>OWASP Foundation"
+        
+    
+    message = Mail(
+    from_email=From('noreply@owasp.org', 'OWASP'),
+    to_emails=leader_emails,
+    html_content=hcontent, 
+    subject="Your Zoom Account")
+    
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+    except Exception as e:
+        logging.warn(f"Failed to send mail to {leader_emails}.  Result: {str(e)}")
+
 def IsAlreadyProvisioned(groupemail, zoomaccounts):
     og = OWASPGoogle()
     for account in zoomaccounts:
@@ -89,16 +105,17 @@ def create_zoom_account(chapter_url):
     leaders = []
     gh = OWASPGitHub()
     leaders = gh.GetLeadersForRepo(chapter_url)
+    leader_emails = []
+    for leader in leaders:
+        leader_emails.append(leader['email'])
 
-    if len(leaders) > 0:
+    if len(leaders) > 0 and len(leader_emails) > 0:
         og = OWASPGoogle()
         result = og.FindGroup(leadersemail)
-        leader_emails = []
+        
         if result == None:
             result = og.CreateGroup(chapter_name, leadersemail)
         if not 'Failed' in result:    
-            for leader in leaders:
-                leader_emails.append(leader['email'])
                 og.AddMemberToGroup(leadersemail, leader['email'])
         else:
             logging.error(f"Failed to find or create group for {leadersemail}.  Reason:{result}")
@@ -121,11 +138,12 @@ def create_zoom_account(chapter_url):
 
             zoom_account = use_group[0:use_group.find('@')]
             
-            logging.info("Sending one time secret to leaders' emails.")
-            helperfuncs.send_onetime_secret(leader_emails, os.environ[zoom_account.replace('-', '_') +'_pass'])
-
             # should send email to leaders group indicating which zoom group they are in...
             send_zoominfo_email(leadersemail, zoom_account)
+
+            # send email to each leader indicating group password
+            send_zoompw_email(leader_emails, os.environ[zoom_account.replace('-', '_') + '_pass'])
+
     else:
         logging.error(f"No leaders found for {chapter_url}")
         return f"No Leaders in {chapter_url}"
