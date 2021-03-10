@@ -7,6 +7,7 @@ from urllib.parse import unquote_plus
 from ..SharedCode import salesforce
 from ..SharedCode import spotchk
 
+# THIS IS A DEPRECATED FUNCTION
 def main(req: func.HttpRequest, msg: func.Out[func.QueueMessage]) -> func.HttpResponse:
 
     # first check for a valid call

@@ -64,7 +64,7 @@ def process_form(values, view_id, function_directory):
     
     logging.info(resp)
     urldialog = "https://slack.com/api/views.update"
-    headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN"]}' }
+    headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
     r = requests.post(urldialog,headers=headers, data=resp)
     logging.info(r.text)
 
