@@ -37,10 +37,11 @@ class spotchk:
             md5_token = md5str[os.environ["SL_CHECK"]]
 
             sl_sgchannel = os.environ['SL_STAFF_GENERAL']
+            sl_sechannel = os.environ['SL_STAFF_EVENTS']
             channel = md5str['channel_id']
         except KeyError:
             return False
 
         # minor annoyance for unofficial callers
-        return testsec == salt_secret and testprov.find(salt_provider) >= 0 and testla == salt_la and sl_token == md5_token and sl_sgchannel == channel
+        return testsec == salt_secret and testprov.find(salt_provider) >= 0 and testla == salt_la and sl_token == md5_token and (sl_sgchannel == channel or sl_sechannel == channel)
 
