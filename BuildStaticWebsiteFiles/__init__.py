@@ -285,14 +285,18 @@ def update_corp_members(gh):
         logging.error(f'Failed to update assets/sitedata/corp_members.yml: {r.text}')
 
 def deEmojify(text):
-    regrex_pattern = re.compile(pattern = "["
-        u"\U0001F600-\U0001F64F"  # emoticons
-        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-        u"\U0001F680-\U0001F6FF"  # transport & map symbols
-        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                           "]+", flags = re.UNICODE)
-                           
-    return regrex_pattern.sub(r'',text)
+    # was included but should be covered by enclosed characters u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        
+    # regex_pattern = re.compile(pattern = "["
+    #     u"\U0001F600-\U0001F64F"  # emoticons
+    #     u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+    #     u"\U0001F680-\U0001F6FF"  # transport & map symbols
+    #     u"\U00002702-\U000027B0"  # dingbats
+    #     u"\U000024C2-\U0001F251"  # enclosed characters
+    #                        "]+", flags = re.UNICODE)
+    regex_pattern = re.compile(u"[^\U00000000-\U0000d7ff\U0000e000-\U0000ffff]", flags=re.UNICODE)
+
+    return regex_pattern.sub(r'',text)
 
 def add_to_events(mue, events, repo):
     
