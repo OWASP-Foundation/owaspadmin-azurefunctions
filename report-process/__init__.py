@@ -90,6 +90,19 @@ def get_spreadsheet_name(base_name):
 
     return report_name + ' ' + report_date.strftime('%Y-%m-%d-%H-%M-%S')
 
+def add_member_row(rows, headers, name, email, memtype, memstart, memend, memrecurr):
+    row_data = headers.copy()
+    for i in range(len(row_data)):
+        row_data[i] = ''
+
+    row_data[0] = name
+    row_data[1] = email
+    row_data[2] = memtype
+    row_data[3] = memstart
+    row_data[4] = memend
+    row_data[5] = memrecurr
+    
+    rows.append(row_data)
 
 def add_leader_row(rows, headers, name, email, group, url):
     row_data = headers.copy()
@@ -217,7 +230,6 @@ def process_chapter_report(datastr):
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
 
 def process_member_report(datastr):
-    cp = copper.OWASPCopper()
     data = urllib.parse.parse_qs(datastr)
     sheet_name = get_spreadsheet_name('member-report')
     row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
@@ -233,7 +245,7 @@ def process_member_report(datastr):
         end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', None))
 
         if metadata.get('membership_type', None) and (end_date >= datetime.today() or end_date == None):
-            add_leader_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
+            add_member_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
                         metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'),
                         metadata.get('membership_end', 'none'), metadata.get('membership_recurring', 'no'))
 
