@@ -7,6 +7,7 @@ import json
 import base64
 from ..SharedCode import spotchk
 from ..SharedCode import helperfuncs
+import stripe
 from urllib.parse import unquote_plus
 import pathlib
 import urllib
@@ -30,6 +31,8 @@ def main(msg: func.QueueMessage) -> None:
         process_chapter_report(datastr)
     elif 'leader-report' in datastr:
         process_leader_report(datastr)
+    elif 'member-report' in datastr:
+        process_member_report(datastr)
     else:
         logging.warn('No report to process in item')
 
@@ -212,3 +215,30 @@ def process_chapter_report(datastr):
             'response_type':'ephemeral'
         }
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
+
+def process_member_report(datastr):
+    data = urllib.parse.parse_qs(datastr)
+    sheet_name = get_spreadsheet_name('member-report')
+    row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
+
+    ret = create_spreadsheet(sheet_name, row_headers)
+    sheet = ret[0]
+    file_id = ret[1]
+    headers = sheet.row_values(1) # pull them again anyway
+    rows = []
+    customers = stripe.Customer.list()
+    for customer in customers.auto_paging_iter():
+        metadata = customer.get('metadata', {})
+        add_leader_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
+                        metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'),
+                        metadata.get('membership_end', 'none'), metadata.get('membership_recurring', 'no'))
+
+    sheet.append_rows(rows)
+    msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+    response_url = data['response_url'][0]
+    headers = { 'Content-type':'application/json'}
+    msgdata = {
+        'text':msgtext,
+        'response_type':'ephemeral'
+    }
+    requests.post(response_url, data=json.dumps(msgdata), headers = headers)
