@@ -245,7 +245,7 @@ def process_member_report(datastr):
         metadata = customer.get('metadata', {})
         end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', None))
 
-        if metadata.get('membership_type', None) and (end_date >= datetime.today() or end_date == None):
+        if metadata.get('membership_type', None) and (end_date == None or end_date >= datetime.today()):
             add_member_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
                         metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'),
                         metadata.get('membership_end', 'none'), metadata.get('membership_recurring', 'no'))
