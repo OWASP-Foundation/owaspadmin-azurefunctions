@@ -230,6 +230,7 @@ def process_chapter_report(datastr):
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
 
 def process_member_report(datastr):
+    stripe.api_key = os.environ['STRIPE_SECRET']
     data = urllib.parse.parse_qs(datastr)
     sheet_name = get_spreadsheet_name('member-report')
     row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
