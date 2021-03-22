@@ -240,7 +240,7 @@ def process_member_report(datastr):
     file_id = ret[1]
     headers = sheet.row_values(1) # pull them again anyway
     rows = []
-    customers = stripe.Customer.list()
+    customers = stripe.Customer.list(limit=250)
     for customer in customers.auto_paging_iter():
         metadata = customer.get('metadata', {})
         end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', None))
