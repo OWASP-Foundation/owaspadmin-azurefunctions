@@ -217,6 +217,7 @@ def process_chapter_report(datastr):
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
 
 def process_member_report(datastr):
+    cp = copper.OWASPCopper()
     data = urllib.parse.parse_qs(datastr)
     sheet_name = get_spreadsheet_name('member-report')
     row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
@@ -229,7 +230,10 @@ def process_member_report(datastr):
     customers = stripe.Customer.list()
     for customer in customers.auto_paging_iter():
         metadata = customer.get('metadata', {})
-        add_leader_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
+        end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', None))
+
+        if metadata.get('membership_type', None) and (end_date >= datetime.today() or end_date == None):
+            add_leader_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
                         metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'),
                         metadata.get('membership_end', 'none'), metadata.get('membership_recurring', 'no'))
 

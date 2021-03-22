@@ -13,6 +13,25 @@ from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.owaspmailchimp import OWASPMailchimp
 from ..SharedCode.copper import OWASPCopper
 
+
+def get_datetime_helper(datestr):
+    retdate = None
+    if datestr == None or datestr == '':
+        return retdate
+        
+    try:
+        retdate = datetime.strptime(datestr, "%m/%d/%Y")
+    except:
+        try:
+            retdate = datetime.strptime(datestr, "%Y-%m-%d")
+        except:
+            try:
+                retdate = datetime.strptime(datestr, "%m/%d/%y")
+            except:
+                return retdate
+
+    return retdate
+
 # for leaders, the check should exist in the azure function to not allow 
 # complimentary membership if already a member unless within some number 
 # of days prior to expiry
