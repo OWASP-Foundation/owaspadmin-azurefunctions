@@ -243,14 +243,18 @@ def process_member_report(datastr):
     customers = stripe.Customer.list(limit=250)
     for customer in customers.auto_paging_iter():
         metadata = customer.get('metadata', {})
-        end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', datetime.today() - datetime.timedelta(days=1))
+        end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', datetime.today() - datetime.timedelta(days=1)))
     
-        if metadata.get('membership_type', None) and end_date >= datetime.today():
+        if(metadata.get('membership_type', None) and end_date >= datetime.today()):
             add_member_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
-                        metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'),
+                        metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'), 
                         metadata.get('membership_end', 'none'), metadata.get('membership_recurring', 'no'))
-
-    sheet.append_rows(rows)
+        if len(rows) > 20:
+            sheet.append_rows(rows)
+            rows = []
+    
+    if len(rows) > 0:
+        sheet.append_rows(rows)
     msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
     response_url = data['response_url'][0]
     headers = { 'Content-type':'application/json'}
