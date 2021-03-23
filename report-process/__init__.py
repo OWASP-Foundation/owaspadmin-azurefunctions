@@ -272,7 +272,7 @@ def process_member_report(datastr):
             member_counts[memtype] == member_counts[memtype] + 1
             if start_date != None and today.month == start_date.month:
                 member_counts['month'] = member_counts['month'] + 1
-        if count > 20:
+        if count > 200:
             sheet.append_rows(rows)
             rows = []
             count = 0
