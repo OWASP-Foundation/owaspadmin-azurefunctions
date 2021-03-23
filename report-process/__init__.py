@@ -240,7 +240,7 @@ def process_member_report(datastr):
     file_id = ret[1]
     headers = sheet.row_values(1) # pull them again anyway
     rows = []
-    customers = stripe.Customer.list(limit=1000)
+    customers = stripe.Customer.list(limit=100)
     member_counts = {
         'month': 0,
         'one': 0,
