@@ -258,6 +258,8 @@ def process_member_report(datastr):
         metadata = customer.get('metadata', {})
         end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', default_dt))
         start_date = helperfuncs.get_datetime_helper(metadata.get('membership_start', None))
+        if end_date == None:
+            end_date = default_dt
         memtype = metadata.get('membership_type', None)
         if(memtype and end_date >= today):
             memstart = metadata.get('membership_start', 'none')
