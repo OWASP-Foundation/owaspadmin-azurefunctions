@@ -12,7 +12,7 @@ from urllib.parse import unquote_plus
 import pathlib
 import urllib
 import gspread
-from datetime import datetime
+from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -252,7 +252,7 @@ def process_member_report(datastr):
     }
     count = 0
     today = datetime.today()
-    default_dt = today - datetime.timedelta(days=1)
+    default_dt = today - timedelta(days=1)
     
     for customer in customers.auto_paging_iter():
         metadata = customer.get('metadata', {})
