@@ -240,22 +240,50 @@ def process_member_report(datastr):
     file_id = ret[1]
     headers = sheet.row_values(1) # pull them again anyway
     rows = []
-    customers = stripe.Customer.list(limit=250)
+    customers = stripe.Customer.list(limit=1000)
+    member_counts = {
+        'month': 0,
+        'one': 0,
+        'two': 0,
+        'lifetime': 0,
+        'student': 0,
+        'complimentary': 0,
+        'honorary': 0
+    }
+    count = 0
+    today = datetime.today()
+    default_dt = today - datetime.timedelta(days=1)
+    
     for customer in customers.auto_paging_iter():
         metadata = customer.get('metadata', {})
-        end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', datetime.today() - datetime.timedelta(days=1)))
-    
-        if(metadata.get('membership_type', None) and end_date >= datetime.today()):
+        end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', default_dt))
+        start_date = helperfuncs.get_datetime_helper(metadata.get('membership_start', None))
+        memtype = metadata.get('membership_type', None)
+        if(memtype and end_date >= today):
+            memstart = metadata.get('membership_start', 'none')
+            memend = metadata.get('membership_end', 'none')
+            memrecurr = metadata.get('membership_recurring', 'no')
             add_member_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
-                        metadata.get('membership_type', 'none'), metadata.get('membership_start', 'none'), 
-                        metadata.get('membership_end', 'none'), metadata.get('membership_recurring', 'no'))
-        if len(rows) > 20:
+                        memtype, memstart, memend, memrecurr)
+
+            count = count + 1
+            member_counts[memtype] == member_counts[memtype] + 1
+            if start_date != None and today.month == start_date.month:
+                member_counts['month'] = member_counts['month'] + 1
+        if count > 20:
             sheet.append_rows(rows)
             rows = []
+            count = 0
     
     if len(rows) > 0:
         sheet.append_rows(rows)
     msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+    msgtext += f"\n\ttotal members: {member_counts['total']}"
+    msgtext += f"\t\tone: {member_counts['one']}\ttwo:{member_counts['two']}\n"
+    msgtext += f"\t\tlifetime: {member_counts['lifetime']}\tstudent:{member_counts['student']}\n"
+    msgtext += f"\t\tcomplimentary: {member_counts['complimentary']}\thonorary:{member_counts['honorary']}\n"
+    
+    
     response_url = data['response_url'][0]
     headers = { 'Content-type':'application/json'}
     msgdata = {
