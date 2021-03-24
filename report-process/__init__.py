@@ -241,12 +241,21 @@ def process_member_report(datastr):
     file_id = ret[1]
     headers = sheet.row_values(1) # pull them again anyway
     rows = []
-   
+    member_data = {
+        'month':0,
+        'one':0,
+        'two':0,
+        'lifetime':0,
+        'complimentary':0,
+        'student':0,
+        'honorary':0
+    }
+
     done = False
     page = 1
     today = datetime.today()
     while(not done):
-        retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.pipeline_id_membership]) # all Won Opportunities for Individual Membership
+        retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.cp_opportunity_pipeline_id_membership]) # all Won Opportunities for Individual Membership
         if retopp != '':
             opportunities = json.loads(retopp)
             if len(opportunities) < 200:
@@ -261,17 +270,24 @@ def process_member_report(datastr):
                 if close_date.month == today.month:
                     member_data['month'] = member_data['month'] + 1
 
+                memtype = 'unknown'
                 if 'student' in opp['name'].lower():
+                    memtype = 'student'
                     member_data['student'] = member_data['student'] + 1
                 elif 'complimentary' in opp['name'].lower():
+                    memtype = 'complimentary'
                     member_data['complimentary'] = member_data['complimentary'] + 1
                 elif 'honorary' in opp['name'].lower():
+                    memtype = 'honorary'
                     member_data['honorary'] = member_data['honorary'] + 1
                 elif 'one' in opp['name'].lower():
+                    memtype = 'one'
                     member_data['one'] = member_data['one'] + 1
                 elif 'two' in opp['name'].lower():
+                    memtype = 'two'
                     member_data['two'] = member_data['two'] + 1
                 elif 'lifetime' in opp['name'].lower():
+                    memtype = 'lifetime'
                     member_data['lifetime'] = member_data['lifetime'] + 1
                 
                 memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_auto_renew)
@@ -280,23 +296,23 @@ def process_member_report(datastr):
                 customer_email = 'none'
                 customer_name = 'none'
                 if person_json != '':
-                    person = json.loads(contact_json)
+                    person = json.loads(person_json)
                     if 'emails' in person:
                         customer_email = person['emails']
                     customer_name = person['name']
 
                 add_member_row(rows, headers, customer_name, customer_email, 
-                        memtype, memstart, memend, memrecurr)
+                        memtype, close_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"), memrecurr)
             page = page + 1
     
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
     
     sheet.append_rows(rows)
     msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
-    msgtext += f"\n\ttotal members: {member_counts['total']}"
-    msgtext += f"\t\tone: {member_counts['one']}\ttwo:{member_counts['two']}\n"
-    msgtext += f"\t\tlifetime: {member_counts['lifetime']}\tstudent:{member_counts['student']}\n"
-    msgtext += f"\t\tcomplimentary: {member_counts['complimentary']}\thonorary:{member_counts['honorary']}\n"
+    msgtext += f"\n\ttotal members: {total_members}"
+    msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
+    msgtext += f"\t\tlifetime: {member_data['lifetime']}\tstudent:{member_data['student']}\n"
+    msgtext += f"\t\tcomplimentary: {member_data['complimentary']}\thonorary:{member_data['honorary']}\n"
     
     
     response_url = data['response_url'][0]

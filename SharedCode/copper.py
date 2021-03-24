@@ -78,6 +78,8 @@ class OWASPCopper:
     cp_opportunity_end_date = 400119
     cp_opportunity_autorenew_checkbox = 419575
     cp_opportunity_invoice_no = 407333  # can be the URL to the stripe payment for membership
+    cp_opportunity_pipeline_id_membership = 721986
+    
     #leader specific
     
     def GetHeaders(self):
