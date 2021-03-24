@@ -5,6 +5,7 @@ import azure.functions as func
 import requests
 import json
 import base64
+import time
 from ..SharedCode import spotchk
 from ..SharedCode import helperfuncs
 from ..SharedCode.copper import OWASPCopper
@@ -293,6 +294,8 @@ def process_member_report(datastr):
                 memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_autorenew_checkbox)
                 primary_contact_id = opp['primary_contact_id']
                 person_json = cp.GetPerson(primary_contact_id)
+                time.sleep(3333) # copper is rate limited to 180 calls per minute
+
                 customer_email = 'none'
                 customer_name = 'none'
                 if person_json != '':
