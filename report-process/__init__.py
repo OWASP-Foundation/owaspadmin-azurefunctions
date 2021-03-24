@@ -7,6 +7,7 @@ import json
 import base64
 from ..SharedCode import spotchk
 from ..SharedCode import helperfuncs
+from ..SharedCode.copper import OWASPCopper
 import stripe
 from urllib.parse import unquote_plus
 import pathlib
@@ -230,7 +231,7 @@ def process_chapter_report(datastr):
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
 
 def process_member_report(datastr):
-    stripe.api_key = os.environ['STRIPE_SECRET']
+    cp = OWASPCopper()
     data = urllib.parse.parse_qs(datastr)
     sheet_name = get_spreadsheet_name('member-report')
     row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
@@ -240,45 +241,57 @@ def process_member_report(datastr):
     file_id = ret[1]
     headers = sheet.row_values(1) # pull them again anyway
     rows = []
-    customers = stripe.Customer.list(limit=100)
-    member_counts = {
-        'month': 0,
-        'one': 0,
-        'two': 0,
-        'lifetime': 0,
-        'student': 0,
-        'complimentary': 0,
-        'honorary': 0
-    }
-    count = 0
+   
+    done = False
+    page = 1
     today = datetime.today()
-    default_dt = today - timedelta(days=1)
-    
-    for customer in customers.auto_paging_iter():
-        metadata = customer.get('metadata', {})
-        end_date = helperfuncs.get_datetime_helper(metadata.get('membership_end', default_dt))
-        start_date = helperfuncs.get_datetime_helper(metadata.get('membership_start', None))
-        if end_date == None:
-            end_date = default_dt
-        memtype = metadata.get('membership_type', None)
-        if(memtype and end_date >= today):
-            memstart = metadata.get('membership_start', 'none')
-            memend = metadata.get('membership_end', 'none')
-            memrecurr = metadata.get('membership_recurring', 'no')
-            add_member_row(rows, headers, customer.get('name', 'none'), customer.get('email', 'none'), 
-                        memtype, memstart, memend, memrecurr)
+    while(not done):
+        retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.pipeline_id_membership]) # all Won Opportunities for Individual Membership
+        if retopp != '':
+            opportunities = json.loads(retopp)
+            if len(opportunities) < 200:
+                done = True
+            for opp in opportunities:
+                end_date = cp.GetDatetimeHelper(cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date))
+                if end_date and end_date < today:
+                    continue
+                close_date = cp.GetDatetimeHelper(opp['close_date'])
+                if close_date == None:
+                    close_date = datetime.fromtimestamp(opp['date_created'])
+                if close_date.month == today.month:
+                    member_data['month'] = member_data['month'] + 1
 
-            count = count + 1
-            member_counts[memtype] == member_counts[memtype] + 1
-            if start_date != None and today.month == start_date.month:
-                member_counts['month'] = member_counts['month'] + 1
-        #if count > 200:
-        #    sheet.append_rows(rows)
-        #    rows = []
-        #    count = 0
+                if 'student' in opp['name'].lower():
+                    member_data['student'] = member_data['student'] + 1
+                elif 'complimentary' in opp['name'].lower():
+                    member_data['complimentary'] = member_data['complimentary'] + 1
+                elif 'honorary' in opp['name'].lower():
+                    member_data['honorary'] = member_data['honorary'] + 1
+                elif 'one' in opp['name'].lower():
+                    member_data['one'] = member_data['one'] + 1
+                elif 'two' in opp['name'].lower():
+                    member_data['two'] = member_data['two'] + 1
+                elif 'lifetime' in opp['name'].lower():
+                    member_data['lifetime'] = member_data['lifetime'] + 1
+                
+                memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_auto_renew)
+                primary_contact_id = opp['primary_contact_id']
+                person_json = cp.GetPerson(primary_contact_id)
+                customer_email = 'none'
+                customer_name = 'none'
+                if person_json != '':
+                    person = json.loads(contact_json)
+                    if 'emails' in person:
+                        customer_email = person['emails']
+                    customer_name = person['name']
+
+                add_member_row(rows, headers, customer_name, customer_email, 
+                        memtype, memstart, memend, memrecurr)
+            page = page + 1
     
-    if len(rows) > 0:
-        sheet.append_rows(rows)
+    total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
+    
+    sheet.append_rows(rows)
     msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
     msgtext += f"\n\ttotal members: {member_counts['total']}"
     msgtext += f"\t\tone: {member_counts['one']}\ttwo:{member_counts['two']}\n"

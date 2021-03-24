@@ -625,6 +625,13 @@ class OWASPCopper:
         
         return ''
 
+    def GetCustomFieldValue(self, fields, id):
+        for field in fields:
+            if field['custom_field_definition_id'] == id:
+                return field['value']
+
+        return None
+
     def GetCustomFields(self):
         url = f'{self.cp_base_url}{self.cp_custfields_fragment}'
         r = requests.get(url, headers=self.GetHeaders())
