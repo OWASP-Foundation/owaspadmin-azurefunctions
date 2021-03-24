@@ -255,11 +255,13 @@ def process_member_report(datastr):
     done = False
     page = 1
     today = datetime.today()
+    count = 0
     while(not done):
         retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.cp_opportunity_pipeline_id_membership]) # all Won Opportunities for Individual Membership
         if retopp != '':
             opportunities = json.loads(retopp)
             if len(opportunities) < 200:
+                logging.debug('listing opportunities done')
                 done = True
             for opp in opportunities:
                 end_date = helperfuncs.get_datetime_helper(cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date))
@@ -309,11 +311,16 @@ def process_member_report(datastr):
                     end_date_str = end_date.strftime("%m/%d/%Y")
                 add_member_row(rows, headers, customer_name, customer_email, 
                         memtype, close_date.strftime("%m/%d/%Y"), end_date_str, memrecurr)
+                count = count + 1
+                if count >= 200:
+                    sheet.append_rows(rows)
+                    rows = []
+                    count = 0
             page = page + 1
     
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
-    
-    sheet.append_rows(rows)
+    if count > 0:
+        sheet.append_rows(rows)
     msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
     msgtext += f"\n\ttotal members: {total_members}"
     msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
