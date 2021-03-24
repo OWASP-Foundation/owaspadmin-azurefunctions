@@ -81,15 +81,16 @@ class OWASPCopper:
     cp_opportunity_pipeline_id_membership = 721986
 
     #leader specific
-    
-    def GetHeaders(self):
-        headers = {
+
+    default_headers = {
             'X-PW-AccessToken':os.environ['COPPER_API_KEY'],
             'X-PW-Application':'developer_api',
             'X-PW-UserEmail':os.environ['COPPER_USER'],
             'Content-Type':'application/json'
         }
-        return headers
+        
+    def GetHeaders(self):
+        return self.default_headers
 
     def ListProjects(self):
         data = {
@@ -124,7 +125,7 @@ class OWASPCopper:
     def GetPerson(self, pid):
         if pid:
             url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"
-            r = requests.get(url, headers = self.GetHeaders())
+            r = requests.get(url, headers = self.default_headers)
             if r.ok:
                 return r.text
         
