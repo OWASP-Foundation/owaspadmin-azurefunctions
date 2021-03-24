@@ -301,8 +301,11 @@ def process_member_report(datastr):
                         customer_email = person['emails']
                     customer_name = person['name']
 
+                end_date_str = 'none'
+                if end_date != None:
+                    end_date_str = end_date.strftime("%m/%d/%Y")
                 add_member_row(rows, headers, customer_name, customer_email, 
-                        memtype, close_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"), memrecurr)
+                        memtype, close_date.strftime("%m/%d/%Y"), end_date_str, memrecurr)
             page = page + 1
     
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
