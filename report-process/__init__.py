@@ -320,8 +320,8 @@ def process_member_report(datastr):
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
     #if count > 0:
     #    sheet.append_rows(rows)
-    msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
-    msgtext += f"\n\ttotal members: {total_members}"
+    #msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+    msgtext = f"\ttotal members: {total_members}"
     msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
     msgtext += f"\t\tlifetime: {member_data['lifetime']}\tstudent:{member_data['student']}\n"
     msgtext += f"\t\tcomplimentary: {member_data['complimentary']}\thonorary:{member_data['honorary']}\n"
