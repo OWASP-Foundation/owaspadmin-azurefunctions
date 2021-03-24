@@ -290,7 +290,7 @@ def process_member_report(datastr):
                     memtype = 'lifetime'
                     member_data['lifetime'] = member_data['lifetime'] + 1
                 
-                memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_auto_renew)
+                memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_autorenew_checkbox)
                 primary_contact_id = opp['primary_contact_id']
                 person_json = cp.GetPerson(primary_contact_id)
                 customer_email = 'none'
