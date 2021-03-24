@@ -122,10 +122,11 @@ class OWASPCopper:
         return ''
         
     def GetPerson(self, pid):
-        url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"
-        r = requests.get(url, headers = self.GetHeaders())
-        if r.ok:
-            return r.text
+        if pid:
+            url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"
+            r = requests.get(url, headers = self.GetHeaders())
+            if r.ok:
+                return r.text
         
         return ''
 
