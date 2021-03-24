@@ -261,10 +261,10 @@ def process_member_report(datastr):
             if len(opportunities) < 200:
                 done = True
             for opp in opportunities:
-                end_date = cp.GetDatetimeHelper(cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date))
+                end_date = helperfuncs.get_datetime_helper(cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date))
                 if end_date and end_date < today:
                     continue
-                close_date = cp.GetDatetimeHelper(opp['close_date'])
+                close_date = helperfuncs.get_datetime_helper(opp['close_date'])
                 if close_date == None:
                     close_date = datetime.fromtimestamp(opp['date_created'])
                 if close_date.month == today.month:
