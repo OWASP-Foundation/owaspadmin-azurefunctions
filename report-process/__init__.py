@@ -264,8 +264,12 @@ def process_member_report(datastr):
                 logging.debug('listing opportunities done')
                 done = True
             for opp in opportunities:
-                end_date = helperfuncs.get_datetime_helper(cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date))
-                if end_date and end_date < today:
+                end_val = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date)
+                if end_val != None:
+                    end_date = datetime.fromtimestamp(end_val)
+                    if end_date and end_date < today:
+                        continue
+                if end_val == None and 'lifetime' not in opp['name'].lower():
                     continue
                 close_date = helperfuncs.get_datetime_helper(opp['close_date'])
                 if close_date == None:
