@@ -62,7 +62,7 @@ def send_zoominfo_email(member_email, zoom_email):
         logging.warn(f"Failed to send mail to {member_email}.  Result: {str(e)}")
 
 def send_zoompw_email(leader_emails, zoom_pw):
-    hcontent = f"To access your shared zoom account, use <strong>{zoom_pw}</strong><br>You should receive a separate email with the password for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account username.<br><br>Thank you,<br>OWASP Foundation"
+    hcontent = f"To access your shared zoom account, use <strong>{zoom_pw}</strong><br>You should receive a separate email with the account login for this account. Because this is a shared account, please coordinate with other members on the account, do not change account details, and do not change the account username.<br><br>Thank you,<br>OWASP Foundation"
         
     
     message = Mail(
