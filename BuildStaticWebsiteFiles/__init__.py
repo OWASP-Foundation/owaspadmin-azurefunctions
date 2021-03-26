@@ -285,18 +285,24 @@ def update_corp_members(gh):
         logging.error(f'Failed to update assets/sitedata/corp_members.yml: {r.text}')
 
 def deEmojify(text):
-    # was included but should be covered by enclosed characters u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        
-    # regex_pattern = re.compile(pattern = "["
-    #     u"\U0001F600-\U0001F64F"  # emoticons
-    #     u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-    #     u"\U0001F680-\U0001F6FF"  # transport & map symbols
-    #     u"\U00002702-\U000027B0"  # dingbats
-    #     u"\U000024C2-\U0001F251"  # enclosed characters
-    #                        "]+", flags = re.UNICODE)
-    regex_pattern = re.compile(u"[^\U00000000-\U0000d7ff\U0000e000-\U0000ffff]", flags=re.UNICODE)
+    EMOJI_PATTERN = re.compile(
+        "(["
+        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F680-\U0001F6FF"  # transport & map symbols
+        "\U0001F700-\U0001F77F"  # alchemical symbols
+        "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+        "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+        "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+        "\U0001FA00-\U0001FA6F"  # Chess Symbols
+        "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+        "\U00002702-\U000027B0"  # Dingbats
+        "\U000024C2-\U0001F251" 
+        "])"
+    )
 
-    return regex_pattern.sub(r'',text)
+    return EMOJI_PATTERN.sub(u'', text)
 
 def add_to_events(mue, events, repo):
     
@@ -350,7 +356,7 @@ def create_chapter_events(gh, mu):
         doc = json.loads(r.text)
         sha = doc['sha']
     
-    contents = json.dumps(events)
+    contents = json.dumps(events, indents=4)
     r = gh.UpdateFile('owasp.github.io', '_data/chapter_events.json', contents, sha)
     if r.ok:
         logging.info('Updated _data/chapter_events.json successfully')
