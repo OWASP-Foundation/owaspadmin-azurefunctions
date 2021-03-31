@@ -106,21 +106,21 @@ def create_zoom_account(chapter_url):
     gh = OWASPGitHub()
     leaders = gh.GetLeadersForRepo(chapter_url)
     leader_emails = []
+    og = OWASPGoogle()
+    result = og.FindGroup(leadersemail)
+    if result == None:
+        result = og.CreateGroup(chapter_name, leadersemail)
+    if 'Failed' in result:
+        logging.error(f"Failed to find or create group for {leadersemail}.  Reason:{result}")
+        #return f"Could not create or find group for {leadersemail}"
+
     for leader in leaders:
         leader_emails.append(leader['email'])
-
+        if not 'Failed' in result: # add leader to group if it exists   
+            og.AddMemberToGroup(leadersemail, leader['email'])
+    
     if len(leaders) > 0 and len(leader_emails) > 0:
-        og = OWASPGoogle()
-        result = og.FindGroup(leadersemail)
         
-        if result == None:
-            result = og.CreateGroup(chapter_name, leadersemail)
-        if not 'Failed' in result:    
-                og.AddMemberToGroup(leadersemail, leader['email'])
-        else:
-            logging.error(f"Failed to find or create group for {leadersemail}.  Reason:{result}")
-            return f"Could not create or find group for {leadersemail}"
-
         if not 'Failed' in result:
             # if an account is added to SHARED_ZOOM_ACCOUNTS, remember to also add the associated password in the appropriate credential
             # further, if passwords change on the accounts they MUST be changed in Configuration as well
@@ -142,8 +142,7 @@ def create_zoom_account(chapter_url):
             send_zoominfo_email(leadersemail, zoom_account)
 
             # send email to each leader indicating group password
-            send_zoompw_email(leader_emails, os.environ[zoom_account.replace('-', '_') + '_pass'])
-
+            send_zoompw_email(leader_emails, os.environ[zoom_account.replace('-', '_') + '_pass'])          
     else:
         logging.error(f"No leaders found for {chapter_url}")
         return f"No Leaders in {chapter_url}"
