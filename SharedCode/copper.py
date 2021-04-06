@@ -121,7 +121,44 @@ class OWASPCopper:
             return r.text
         
         return ''
+    
+    def FindMemberOpportunity(self, email, subscription_data=None ):
+        opp = None
+        contact_json = self.FindPersonByEmail(email)
+        pid = None
+        if contact_json and contact_json != '' and contact_json != '[]':
+            jsonp = json.loads(contact_json)
+            if len(jsonp) > 0:
+                pid = jsonp[0]['id']
         
+        if pid != None:
+            url = f"{self.cp_base_url}{self.cp_related_fragment}"
+            url = url.replace(':entity_id', str(pid)).replace(':entity', 'people')
+            url = url + '/opportunities'
+            r = requests.get(url, headers=self.GetHeaders())
+            if r.ok and r.text:
+                for item in json.loads(r.text):
+                    url = url = f"{self.cp_base_url}{self.cp_opp_fragment}{item['id']}"
+                    r = requests.get(url, headers=self.GetHeaders())
+                    if r.ok:
+                        opportunity = json.loads(r.text)
+                        if 'Lifetime' in opportunity['name'] or (opportunity['name'] == 'Membership' and opportunity['monetary_value'] == 500):
+                            return r.text
+                        for cfield in opportunity['custom_fields']:
+                            if cfield['custom_field_definition_id'] == self.cp_opportunity_end_date:
+                                mend = cfield['value']
+                                if subscription_data == None: # no data, just find first non-expired membership, if any
+                                    today = datetime.today()
+                                    tdstamp = int(today.timestamp())
+                                    if mend > tdstamp:
+                                        return r.text
+                                elif subscription_data['membership_end']:
+                                    tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
+                                    if mend == tend:
+                                        return r.text
+
+        return opp
+
     def GetPerson(self, pid):
         if pid:
             url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"

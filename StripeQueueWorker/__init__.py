@@ -423,6 +423,9 @@ def get_merge_fields(metadata, subscription_data, customer_id):
 
         if membership_end is not None:
             merge_fields['MEMEND'] = membership_end
+        elif 'lifetime' in membership_type:
+            merge_fields['MEMEND'] = ''
+
         if membership_type is not None:
             merge_fields['MEMTYPE'] = membership_type
         if membership_recurring is not None:
