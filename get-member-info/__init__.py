@@ -66,7 +66,7 @@ def get_membership_end(cp, opp):
 
 def get_membership_recurring(cp, opp):
     retstr = 'no'
-    if cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_auto_renew):
+    if cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_autorenew_checkbox):
         retstr = 'yes'
 
     return retstr
