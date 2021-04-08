@@ -77,14 +77,15 @@ def get_member_info(emailaddress):
     cp = OWASPCopper()
     opp = None
     person = None
-
     opptxt = cp.FindMemberOpportunity(emailaddress)
     if opptxt != None:
         opp = json.loads(opptxt)
     pertext = cp.FindPersonByEmail(emailaddress)
     if pertext != '':
-        person = json.loads(pertext)
-
+        people = json.loads(pertext)
+        if len(people) > 0:
+            person = people[0]
+            
     if opp and person:
         member_info['membership_type'] = get_membership_type(opp)
         member_info['membership_start'] = get_membership_start(opp)
