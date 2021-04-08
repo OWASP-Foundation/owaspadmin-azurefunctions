@@ -1,4 +1,3 @@
-from SharedCode.github import OWASPGitHub
 import logging
 import os
 import azure.functions as func
