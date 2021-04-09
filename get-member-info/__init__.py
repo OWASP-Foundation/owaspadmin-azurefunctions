@@ -1,5 +1,7 @@
 import logging
 import os
+import jwt
+from jwt import algorithms
 import azure.functions as func
 import requests
 import json
@@ -19,23 +21,55 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     LogIpFromRequestHeaders(req)
     
-    email = req.params.get('email')
-    if not email:
+    token = req.params.get('authtoken')
+    if not token:
         try:
             req_body = req.get_json()
         except ValueError:
             pass
         else:
-            email = req_body.get('email')
+            token = req_body.get('authtoken')
 
-    if email and email=='harold.blankenship@owasp.com': #only work with this email address for now
-        member_info = get_member_info(email)
+    email = None
+    data = None
+    if token:
+        # do stuff here to decode the token and verify
+        try:
+            data = get_token_data(token)
+        except:
+            logging.error('Invalid token')
+
+    if len(data) > 0 and data['email']=='harold.blankenship@owasp.com': #only work with this email address for now
+        member_info = get_member_info(data)
         return func.HttpResponse(json.dumps(member_info))
     else:
         return func.HttpResponse(
              "malformed request",
              status_code=404
         )
+
+def get_public_keys():
+    r = requests.get(os.environ['CF_TEAMS_DOMAIN'])
+    public_keys = []
+    jwk_set = r.json()
+    for key_dict in jwk_set['keys']:
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key_dict))
+        public_keys.append(public_key)
+    return public_keys
+
+def get_token_data(token):
+    data = {}
+    keys = get_public_keys()
+    valid_token = False
+    for key in keys:
+        try:
+            data = jwt.decode(token, key=key, audience=os.environ['CF_AUD_POLICY'], algorithms=['RS256'], verify=True)
+            valid_token=True
+            break
+        except:
+            pass
+    
+    return data
 
 def get_membership_type(opp):
     memtype = 'Unknown'
@@ -88,7 +122,8 @@ def LogIpFromRequestHeaders(req):
         logging.info(f"Authority: {req.headers.get(':authority:')}")
 
 
-def get_member_info(emailaddress):
+def get_member_info(data):
+    emailaddress = data['email']
     today = datetime.today()
     member_info = {}
     cp = OWASPCopper()
