@@ -38,7 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except:
             logging.error('Invalid token')
 
-    if len(data) > 0 and data['email']=='harold.blankenship@owasp.com': #only work with this email address for now
+    if data and len(data) > 0 and data['email']=='harold.blankenship@owasp.com': #only work with this email address for now
         member_info = get_member_info(data)
         return func.HttpResponse(json.dumps(member_info))
     else:
@@ -66,7 +66,10 @@ def get_token_data(token):
             valid_token=True
             break
         except:
+            logging.info('Failed decode')
             pass
+    
+    logging.info(data)
     
     return data
 
