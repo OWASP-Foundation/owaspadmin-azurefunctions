@@ -18,7 +18,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     LogIpFromRequestHeaders(req)
-
+    
     email = req.params.get('email')
     if not email:
         try:
@@ -79,6 +79,11 @@ def LogIpFromRequestHeaders(req):
         ipaddrs = req.headers.get('X-Forwarded-For').split(',')
         for ipaddr in ipaddrs:
             logging.info(f"Ip Address forward: {ipaddr}")
+        
+    if 'X-Forwarded-Host' in req.headers:
+        host = req.headers.get('X-Forwarded-Host')
+        logging.info(f"Forward host is {host}")
+
 
 def get_member_info(emailaddress):
     today = datetime.today()
