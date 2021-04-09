@@ -84,6 +84,9 @@ def LogIpFromRequestHeaders(req):
         host = req.headers.get('X-Forwarded-Host')
         logging.info(f"Forward host is {host}")
 
+    if ':authority:' in req.headers:
+        logging.info(f"Authority: {req.headers.get(':authority:')}")
+
 
 def get_member_info(emailaddress):
     today = datetime.today()
