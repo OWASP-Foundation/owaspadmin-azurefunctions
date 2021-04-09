@@ -17,6 +17,8 @@ stripe.api_key = os.environ['STRIPE_SECRET']
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
+    LogIpFromRequestHeaders(req)
+    
     email = req.params.get('email')
     if not email:
         try:
@@ -71,6 +73,13 @@ def get_membership_recurring(cp, opp):
 
     return retstr
 
+def LogIpFromRequestHeaders(req):
+    ipaddr = ''
+    if 'X-Forwarded-For' in req.headers:
+        ipaddrs = req.headers.get('X-Forwarded-For').split(',')
+        for ipaddr in ipaddrs:
+            logging.info(f"Ip Address forward: {ipaddr}")
+
 def get_member_info(emailaddress):
     today = datetime.today()
     member_info = {}
@@ -85,7 +94,7 @@ def get_member_info(emailaddress):
         people = json.loads(pertext)
         if len(people) > 0:
             person = people[0]
-            
+
     if opp and person:
         member_info['membership_type'] = get_membership_type(opp)
         member_info['membership_start'] = get_membership_start(opp)
