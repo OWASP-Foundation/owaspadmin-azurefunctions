@@ -19,7 +19,7 @@ stripe.api_key = os.environ['STRIPE_SECRET']
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
-    LogIpFromRequestHeaders(req)
+    #LogIpFromRequestHeaders(req)
     
     token = req.params.get('authtoken')
     if not token:
@@ -30,7 +30,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         else:
             token = req_body.get('authtoken')
 
-    email = None
     data = None
     if token:
         # do stuff here to decode the token and verify
