@@ -18,7 +18,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     LogIpFromRequestHeaders(req)
-    
+
     email = req.params.get('email')
     if not email:
         try:
@@ -28,7 +28,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         else:
             email = req_body.get('email')
 
-    if email:
+    if email and email=='harold.blankenship@owasp.com': #only work with this email address for now
         member_info = get_member_info(email)
         return func.HttpResponse(json.dumps(member_info))
     else:
