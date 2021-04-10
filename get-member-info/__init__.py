@@ -59,14 +59,12 @@ def get_public_keys():
 def get_token_data(token):
     data = {}
     keys = get_public_keys()
-    valid_token = False
+    
     for key in keys:
         try:
             data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
-            valid_token=True
             break
         except Exception as err:
-            logging.info(f'Failed decode: {err}')
             pass
 
     return data
@@ -124,7 +122,7 @@ def LogIpFromRequestHeaders(req):
 
 def get_member_info(data):
     logging.info(data)
-    emailaddress = data['payload']['email']
+    emailaddress = data['email']
     today = datetime.today()
     member_info = {}
     cp = OWASPCopper()
