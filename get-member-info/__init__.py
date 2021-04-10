@@ -123,7 +123,8 @@ def LogIpFromRequestHeaders(req):
 
 
 def get_member_info(data):
-    emailaddress = data['email']
+    logging.info(data)
+    emailaddress = data['payload']['email']
     today = datetime.today()
     member_info = {}
     cp = OWASPCopper()
