@@ -35,8 +35,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # do stuff here to decode the token and verify
         try:
             data = get_token_data(token)
-        except:
-            logging.error('Invalid token')
+        except Exception as err:
+            logging.error(f'Invalid token: {err}')
 
     if data and len(data) > 0 and data['email']=='harold.blankenship@owasp.com': #only work with this email address for now
         member_info = get_member_info(data)
@@ -62,15 +62,13 @@ def get_token_data(token):
     valid_token = False
     for key in keys:
         try:
-            data = jwt.decode(token, key=key, audience=os.environ['CF_AUD_POLICY'], algorithms=['RS256'], verify=True)
+            data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
             valid_token=True
             break
-        except:
-            logging.info('Failed decode')
+        except Exception as err:
+            logging.info(f'Failed decode: {err}')
             pass
-    
-    logging.info(data)
-    
+
     return data
 
 def get_membership_type(opp):
