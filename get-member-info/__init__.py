@@ -38,7 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except Exception as err:
             logging.error(f'Invalid token: {err}')
 
-    if data and len(data) > 0 and data['email']=='harold.blankenship@owasp.com': #only work with this email address for now
+    if data and len(data) > 0 and 'owasp.com' in data['email']: #only work with this email address for now
         member_info = get_member_info(data)
         return func.HttpResponse(json.dumps(member_info))
     else:

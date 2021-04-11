@@ -28,7 +28,10 @@ def get_datetime_helper(datestr):
             try:
                 retdate = datetime.strptime(datestr, "%m/%d/%y")
             except:
-                return retdate
+                try:
+                    retdate = datetime.fromtimestamp(datestr)
+                except:
+                    pass
 
     return retdate
 
