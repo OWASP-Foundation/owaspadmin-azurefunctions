@@ -334,6 +334,38 @@ def add_to_events(mue, events, repo):
 
     return events
 
+def create_community_events(gh, mu):
+    repos = gh.GetPublicRepositories('www-')
+    
+    events = []
+    for repo in repos:
+        if 'www-chapter' not in repo['name'] and 'www-project' not in repo['name'] and 'www-committee' not in repo['name']:
+            continue
+
+        if 'meetup-group' in repo and repo['meetup-group']:
+            if mu.Login():
+                mstr = mu.GetGroupEvents(repo['meetup-group'])
+                if mstr:
+                    muej = json.loads(mstr)
+                    add_to_events(muej, events, repo['name'])
+                
+
+    if len(events) <= 0:
+        return
+        
+    r = gh.GetFile('www-community', '_data/community_events.json')
+    sha = ''
+    if r.ok:
+        doc = json.loads(r.text)
+        sha = doc['sha']
+    
+    contents = json.dumps(events, indents=4)
+    r = gh.UpdateFile('www-community', '_data/community_events.json', contents, sha)
+    if r.ok:
+        logging.info('Updated _data/community_events.json successfully')
+    else:
+        logging.error(f"Failed to update _data/community_events.json: {r.text}")
+
 def create_chapter_events(gh, mu):
     repos = gh.GetPublicRepositories('www-chapter')
     
@@ -413,12 +445,19 @@ def main(mytimer: func.TimerRequest) -> None:
     except Exception as err:
         logging.error(f"Exception updating leaders json file: {err}")
 
-    logging.info('Updating chapter events')
+    #logging.info('Updating chapter events')
+    #mu = meetup.OWASPMeetup()
+    #try:
+    #    create_chapter_events(gh, mu)
+    #except Exception as err:
+    #    logging.error(f"Exception updating chapter events: {err}")
+    
+    logging.info('Updating community events')
     mu = meetup.OWASPMeetup()
     try:
-        create_chapter_events(gh, mu)
+        create_community_events(gh, mu)
     except Exception as err:
-        logging.error(f"Exception updating chapter events: {err}")
+        logging.error(f"Exception updating community events: {err}")
 
     logging.info('Updating inactive chapters')
     try:
