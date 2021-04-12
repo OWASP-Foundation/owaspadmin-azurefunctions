@@ -144,6 +144,9 @@ class OWASPCopper:
                         opportunity = json.loads(r.text)
                         if 'Lifetime' in opportunity['name'] or (opportunity['name'] == 'Membership' and opportunity['monetary_value'] == 500):
                             return r.text
+                        elif 'Membership' not in opportunity['name']:
+                            continue
+                        
                         for cfield in opportunity['custom_fields']:
                             if cfield['custom_field_definition_id'] == self.cp_opportunity_end_date:
                                 mend = cfield['value']
