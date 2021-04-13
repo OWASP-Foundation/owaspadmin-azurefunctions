@@ -141,8 +141,8 @@ def add_to_events(mue, events, repo):
     if len(mue) <= 0 or 'errors' in mue:
         return events
     
-    chapter = repo.replace('www-chapter-','').replace('-', ' ')
-    chapter = " ".join(w.capitalize() for w in chapter.split())
+    group = repo.replace('www-chapter-','').replace('www-project-','').replace('www-committee-','').replace('-', ' ')
+    group = " ".join(w.capitalize() for w in group.split())
                 
     for mevent in mue:
         event = {}
@@ -150,7 +150,7 @@ def add_to_events(mue, events, repo):
         eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
         tdelta = eventdate - today
         if tdelta.days >= 0 and tdelta.days < 30:
-            event['chapter'] = chapter
+            event['group'] = group
             event['repo'] = repo
             event['name'] = mevent['name']
             event['date'] = mevent['local_date']
