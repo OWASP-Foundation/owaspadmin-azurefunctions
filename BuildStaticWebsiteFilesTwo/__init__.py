@@ -45,9 +45,9 @@ def add_to_leaders(repo, content, all_leaders, stype):
                 all_leaders.append(leader)
                 leader_count = leader_count + 1
 
-def build_leaders_json(gh):
+def build_leaders_json(gh, repos):
     all_leaders = []
-    repos = gh.GetPublicRepositories('www-')
+    #repos = gh.GetPublicRepositories('www-')
     for repo in repos:
         stype = ''
         if repo['name'] == 'www-projectchapter-example':
@@ -62,6 +62,7 @@ def build_leaders_json(gh):
         else:
             continue
 
+        logging.info(f"attempting to get leader file for {repo['name']}")
         r = gh.GetFile(repo['name'], 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)
@@ -69,12 +70,13 @@ def build_leaders_json(gh):
 
             add_to_leaders(repo, content, all_leaders, stype)
     
+    logging.info("Getting leaders file in main website....")
     r = gh.GetFile('owasp.github.io', '_data/leaders.json')
     sha = ''
     if r.ok:
         doc = json.loads(r.text)
         sha = doc['sha']
-    
+    logging.info("Updating leaders file in main website....")
     r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders, ensure_ascii=False, indent = 4), sha)
     if r.ok:
         logging.info('Update leaders json succeeded')
@@ -164,8 +166,8 @@ def add_to_events(mue, events, repo):
 
     return events
 
-def create_community_events(gh, mu):
-    repos = gh.GetPublicRepositories('www-')
+def create_community_events(gh, mu, repos):
+    #repos = gh.GetPublicRepositories('www-')
     
     events = []
     for repo in repos:
@@ -189,7 +191,7 @@ def create_community_events(gh, mu):
         doc = json.loads(r.text)
         sha = doc['sha']
     
-    contents = json.dumps(events, indents=4)
+    contents = json.dumps(events, indent=4)
     r = gh.UpdateFile('www-community', '_data/community_events.json', contents, sha)
     if r.ok:
         logging.info('Updated _data/community_events.json successfully')
@@ -206,16 +208,18 @@ def main(mytimer: func.TimerRequest) -> None:
     gh = github.OWASPGitHub()
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
 
+    #call get repos like this once because leaders and community events both use it
+    repos = gh.GetPublicRepositories('www-')
     logging.info('Building leaders json file')
     try:
-        build_leaders_json(gh)
+        build_leaders_json(gh, repos)
     except Exception as err:
         logging.error(f"Exception updating leaders json file: {err}")
     
     logging.info('Updating community events')
     mu = meetup.OWASPMeetup()
     try:
-        create_community_events(gh, mu)
+        create_community_events(gh, mu, repos)
     except Exception as err:
         logging.error(f"Exception updating community events: {err}")
 
