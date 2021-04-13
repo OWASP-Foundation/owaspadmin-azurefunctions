@@ -62,7 +62,7 @@ def build_leaders_json(gh, repos):
         else:
             continue
 
-        logging.info(f"attempting to get leader file for {repo['name']}")
+        #logging.info(f"attempting to get leader file for {repo['name']}")
         r = gh.GetFile(repo['name'], 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)
@@ -70,13 +70,13 @@ def build_leaders_json(gh, repos):
 
             add_to_leaders(repo, content, all_leaders, stype)
     
-    logging.info("Getting leaders file in main website....")
+    #logging.info("Getting leaders file in main website....")
     r = gh.GetFile('owasp.github.io', '_data/leaders.json')
     sha = ''
     if r.ok:
         doc = json.loads(r.text)
         sha = doc['sha']
-    logging.info("Updating leaders file in main website....")
+    #logging.info("Updating leaders file in main website....")
     r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders, ensure_ascii=False, indent = 4), sha)
     if r.ok:
         logging.info('Update leaders json succeeded')
