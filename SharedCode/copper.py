@@ -354,6 +354,26 @@ class OWASPCopper:
 
         return pid
 
+    def UpdatePersonInfo(self, pid, person_data):
+        logging.info('Copper Update Person Info')
+        data = {
+            'name': person_data['name'],
+            'address': person_data['address'],
+            'phone_numbers': person_data['phone_numbers'],
+            'emails': person_data['emails']            
+        }
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
+        r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
+        pid = None
+        if r.ok:
+            person = json.loads(r.text)
+            pid = person['id']
+        else:
+            logging.error(f'Copper Failed UpdatePersonInfo: {r.text}')
+
+        return pid
+
+
     def UpdatePerson(self, pid, subscription_data = None, stripe_id = None, other_email = None):
         logging.info('Copper UpdatePerson')
             
