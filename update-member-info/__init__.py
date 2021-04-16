@@ -28,13 +28,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         else:
             token = req_body.get('authtoken')
     membership_data = req.params.get('membership_data')
-    if not token:
+    if not membership_data:
         try:
             req_body = req.get_json()
         except ValueError:
             pass
         else:
-            token = req_body.get('membership_data')
+            membership_data = req_body.get('membership_data')
 
     if token and membership_data:
         # do stuff here to decode the token and verify
