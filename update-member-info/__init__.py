@@ -34,7 +34,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except ValueError:
             pass
         else:
-            membership_data = req_body.get('membership_data')
+            membership_data = json.loads(req_body.get('membership_data'))
 
     if token and membership_data:
         # do stuff here to decode the token and verify
