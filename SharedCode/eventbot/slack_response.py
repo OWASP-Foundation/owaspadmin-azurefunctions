@@ -135,7 +135,7 @@ class SlackResponse:
             json=response_json,
             headers={
                 "Content-type": "application/json",
-                "Authorization": "Bearer " + os.environ["SL_ACCESS_TOKEN"]
+                "Authorization": "Bearer " + os.environ["SL_ACCESS_TOKEN_GENERAL"]
             }
         )
 

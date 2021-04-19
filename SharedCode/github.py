@@ -217,14 +217,14 @@ class OWASPGitHub:
         results = []
         while not done:
             pagestr = "?page=%d" % pageno
-            url = self.gh_endpoint + self.org_fragment + pagestr
+            url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
             r = requests.get(url=url, headers = headers)
             
             if self.TestResultCode(r.status_code):
                 repos = json.loads(r.text)
                 if pageend == -1:
                     endlink = r.links['last']['url']
-                    pageend = int(endlink[endlink.find('?page=') + 6:])
+                    pageend = int(endlink[endlink.find('?page=') + 6:endlink.find('&')])
                 
                 if pageno == pageend:
                     done = True

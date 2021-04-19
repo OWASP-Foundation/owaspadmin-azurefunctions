@@ -5,13 +5,16 @@ import azure.functions as func
 import requests
 import json
 import base64
+import time
 from ..SharedCode import spotchk
 from ..SharedCode import helperfuncs
+from ..SharedCode.copper import OWASPCopper
+import stripe
 from urllib.parse import unquote_plus
 import pathlib
 import urllib
 import gspread
-from datetime import datetime
+from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -30,6 +33,8 @@ def main(msg: func.QueueMessage) -> None:
         process_chapter_report(datastr)
     elif 'leader-report' in datastr:
         process_leader_report(datastr)
+    elif 'member-report' in datastr:
+        process_member_report(datastr)
     else:
         logging.warn('No report to process in item')
 
@@ -87,6 +92,19 @@ def get_spreadsheet_name(base_name):
 
     return report_name + ' ' + report_date.strftime('%Y-%m-%d-%H-%M-%S')
 
+def add_member_row(rows, headers, name, email, memtype, memstart, memend, memrecurr):
+    row_data = headers.copy()
+    for i in range(len(row_data)):
+        row_data[i] = ''
+
+    row_data[0] = name
+    row_data[1] = email
+    row_data[2] = memtype
+    row_data[3] = memstart
+    row_data[4] = memend
+    row_data[5] = memrecurr
+    
+    rows.append(row_data)
 
 def add_leader_row(rows, headers, name, email, group, url):
     row_data = headers.copy()
@@ -212,3 +230,111 @@ def process_chapter_report(datastr):
             'response_type':'ephemeral'
         }
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
+
+def process_member_report(datastr):
+    cp = OWASPCopper()
+    data = urllib.parse.parse_qs(datastr)
+    #sheet_name = get_spreadsheet_name('member-report')
+    #row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
+
+    #ret = create_spreadsheet(sheet_name, row_headers)
+    #sheet = ret[0]
+    #file_id = ret[1]
+    #headers = sheet.row_values(1) # pull them again anyway
+    #rows = []
+    member_data = {
+        'month':0,
+        'one':0,
+        'two':0,
+        'lifetime':0,
+        'complimentary':0,
+        'student':0,
+        'honorary':0
+    }
+
+    done = False
+    page = 1
+    today = datetime.today()
+    #count = 0
+    while(not done):
+        retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.cp_opportunity_pipeline_id_membership]) # all Won Opportunities for Individual Membership
+        if retopp != '':
+            opportunities = json.loads(retopp)
+            if len(opportunities) < 200:
+                logging.debug('listing opportunities done')
+                done = True
+            for opp in opportunities:
+                end_val = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date)
+                if end_val != None:
+                    end_date = datetime.fromtimestamp(end_val)
+                    if end_date and end_date < today:
+                        continue
+                if end_val == None and 'lifetime' not in opp['name'].lower():
+                    continue
+                close_date = helperfuncs.get_datetime_helper(opp['close_date'])
+                if close_date == None:
+                    close_date = datetime.fromtimestamp(opp['date_created'])
+                if close_date.month == today.month:
+                    member_data['month'] = member_data['month'] + 1
+
+                memtype = 'unknown'
+                if 'student' in opp['name'].lower():
+                    memtype = 'student'
+                    member_data['student'] = member_data['student'] + 1
+                elif 'complimentary' in opp['name'].lower():
+                    memtype = 'complimentary'
+                    member_data['complimentary'] = member_data['complimentary'] + 1
+                elif 'honorary' in opp['name'].lower():
+                    memtype = 'honorary'
+                    member_data['honorary'] = member_data['honorary'] + 1
+                elif 'one' in opp['name'].lower():
+                    memtype = 'one'
+                    member_data['one'] = member_data['one'] + 1
+                elif 'two' in opp['name'].lower():
+                    memtype = 'two'
+                    member_data['two'] = member_data['two'] + 1
+                elif 'lifetime' in opp['name'].lower():
+                    memtype = 'lifetime'
+                    member_data['lifetime'] = member_data['lifetime'] + 1
+                
+                #memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_autorenew_checkbox)
+                #primary_contact_id = opp['primary_contact_id']
+                #person_json = cp.GetPerson(primary_contact_id)
+            
+                #customer_email = 'none'
+                #customer_name = 'none'
+                #if person_json != '':
+                #    person = json.loads(person_json)
+                #    if 'emails' in person:
+                #        customer_email = person['emails']
+                #    customer_name = person['name']
+
+                #end_date_str = 'none'
+                #if end_date != None:
+                #    end_date_str = end_date.strftime("%m/%d/%Y")
+                #add_member_row(rows, headers, customer_name, customer_email, 
+                #        memtype, close_date.strftime("%m/%d/%Y"), end_date_str, memrecurr)
+                #count = count + 1
+                #if count >= 200:
+                #    sheet.append_rows(rows)
+                #    rows = []
+                #    count = 0
+            page = page + 1
+    
+    total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
+    #if count > 0:
+    #    sheet.append_rows(rows)
+    #msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+    msgtext = f"\ttotal members: {total_members}\tthis month:{member_data['month']}\n"
+    msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
+    msgtext += f"\t\tlifetime: {member_data['lifetime']}\tstudent:{member_data['student']}\n"
+    msgtext += f"\t\tcomplimentary: {member_data['complimentary']}\thonorary:{member_data['honorary']}\n"
+    
+    
+    response_url = data['response_url'][0]
+    headers = { 'Content-type':'application/json'}
+    msgdata = {
+        'text':msgtext,
+        'response_type':'ephemeral'
+    }
+    requests.post(response_url, data=json.dumps(msgdata), headers = headers)

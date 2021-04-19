@@ -9,8 +9,9 @@ from urllib.parse import unquote_plus
 import pathlib
 
 
-def main(req: func.HttpRequest, pzmsg: func.Out[func.QueueMessage]) -> func.HttpResponse:
-    logging.info('provision zoom request.')  
+def main(req: func.HttpRequest, rpmsg: func.Out[func.QueueMessage]) -> func.HttpResponse:
+    logging.info('member-report request')
+    
     body = req.get_body()
     
     # validate the call...
@@ -20,7 +21,6 @@ def main(req: func.HttpRequest, pzmsg: func.Out[func.QueueMessage]) -> func.Http
             'Call not valid (100)',
             status_code = 200
         )
-    # convert url string parameters to dict
     names = dict(x.split('=') for x in strbody.split('&'))
     
     if not spotchk.spotchk().validate_query2(names):
@@ -28,16 +28,15 @@ def main(req: func.HttpRequest, pzmsg: func.Out[func.QueueMessage]) -> func.Http
             'Call not valid (101)',
             status_code = 200
         )
-    
-    # convert dict to string
-    jsonstr = json.dumps(names)
+    jsonstr = strbody
     # validation complete...let's do something...
-    resp = 'Zoom Provisioning request received. You will receive a message when complete.' 
+    resp = 'Report request received. You will receive a message when available.' 
     
-    #add this to the queue, it will be picked up by the provision-zoom-process function
-    if 'provision-zoom' in names['command'] :
-        pzmsg.set(jsonstr)
+    #add this to the queue, it will be picked up by the chapter-process function
+    if 'member-report' in jsonstr:
+        rpmsg.set(jsonstr)
     
     headers = {"Content-Type":"application/json;charset=utf-8"}
     
     return func.HttpResponse(resp, headers=headers)
+

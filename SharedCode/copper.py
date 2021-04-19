@@ -1,4 +1,5 @@
 from re import sub
+import re
 import requests
 import json
 import os
@@ -78,16 +79,19 @@ class OWASPCopper:
     cp_opportunity_end_date = 400119
     cp_opportunity_autorenew_checkbox = 419575
     cp_opportunity_invoice_no = 407333  # can be the URL to the stripe payment for membership
+    cp_opportunity_pipeline_id_membership = 721986
+
     #leader specific
-    
-    def GetHeaders(self):
-        headers = {
+
+    default_headers = {
             'X-PW-AccessToken':os.environ['COPPER_API_KEY'],
             'X-PW-Application':'developer_api',
             'X-PW-UserEmail':os.environ['COPPER_USER'],
             'Content-Type':'application/json'
         }
-        return headers
+        
+    def GetHeaders(self):
+        return self.default_headers
 
     def ListProjects(self):
         data = {
@@ -100,23 +104,98 @@ class OWASPCopper:
             return r.text
         
         return ''
+    
+    def FindOpportunities(self, email):
+        opps = []
+        contact_json = self.FindPersonByEmail(email)
+        pid = None
+        if contact_json != '' and contact_json != '[]':
+            jsonp = json.loads(contact_json)
+            if len(jsonp) > 0:
+                pid = jsonp[0]['id']
+        if pid != None:
+            url = f'{self.cp_base_url}{self.cp_related_fragment}'
+            url = url.replace(':entity_id', str(pid)).replace(':entity', 'people')
+            url = url + '/opportunities'
+            r = requests.get(url, headers=self.GetHeaders())
+            if r.ok and r.text:
+                opps = json.loads(r.text)
+
+        return opps
+
+    def GetOpportunity(self, oid):
+        opp = None
+        url = f'{self.cp_base_url}{self.cp_opp_fragment}{oid}'
+        r = requests.get(url, headers=self.GetHeaders())
+        if r.ok and r.text:
+            opp = json.loads(r.text)
         
-    def ListOpportunities(self):
+        return opp
+        
+    def ListOpportunities(self, page_number=1, pipeline_ids=None, status_ids=[0,1,2,3]):
         data = {
             'page_size': 200,
-            'sort_by': 'name'
+            'sort_by': 'name',
+            'page_number':page_number,
+            'status_ids':status_ids
         }
+
+        if pipeline_ids:
+            data['pipeline_ids'] = pipeline_ids
+
         url = f'{self.cp_base_url}{self.cp_opp_fragment}{self.cp_search_fragment}'
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
         if r.ok:
             return r.text
         
         return ''
+    
+    def FindMemberOpportunity(self, email, subscription_data=None ):
+        opp = None
+        contact_json = self.FindPersonByEmail(email)
+        pid = None
+        if contact_json and contact_json != '' and contact_json != '[]':
+            jsonp = json.loads(contact_json)
+            if len(jsonp) > 0:
+                pid = jsonp[0]['id']
+        
+        if pid != None:
+            url = f"{self.cp_base_url}{self.cp_related_fragment}"
+            url = url.replace(':entity_id', str(pid)).replace(':entity', 'people')
+            url = url + '/opportunities'
+            r = requests.get(url, headers=self.GetHeaders())
+            if r.ok and r.text:
+                for item in json.loads(r.text):
+                    url = url = f"{self.cp_base_url}{self.cp_opp_fragment}{item['id']}"
+                    r = requests.get(url, headers=self.GetHeaders())
+                    if r.ok:
+                        opportunity = json.loads(r.text)
+                        if 'Lifetime' in opportunity['name'] or (opportunity['name'] == 'Membership' and opportunity['monetary_value'] == 500):
+                            return r.text
+                        elif 'Membership' not in opportunity['name']:
+                            continue
+                        
+                        for cfield in opportunity['custom_fields']:
+                            if cfield['custom_field_definition_id'] == self.cp_opportunity_end_date:
+                                mend = cfield['value']
+                                if subscription_data == None: # no data, just find first non-expired membership, if any
+                                    today = datetime.today()
+                                    tdstamp = int(today.timestamp())
+                                    if mend > tdstamp:
+                                        return r.text
+                                elif subscription_data['membership_end']:
+                                    tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
+                                    if mend == tend:
+                                        return r.text
+
+        return opp
+
     def GetPerson(self, pid):
-        url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"
-        r = requests.get(url, headers = self.GetHeaders())
-        if r.ok:
-            return r.text
+        if pid:
+            url = f"{self.cp_base_url}{self.cp_people_fragment}{pid}"
+            r = requests.get(url, headers = self.default_headers)
+            if r.ok:
+                return r.text
         
         return ''
 
@@ -302,6 +381,26 @@ class OWASPCopper:
             logging.error(f'Copper Failed CreatePerson: {r.text}')
 
         return pid
+
+    def UpdatePersonInfo(self, pid, person_data):
+        logging.info('Copper Update Person Info')
+        data = {
+            'name': person_data['name'],
+            'address': person_data['address'],
+            'phone_numbers': person_data['phone_numbers'],
+            'emails': person_data['emails']            
+        }
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
+        r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
+        pid = None
+        if r.ok:
+            person = json.loads(r.text)
+            pid = person['id']
+        else:
+            logging.error(f'Copper Failed UpdatePersonInfo: {r.text}')
+
+        return pid
+
 
     def UpdatePerson(self, pid, subscription_data = None, stripe_id = None, other_email = None):
         logging.info('Copper UpdatePerson')
@@ -624,6 +723,13 @@ class OWASPCopper:
             return r.text
         
         return ''
+
+    def GetCustomFieldValue(self, fields, id):
+        for field in fields:
+            if field['custom_field_definition_id'] == id:
+                return field['value']
+
+        return None
 
     def GetCustomFields(self):
         url = f'{self.cp_base_url}{self.cp_custfields_fragment}'

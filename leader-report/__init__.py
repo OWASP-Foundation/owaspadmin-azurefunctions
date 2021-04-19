@@ -21,7 +21,7 @@ def main(req: func.HttpRequest, rpmsg: func.Out[func.QueueMessage]) -> func.Http
         )
     names = dict(x.split('=') for x in strbody.split('&'))
     
-    if not spotchk.spotchk().validate_query(names):
+    if not spotchk.spotchk().validate_query2(names):
         return func.HttpResponse(
             'Call not valid (101)',
             status_code = 200

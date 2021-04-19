@@ -21,7 +21,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     token = post_dict.get('token')[0]
 
-    if token != os.environ["SL_TOKEN"]:
+    if token != os.environ["SL_TOKEN_GENERAL"]:
         return func.HttpResponse(
             body='Invalid token',
             status_code=400

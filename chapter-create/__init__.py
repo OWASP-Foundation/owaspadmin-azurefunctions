@@ -28,7 +28,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
     names = dict(x.split('=') for x in strbody.split('&'))
     
-    if not spotchk.spotchk().validate_query(names):
+    if not spotchk.spotchk().validate_query2(names):
         return func.HttpResponse(
             'Call not valid (101)',
             status_code = 200
@@ -41,7 +41,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     strdata = "{ 'trigger_id': '" + names['trigger_id'] + "'," + "'view': '" + strdialog + "'}"
 
     urldialog = "https://slack.com/api/views.open"
-    headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN"]}' }
+    headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
 
     # respond to caller...
     r = requests.post(url = urldialog, headers=headers, data=strdata)
