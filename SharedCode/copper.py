@@ -1,4 +1,5 @@
 from re import sub
+import re
 import requests
 import json
 import os
@@ -103,6 +104,33 @@ class OWASPCopper:
             return r.text
         
         return ''
+    
+    def FindOpportunities(self, email):
+        opps = []
+        contact_json = self.FindPersonByEmail(email)
+        pid = None
+        if contact_json != '' and contact_json != '[]':
+            jsonp = json.loads(contact_json)
+            if len(jsonp) > 0:
+                pid = jsonp[0]['id']
+        if pid != None:
+            url = f'{self.cp_base_url}{self.cp_related_fragment}'
+            url = url.replace(':entity_id', str(pid)).replace(':entity', 'people')
+            url = url + '/opportunities'
+            r = requests.get(url, headers=self.GetHeaders())
+            if r.ok and r.text:
+                opps = json.loads(r.text)
+
+        return opps
+
+    def GetOpportunity(self, oid):
+        opp = None
+        url = f'{self.cp_base_url}{self.cp_opp_fragment}{oid}'
+        r = requests.get(url, headers=self.GetHeaders())
+        if r.ok and r.text:
+            opp = json.loads(r.text)
+        
+        return opp
         
     def ListOpportunities(self, page_number=1, pipeline_ids=None, status_ids=[0,1,2,3]):
         data = {
