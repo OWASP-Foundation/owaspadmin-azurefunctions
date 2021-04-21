@@ -27,14 +27,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             pass
         else:
             token = req_body.get('authtoken')
-    membership_data = req.params.get('membership_data')
-    if not membership_data:
+    membership_datastr = req.params.get('membership_data')
+    membership_data = None
+    if not membership_datastr:
         try:
             req_body = req.get_json()
         except ValueError:
             pass
         else:
-            membership_data = json.loads(req_body.get('membership_data'))
+            membership_data = req_body
+    else:
+        membership_data = json.loads(membership_datastr)
 
     if token and membership_data:
         # do stuff here to decode the token and verify
@@ -44,7 +47,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f'Invalid token: {err}')
 
     if data and len(data) > 0 and 'owasp.com' in data['email']: #only work with this email address for now
-        logging.info(f'Member data: {membership_data}')
+        #logging.info(f'Member data: {membership_data}')
         update_member_info(data['email'], membership_data)
         return func.HttpResponse(status_code=200)
     else:
