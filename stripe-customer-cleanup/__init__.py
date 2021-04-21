@@ -36,7 +36,8 @@ def main(mytimer: func.TimerRequest) -> None:
                     processed_file.write(customer['id'])
             else:
                 with open('deletedCustomers.txt', 'a') as deleted_file:
-                    deleted_file.write(customer['email'] + '\r') 
+                    if customer['email'] is not None:
+                        deleted_file.write(customer['email'] + '\r') 
             
             num_processed = num_processed + 1
             #with open('stripe-customer-cleanup-number-processed.txt', 'w') as processed_file:
