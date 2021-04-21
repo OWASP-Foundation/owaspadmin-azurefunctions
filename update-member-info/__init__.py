@@ -44,6 +44,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f'Invalid token: {err}')
 
     if data and len(data) > 0 and 'owasp.com' in data['email']: #only work with this email address for now
+        logging.info(f'Member data: {membership_data}')
         update_member_info(data['email'], membership_data)
         return func.HttpResponse(status_code=200)
     else:
