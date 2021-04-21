@@ -148,4 +148,5 @@ def get_member_info(data):
         member_info['phone_numbers'] = person['phone_numbers']
         member_info['member_number'] = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_stripe_number)
 
+    logging.info(f"Member information: {member_info}")
     return member_info
