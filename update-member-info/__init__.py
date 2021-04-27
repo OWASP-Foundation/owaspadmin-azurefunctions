@@ -48,7 +48,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     acl = json.loads(os.environ['MP_ACL'])
 
-    if data and len(data) > 0 and ('owasp.com' in data['email'] or data['email'] in acl): #only work with this email address for now
+    if data and len(data) > 0 and ('owasp.com' in data['email'] or data['email'] in acl['acl']): #only work with this email address for now
         #logging.info(f'Member data: {membership_data}')
         update_member_info(data['email'], membership_data)
         return func.HttpResponse(status_code=200)
