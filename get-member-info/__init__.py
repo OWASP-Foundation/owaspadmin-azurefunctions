@@ -38,8 +38,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except Exception as err:
             logging.error(f'Invalid token: {err}')
     acl = json.loads(os.environ['MP_ACL'])
-
-    if data and len(data) > 0 and ('owasp.com' in data['email'] or data['email'] in acl): #only work with this email address for now
+    
+    if data and len(data) > 0 and ('owasp.com' in data['email'] or data['email'] in acl['acl']): #only work with this email address for now
         member_info = get_member_info(data)
         return func.HttpResponse(json.dumps(member_info))
     else:
@@ -148,6 +148,10 @@ def get_member_info(data):
         member_info['address'] = person['address']
         member_info['phone_numbers'] = person['phone_numbers']
         member_info['member_number'] = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_stripe_number)
-
+    elif not opp:
+        logging.info(f"Failed to get opportunity")
+    else:
+        logging.info(f"Failed to get person")
+        
     logging.info(f"Member information: {member_info}")
     return member_info

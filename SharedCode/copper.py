@@ -80,6 +80,7 @@ class OWASPCopper:
     cp_opportunity_autorenew_checkbox = 419575
     cp_opportunity_invoice_no = 407333  # can be the URL to the stripe payment for membership
     cp_opportunity_pipeline_id_membership = 721986
+    cp_opportunity_stripe_transaction_id = 440903
 
     #leader specific
 
@@ -188,6 +189,13 @@ class OWASPCopper:
                                     if mend == tend:
                                         return r.text
 
+                    else:
+                        logging.info("Failed to get opportunity: {r.text}")
+            else:
+                logging.info(f"Failed to list opportunities: {r.text}")
+        else:
+            logging.info("Failed to get person inside Opportunity")
+
         return opp
 
     def GetPerson(self, pid):
@@ -219,24 +227,6 @@ class OWASPCopper:
 
         url = f'{self.cp_base_url}{self.cp_people_fragment}{self.cp_search_fragment}'
         
-        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
-        if r.ok:
-            return r.text
-        
-        return ''
-
-    def FindPersonByEmail(self, searchtext):
-        lstxt = searchtext.lower()
-        if len(lstxt) <= 0:
-            return ''
-
-        data = {
-            'page_size': 5,
-            'sort_by': 'name',
-            'emails': [lstxt]
-        }
-
-        url = f'{self.cp_base_url}{self.cp_people_fragment}{self.cp_search_fragment}'
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
         if r.ok:
             return r.text

@@ -47,7 +47,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f'Invalid token: {err}')
 
     acl = json.loads(os.environ['MP_ACL'])
-
+    logging.info(f"ACL: {acl['acl']}")
+    logging.info(f"email in acl: {data['email'] in acl['acl']}")
     if data and len(data) > 0 and ('owasp.com' in data['email'] or data['email'] in acl['acl']): #only work with this email address for now
         #logging.info(f'Member data: {membership_data}')
         update_member_info(data['email'], membership_data)
