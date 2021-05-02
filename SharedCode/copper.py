@@ -182,7 +182,7 @@ class OWASPCopper:
                                 if subscription_data == None: # no data, just find first non-expired membership, if any
                                     today = datetime.today()
                                     tdstamp = int(today.timestamp())
-                                    if mend > tdstamp:
+                                    if mend > tdstamp: # no membership end...assume valid until known for certain
                                         return r.text
                                 elif subscription_data['membership_end']:
                                     tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
