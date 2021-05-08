@@ -179,15 +179,16 @@ class OWASPCopper:
                         for cfield in opportunity['custom_fields']:
                             if cfield['custom_field_definition_id'] == self.cp_opportunity_end_date:
                                 mend = cfield['value']
-                                if subscription_data == None: # no data, just find first non-expired membership, if any
-                                    today = datetime.today()
-                                    tdstamp = int(today.timestamp())
-                                    if mend > tdstamp: # no membership end...assume valid until known for certain
-                                        return r.text
-                                elif subscription_data['membership_end']:
-                                    tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
-                                    if mend == tend:
-                                        return r.text
+                                if mend is not None:
+                                    if subscription_data == None: # no data, just find first non-expired membership, if any
+                                        today = datetime.today()
+                                        tdstamp = int(today.timestamp())
+                                        if mend > tdstamp: # no membership end...assume valid until known for certain
+                                            return r.text
+                                    elif subscription_data['membership_end']:
+                                        tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
+                                        if mend == tend:
+                                            return r.text
 
                     else:
                         logging.info("Failed to get opportunity: {r.text}")

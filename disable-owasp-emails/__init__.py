@@ -36,12 +36,19 @@ def main(mytimer: func.TimerRequest) -> None:
     if setting is not None and setting == 'true':
         cleanup_customer_metadata()
         return
-
-    stripe_owasp_emails = get_customers_from_stripe_export()
-    if len(stripe_owasp_emails) == 0:
-        logging.error(
-            "Did not load any emails for the leaders.  Aborting process.")
+    
+    # clean up metadata only
+    setting = os.environ.get('Test.Copper', None)
+    if setting is not None and setting == 'true':
+        test_copper_logic()
         return
+
+    #checking of owasp_email meta in Stripe not needed
+    #stripe_owasp_emails = get_customers_from_stripe_export()
+    #if len(stripe_owasp_emails) == 0:
+    #    logging.error(
+    #        "Did not load any emails for the leaders.  Aborting process.")
+    #    return
 
     leader_emails = get_leader_emails()
     if len(leader_emails) == 0:
@@ -57,6 +64,7 @@ def main(mytimer: func.TimerRequest) -> None:
         next_page_token = None
 
         count = 0
+        errors_count = 0
 
         with open('save-email-leaders.txt', 'w') as save_leaders_file:
             with open('owasp-email-removed.txt', 'w') as remove_file:
@@ -83,23 +91,23 @@ def main(mytimer: func.TimerRequest) -> None:
                                 # could be an issue if casing isn't fixed
                                 customers = stripe.Customer.list(
                                     email=user_email)
-                                if len(customers) > 0:
+                                if customers is not None and len(customers) > 0:
                                     saveEmail = should_email_be_removed(
                                         customers.data[0], notified_file)
                                     if(saveEmail):
                                         continue
-                                else:
-                                    # look for email in stripe owasp_email metadata
-                                    item = search_for_customer_email(
-                                        stripe_owasp_emails, user_email)
-                                    if item != None:
-                                        customers = stripe.Customer.list(
-                                            email=item['Email'])
-                                        if len(customers) > 0:
-                                            saveEmail = should_email_be_removed(
-                                                customers.data[0], notified_file)
-                                            if(saveEmail):
-                                                continue
+                                #else:
+                                    # not needed anymore - look for email in stripe owasp_email metadata
+                                    #item = search_for_customer_email(
+                                    #    stripe_owasp_emails, user_email)
+                                    #if item != None:
+                                    #    customers = stripe.Customer.list(
+                                    #        email=item['Email'])
+                                    #    if len(customers) > 0:
+                                    #        saveEmail = should_email_be_removed(
+                                    #            customers.data[0], notified_file)
+                                    #        if(saveEmail):
+                                    #            continue
 
                                 remove_file.write(
                                     user['primaryEmail'] + "\n")
@@ -155,27 +163,6 @@ def get_leader_emails():
         message = template.format(type(ex).__name__, ex.args)
         logging.exception(message)
         raise
-
-
-def get_customers_from_stripe_export():
-    try:
-        with open('customers.json') as f:
-            data = json.load(f)
-            return data
-
-    except Exception as ex:
-        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        logging.exception(message)
-        raise
-
-
-def search_for_customer_email(customer_emails, email):
-    for item in customer_emails:
-        if item['owasp_email'] == email:
-            return item
-    return None
-
 
 def SendResultsEmail(deleted_emails_count, errors_count):
     try:
@@ -268,6 +255,9 @@ def should_email_be_removed(customer, notified_file):
 
         membership_notified_date = metadata.get(
             'membership_notified_date', None)
+        if membership_notified_date is None:
+            logging.exception('membership_notified_date is empty for customer {customer_id}')
+            return False
         notified_date = date.strptime(membership_notified_date, "%Y-%m-%d")
         days_sent = date.utcnow() - notified_date
         last_notification =  metadata.get(
@@ -303,18 +293,19 @@ def send_notification(customer, day):
 
 
 def email_found_with_copper(email):
-
-    opps = cp.FindOpportunities(email)
-    for opp in opps:
-        topp = cp.GetOpportunity(opp['id'])
-        if topp != None and 'Membership' in topp['name'] and topp['pipeline_stage_id'] == 3381438:  # Good enough for now
-            end = cp.GetCustomFieldValue(
-                topp['custom_fields'], cp.cp_opportunity_end_date)
-            if end != None and date.fromtimestamp(end) >= date.utcnow():
-                print(f'Copper found membership for {email}')
-                return True
-    return False
-
+    try:
+        opp = cp.FindMemberOpportunity(email)
+        if opp != None:
+            print(f'Copper found membership for {email}')
+            return True
+        else:
+            print(f'No membership found in Copper for {email}')
+            return False
+    except Exception as ex:
+        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        logging.exception(message)
+        raise
 
 def cleanup_customer_metadata():
 
@@ -325,3 +316,52 @@ def cleanup_customer_metadata():
         if membership_notified is not None:
             stripe.Customer.modify(customer['id'], metadata={
                 "membership_notified": "", "membership_notified_date": ""},)
+
+def test_copper_logic():
+    with open('email-found-in-copper.txt', 'w') as in_copper_file:
+        with open('email-not-in-copper.txt', 'w') as not_in_copper_file:
+            try:
+                og = OWASPGoogle()
+                cp = copper.OWASPCopper()
+                next_page_token = None
+                
+                while True:
+                    google_users = og.GetActiveUsers(next_page_token)
+                    
+                    for user in google_users['users']:
+                        user_email = user['primaryEmail'].lower()
+                        
+                        # check if they are in Copper
+                        if(email_found_with_copper(user_email)):
+                            in_copper_file.write(user['primaryEmail'] + "\n")
+                        else:
+                            not_in_copper_file.write(user['primaryEmail'] + "\n")
+                    next_page_token = google_users.get('nextPageToken')
+                    if not next_page_token:
+                        break       
+            except Exception as ex:
+                template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
+                message = template.format(type(ex).__name__, ex.args)
+                logging.exception(message)
+                raise
+        in_copper_file.close()
+    not_in_copper_file.close()
+
+#not needed since we're not checking for owasp_email meta field in Stripe
+#def get_customers_from_stripe_export():
+#    try:
+#        with open('customers.json') as f:
+#            data = json.load(f)
+#            return data
+
+#    except Exception as ex:
+#        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
+#        message = template.format(type(ex).__name__, ex.args)
+#        logging.exception(message)
+#        raise
+#
+#def search_for_customer_email(customer_emails, email):
+#    for item in customer_emails:
+#        if item['owasp_email'] == email:
+#            return item
+#    return None
