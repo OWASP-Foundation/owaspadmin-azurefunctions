@@ -42,6 +42,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             'name': ['No first or last name.  Unable to auto-provision email']
         }
         return return_response(errors, False)
+    metadata = customer.get('metadata', None)
+    if metadata:
+        owasp_email = metadata.get('owasp_email', None)
+        if owasp_email:
+            errors = {
+                'email': ['Only one OWASP email address is allowed per member.']
+            }
+            return return_response(errors, False)
+            
     first_name = customer_name.lower().strip().split(' ')[0]
     last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
     nfn = unicodedata.normalize('NFD', first_name)
