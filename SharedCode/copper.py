@@ -171,9 +171,9 @@ class OWASPCopper:
                     r = requests.get(url, headers=self.GetHeaders())
                     if r.ok:
                         opportunity = json.loads(r.text)
-                        if 'Lifetime' in opportunity['name'] or (opportunity['name'] == 'Membership' and opportunity['monetary_value'] == 500):
+                        if 'Lifetime' in opportunity['name'] or ('Membership' in opportunity['name'] and opportunity['monetary_value'] == 500):
                             return r.text
-                        elif 'Membership' not in opportunity['name']:
+                        elif 'Membership' not in opportunity['name'] or 'Corporate' in opportunity['name']:
                             continue
                         
                         for cfield in opportunity['custom_fields']:
@@ -189,6 +189,8 @@ class OWASPCopper:
                                         tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
                                         if mend == tend:
                                             return r.text
+                                else:
+                                    logging.error(f"Membership end is missing for {email}")
 
                     else:
                         logging.info("Failed to get opportunity: {r.text}")
