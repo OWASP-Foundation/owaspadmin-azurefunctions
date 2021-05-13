@@ -262,7 +262,7 @@ class OWASPCopper:
             'name':name,
             'emails': [
                 {
-                    'email':email,
+                    'email':email.lower(),
                     'category': 'work'
                 }
             ]
