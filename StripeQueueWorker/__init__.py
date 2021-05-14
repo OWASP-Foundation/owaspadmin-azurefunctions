@@ -8,10 +8,11 @@ from datetime import datetime
 from datetime import timedelta
 from typing import Dict
 import azure.functions as func
+
 from ..SharedCode.eventbot import registrant
-from SharedCode.copper import OWASPCopper
-from ..SharedCode import copper
+from ..SharedCode.copper import OWASPCopper
 from ..SharedCode.googleapi import OWASPGoogle
+from ..SharedCode import helperfuncs
 
 from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
@@ -225,15 +226,24 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
         )
         
         customer_email = customer.get('email')
-        
+        cop = OWASPCopper()
         try:
             if monetary_value > 500: # most likely in 5000 = 50.00 format as there is no membership for individuals > 500.00
                 monetary_value = monetary_value * .01
-            cop = OWASPCopper()
             cop.CreateOWASPMembership(customer_id, payment_id, customer_name, customer_email, subscription_data, monetary_value)
             
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err}')
+
+        try:
+            member = cop.FindPersonByEmail(customer_email)
+            if member:
+                owasp_email = helperfuncs.get_owasp_email(member)
+                helperfuncs.unsuspend_google_user(owasp_email)
+            else:
+                logging.warn("No member found in copper")        
+        except Exception as err:
+            logging.error(f'Failed attempting to find and possibly unsuspend Google email: {err}')
     
 def get_subscription_data_from_event(event):
     description = event["display_items"][0]["custom"]["description"]

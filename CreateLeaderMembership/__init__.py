@@ -4,6 +4,8 @@ import re
 import azure.functions as func
 from ..SharedCode.github import OWASPGitHub
 from ..SharedCode import helperfuncs
+from ..SharedCode.copper import OWASPCopper
+
 import base64
 from datetime import datetime, timedelta
 import stripe
@@ -124,6 +126,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 fname = name[0: name.find(' ')]
                 lname = name[name.find(' ') + 1:]
                 helperfuncs.create_complimentary_member(fname, lname, email, company, country, postal_code, datetime.today().strftime("%Y-%m-%d"), (datetime.today() + timedelta(364)).strftime("%Y-%m-%d"), membership_type, mailing_list, True)
+                try:
+                    cop = OWASPCopper()
+                    member = cop.FindPersonByEmail(email)
+                    if member:
+                        owasp_email = helperfuncs.get_owasp_email(member)
+                        helperfuncs.unsuspend_google_user(owasp_email)
+                    else:
+                        logging.warn("No member found in copper")        
+                except Exception as err:
+                    logging.error(f'Failed attempting to find and possibly unsuspend Google email: {err}')
+                
                 status_code = 200
                 result = { "success": "User created."}
         else:

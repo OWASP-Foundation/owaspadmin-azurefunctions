@@ -12,6 +12,7 @@ import stripe
 from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.owaspmailchimp import OWASPMailchimp
 from ..SharedCode.copper import OWASPCopper
+from ..SharedCode.googleapi import OWASPGoogle
 
 
 def get_datetime_helper(datestr):
@@ -34,6 +35,31 @@ def get_datetime_helper(datestr):
                     pass
 
     return retdate
+
+def get_owasp_email(member, cp):
+    result = ''
+    og = OWASPGoogle()
+
+    if member:
+        for email in member['emails']:
+            if '@owasp.org' in email['email']:
+                return email['email']
+            else:
+                user = og.GetUser(email['email'])
+                if user:
+                    for email in user['emails']:
+                        if '@owasp.org' in email['address']:
+                            cp.UpdatePerson(member['id'], other_email=email['address'])
+                            return { 'email': email['address'] }
+
+def unsuspend_google_user(owasp_email):
+    og = OWASPGoogle()
+    user = og.GetUser(owasp_email)
+    if user and user['suspended']:
+        for email in user['emails']:
+            if '@owasp.org' in email['address']:
+                if not og.UnsuspendUser(email['address']):
+                    logging.warn(f"Failed to unsuspend {email['address']}")
 
 # for leaders, the check should exist in the azure function to not allow 
 # complimentary membership if already a member unless within some number 
