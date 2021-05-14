@@ -212,3 +212,11 @@ class OWASPGoogle:
     def GetActiveUsers(self, next_page_token):
         results = self.admin.users().list(domain='owasp.org', pageToken=next_page_token).execute()
         return results
+
+    def GetUser(self, cid, showDeleted=False):
+        results = self.admin.users().list(domain='owasp.org', query=f"email:{cid}", showDeleted=showDeleted).execute()
+        if 'users' in results and len(results['users']) > 0:
+            return results['users']
+        
+
+        return None
