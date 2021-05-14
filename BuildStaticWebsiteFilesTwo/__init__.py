@@ -50,8 +50,9 @@ def build_leaders_json(gh, repos):
     #repos = gh.GetPublicRepositories('www-')
     for repo in repos:
         stype = ''
-        if repo['name'] == 'www-projectchapter-example':
-            continue
+        # Temporarily suspend this check for testing purposes
+        #if repo['name'] == 'www-projectchapter-example':
+        #    continue
         
         if 'www-chapter' in repo['url']:
             stype = 'chapter'
