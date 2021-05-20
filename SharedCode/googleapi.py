@@ -210,7 +210,7 @@ class OWASPGoogle:
         return result
         
     def GetActiveUsers(self, next_page_token):
-        results = self.admin.users().list(domain='owasp.org', pageToken=next_page_token).execute()
+        results = self.admin.users().list(domain='owasp.org', query="isSuspended=false", pageToken=next_page_token).execute()
         return results
 
     def GetUser(self, cid, showDeleted=False):
@@ -224,18 +224,18 @@ class OWASPGoogle:
     def SuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
         user = self.GetUser(email)
         if user:
-            user['suspended'] = True
+            user[0]['suspended'] = True
 
-        results = self.admin.users().update(userKey=email, body=user).execute()
+        results = self.admin.users().update(userKey=email, body=user[0]).execute()
 
         return ('primaryEmail' in results)
 
     def UnsuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
         user = self.GetUser(email)
         if user:
-            user['suspended'] = False
+             user[0]['suspended'] = True
 
-        results = self.admin.users().update(userKey=email, body=user).execute()
+        results = self.admin.users().update(userKey=email, body= user[0]).execute()
 
         return ('primaryEmail' in results)
     

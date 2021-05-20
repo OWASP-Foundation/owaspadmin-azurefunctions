@@ -6,6 +6,9 @@ from sendgrid.helpers.mail import FileType
 from sendgrid.helpers.mail import Disposition
 
 from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import From
+
 from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.googleapi import OWASPGoogle
 import datetime
@@ -21,34 +24,36 @@ from ..SharedCode import copper
 stripe.api_key = os.environ["STRIPE_SECRET"]
 cp = copper.OWASPCopper()
 
-
 def main(mytimer: func.TimerRequest) -> None:
+    
     utc_timestamp = date.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 
     if mytimer.past_due:
         logging.info('The timer is past due!')
 
-    logging.info('Python timer trigger function ran at %s', utc_timestamp)
+    logging.info('Python timer trigger for disable-owasp-emails function ran at %s', utc_timestamp)
 
     # clean up metadata only
-    setting = os.environ.get('Cleanup.Stripe.Meta', None)
+    setting = os.environ.get('Disable.OWASP.Emails.Cleanup.Stripe.Meta', None)
     if setting is not None and setting == 'true':
         cleanup_customer_metadata()
         return
-    
+
     # clean up metadata only
-    setting = os.environ.get('Test.Copper', None)
+    setting = os.environ.get('Disable.OWASP.Emails.Test.Copper', None)
     if setting is not None and setting == 'true':
         test_copper_logic()
         return
 
-    #checking of owasp_email meta in Stripe not needed
-    #stripe_owasp_emails = get_customers_from_stripe_export()
-    #if len(stripe_owasp_emails) == 0:
-    #    logging.error(
-    #        "Did not load any emails for the leaders.  Aborting process.")
-    #    return
+    test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', False)
+    test_users = [
+        'ulysses.one.suspender@owasp.org', 
+        'ulysses.two.suspender@owasp.org',
+        'ulysses.three.suspender@owasp.org',
+        'ulysses.four.suspender@owasp.org',
+        'ulysses.five.suspender@owasp.org'
+        ]
 
     leader_emails = get_leader_emails()
     if len(leader_emails) == 0:
@@ -75,6 +80,10 @@ def main(mytimer: func.TimerRequest) -> None:
                             try:
                                 user_email = user['primaryEmail'].lower()
 
+                                #test logic
+                                if  test_mode == 'true' and user_email not in test_users:
+                                    continue
+                                
                                 # check if they are in Copper
                                 if(email_found_with_copper(user_email)):
                                     save_leaders_file.write(
@@ -96,23 +105,13 @@ def main(mytimer: func.TimerRequest) -> None:
                                         customers.data[0], notified_file)
                                     if(saveEmail):
                                         continue
-                                #else:
-                                    # not needed anymore - look for email in stripe owasp_email metadata
-                                    #item = search_for_customer_email(
-                                    #    stripe_owasp_emails, user_email)
-                                    #if item != None:
-                                    #    customers = stripe.Customer.list(
-                                    #        email=item['Email'])
-                                    #    if len(customers) > 0:
-                                    #        saveEmail = should_email_be_removed(
-                                    #            customers.data[0], notified_file)
-                                    #        if(saveEmail):
-                                    #            continue
-
-                                remove_file.write(
-                                    user['primaryEmail'] + "\n")
-                                deleted_emails_count = deleted_emails_count + 1
-
+                                    else:
+                                        og.SuspendUser(user['primaryEmail'])
+                                        remove_file.write(
+                                            user['primaryEmail'] + "\n")
+                                        deleted_emails_count = deleted_emails_count + 1
+                                else:
+                                    add_user_to_stripe_and_notify(user_email, user['name']['fullName'], notified_file)
                             except Exception as ex:
                                 template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
                                 message = template.format(
@@ -131,8 +130,6 @@ def main(mytimer: func.TimerRequest) -> None:
         message = template.format(type(ex).__name__, ex.args)
         logging.exception(message)
         raise
-
-    #SendResultsEmail(deleted_emails_count, errors_count)
 
 
 def get_leader_emails():
@@ -164,59 +161,6 @@ def get_leader_emails():
         logging.exception(message)
         raise
 
-def SendResultsEmail(deleted_emails_count, errors_count):
-    try:
-        message = Mail(
-            from_email='noreply@owasp.org',
-            to_emails='ccapellan@gmail.com',
-            subject='Daily Email Cleanup, ' + \
-                str(errors_count) + ' errors, ' + str(deleted_emails_count) + '  addresses disabled',
-            html_content='<strong>Please find the results attached.</strong>')
-
-        with open('save-email-stripe.txt', 'rb') as f:
-            data = f.read()
-            f.close()
-        encoded_file = base64.b64encode(data).decode()
-        attachedFile = Attachment(
-            FileContent(encoded_file),
-            FileName('save-email-stripe.txt'),
-            FileType('application/txt'),
-            Disposition('attachment')
-        )
-        message.attachment = attachedFile
-
-        with open('save-email-leaders.txt', 'rb') as f:
-            data = f.read()
-            f.close()
-        encoded_file = base64.b64encode(data).decode()
-        attachedFile = Attachment(
-            FileContent(encoded_file),
-            FileName('save-email-leaders.txt'),
-            FileType('application/txt'),
-            Disposition('attachment')
-        )
-        message.attachment = attachedFile
-
-        with open('delete-email.txt', 'rb') as f:
-            data = f.read()
-            f.close()
-        encoded_file = base64.b64encode(data).decode()
-        attachedFile = Attachment(
-            FileContent(encoded_file),
-            FileName('delete-email.txt'),
-            FileType('application/txt'),
-            Disposition('attachment')
-        )
-        message.attachment = attachedFile
-
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as ex:
-        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        logging.exception(message)
-        raise
-
 
 def should_email_be_removed(customer, notified_file):
     try:
@@ -240,43 +184,50 @@ def should_email_be_removed(customer, notified_file):
         membership_notified = metadata.get('membership_notified', None)
         customer_id = customer['id']
 
-        # send 1 day notification
+        # send 15 day notification
         if membership_notified == None:
-            send_notification(customer, 1)
-            notified_file.write(
-                customer['email'] + '(1 day notification)' + "\n")
-            stripe.Customer.modify(customer_id, metadata={
-                "membership_notified": "true"},)
-            stripe.Customer.modify(customer_id, metadata={
-                "membership_notified_date": date.utcnow().strftime('%Y-%m-%d')},)
-            stripe.Customer.modify(customer_id, metadata={
-                "membership_last_notification": '1 day'},)
+            notification_sent = send_notification(customer['email'], 15)
+            if notification_sent:
+                notified_file.write(
+                    customer['email'] + '(15 day notification)' + "\n")
+                stripe.Customer.modify(customer_id, metadata={
+                    "membership_notified": "true"},)
+                stripe.Customer.modify(customer_id, metadata={
+                    "membership_notified_date": date.utcnow().strftime('%Y-%m-%d')},)
+                stripe.Customer.modify(customer_id, metadata={
+                    "membership_last_notification": '15 day'},)
+            else:
+                 notified_file.write(
+                    customer['email'] + '- notification could not be sent' + "\n")
             return True
 
         membership_notified_date = metadata.get(
             'membership_notified_date', None)
         if membership_notified_date is None:
-            logging.exception('membership_notified_date is empty for customer {customer_id}')
+            logging.exception(
+                'membership_notified_date is empty for customer {customer_id}')
             return False
         notified_date = date.strptime(membership_notified_date, "%Y-%m-%d")
         days_sent = date.utcnow() - notified_date
-        last_notification =  metadata.get(
+        last_notification = metadata.get(
             'membership_last_notification', None)
 
-        # send >1 day notifications
-        if days_sent.days >= 7 and last_notification is not '7 day':
-            send_notification(customer, 7)
+        # send >7 day notifications
+        if days_sent.days >= 7 and last_notification == '15 day':
+            send_notification(customer['email'], 7)
             stripe.Customer.modify(customer_id, metadata={
                 "membership_last_notification": "7 day"},)
             notified_file.write(
                 customer['email'] + '(7 day notification)' + "\n")
-        elif days_sent.days >= 15 and last_notification is not '15 day':
-            send_notification(customer, 15)
+
+        elif days_sent.days >= 15 and last_notification == '7 day':
+            send_notification(customer['email'], 1)
             stripe.Customer.modify(customer_id, metadata={
-                "membership_last_notification": "15 day"},)
+                "membership_last_notification": "1 day"},)
             notified_file.write(
-                customer['email'] + '(15 day notification)' + "\n")
-        elif days_sent.days >= 30:
+                customer['email'] + '(1 day notification)' + "\n")
+        
+        elif days_sent.days >= 15 and last_notification == '1 day':
             return False
 
         return True
@@ -288,8 +239,57 @@ def should_email_be_removed(customer, notified_file):
         raise
 
 
-def send_notification(customer, day):
-    logging.info(f"send {day} notice to user with email: {customer['email']}")
+def add_user_to_stripe_and_notify(email, fullname, notified_file):
+    #add user to Stripe
+    customer_request = stripe.Customer.create(email=email.lower(), 
+                                                  name=fullname,
+                                                  api_key=os.environ["STRIPE_SECRET"]
+                                                )
+
+    #send notification
+    notification_sent = send_notification(email, 15)
+    if notification_sent:
+        notified_file.write(
+            email + '(15 day notification)' + "\n")
+        stripe.Customer.modify(customer_request['id'], metadata={
+            "membership_notified": "true"},)
+        stripe.Customer.modify(customer_request['id'], metadata={
+            "membership_notified_date": date.utcnow().strftime('%Y-%m-%d')},)
+        stripe.Customer.modify(customer_request['id'], metadata={
+            "membership_last_notification": '15 day'},)
+    else:
+            notified_file.write(
+            email + '- notification could not be sent' + "\n")
+    return
+
+
+def send_notification(user_email, day):
+    template_id = None
+    if day == 1:
+        template_id = os.environ.get('SG_MEMBER_TEMPLATE_1_DAY')
+    elif day == 7:
+        template_id = os.environ.get('SG_MEMBER_TEMPLATE_7_DAY')
+    elif day == 15:
+        template_id = os.environ.get('SG_MEMBER_TEMPLATE_15_DAY')
+    else:
+        logging.exception('SendGrid message not found')
+        return False
+    
+    message = Mail(
+        from_email=From('noreply@owasp.org', 'OWASP'),
+        to_emails=user_email,
+        html_content='<strong>Email Removal</strong>')
+    message.template_id = template_id
+    
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+        return True
+    except Exception as ex:
+        template = "An exception of type {0} occurred while sending an email. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        logging.exception(message)
+        return False
 
 
 def email_found_with_copper(email):
@@ -307,6 +307,7 @@ def email_found_with_copper(email):
         logging.exception(message)
         raise
 
+
 def cleanup_customer_metadata():
 
     customers = stripe.Customer.list(limit=100)
@@ -315,7 +316,8 @@ def cleanup_customer_metadata():
         membership_notified = metadata.get('membership_notified', None)
         if membership_notified is not None:
             stripe.Customer.modify(customer['id'], metadata={
-                "membership_notified": "", "membership_notified_date": ""},)
+                "membership_notified": "", "membership_notified_date": "", "membership_last_notification": ""},)
+
 
 def test_copper_logic():
     with open('email-found-in-copper.txt', 'w') as in_copper_file:
@@ -324,21 +326,22 @@ def test_copper_logic():
                 og = OWASPGoogle()
                 cp = copper.OWASPCopper()
                 next_page_token = None
-                
+
                 while True:
                     google_users = og.GetActiveUsers(next_page_token)
-                    
+
                     for user in google_users['users']:
                         user_email = user['primaryEmail'].lower()
-                        
+
                         # check if they are in Copper
                         if(email_found_with_copper(user_email)):
                             in_copper_file.write(user['primaryEmail'] + "\n")
                         else:
-                            not_in_copper_file.write(user['primaryEmail'] + "\n")
+                            not_in_copper_file.write(
+                                user['primaryEmail'] + "\n")
                     next_page_token = google_users.get('nextPageToken')
                     if not next_page_token:
-                        break       
+                        break
             except Exception as ex:
                 template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)
@@ -346,22 +349,3 @@ def test_copper_logic():
                 raise
         in_copper_file.close()
     not_in_copper_file.close()
-
-#not needed since we're not checking for owasp_email meta field in Stripe
-#def get_customers_from_stripe_export():
-#    try:
-#        with open('customers.json') as f:
-#            data = json.load(f)
-#            return data
-
-#    except Exception as ex:
-#        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-#        message = template.format(type(ex).__name__, ex.args)
-#        logging.exception(message)
-#        raise
-#
-#def search_for_customer_email(customer_emails, email):
-#    for item in customer_emails:
-#        if item['owasp_email'] == email:
-#            return item
-#    return None

@@ -62,14 +62,17 @@ def remove_invalid_customer(customer):
         # check for metadata
         metadata = customer['metadata']
         if metadata != {}:
-            marked_for_deletion = metadata.get('cleanup_customer', None)
-            if marked_for_deletion:
-                delete_customer(customer_id)
-                return True
-            else:
-                logging.info("keep " + customer_id +
+            logging.info("keep " + customer_id +
                             " since metadata is not empty")
-                return False
+            return False
+            #marked_for_deletion = metadata.get('cleanup_customer', None)
+            #if marked_for_deletion:
+            #    delete_customer(customer_id)
+            #    return True
+            #else:
+            #    logging.info("keep " + customer_id +
+            #                " since metadata is not empty")
+            #    return False
 
         # check for active subscriptions
         active_subscription_count = customer["subscriptions"]["total_count"]
