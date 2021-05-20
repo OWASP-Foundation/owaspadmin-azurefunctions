@@ -110,7 +110,7 @@ def build_chapter_json(gh):
         doc = json.loads(r.text)
         sha = doc['sha']
 
-    contents = json.dumps(repos)
+    contents = json.dumps(repos, indent=4)
     r = gh.UpdateFile('owasp.github.io', '_data/chapters.json', contents, sha)
     if gh.TestResultCode(r.status_code):
         logging.info('Updated _data/chapters.json successfully')

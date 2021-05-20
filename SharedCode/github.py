@@ -256,6 +256,11 @@ class OWASPGitHub:
                         udate = datetime.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
                         addrepo['created'] = cdate.strftime('%c')
                         addrepo['updated'] = udate.strftime('%c')
+                        if pages:
+                            addrepo['build'] = pages['status']
+                        else:
+                            addrepo['build'] = 'no pages'
+
                         r = self.GetFile(repoName, 'index.md')
                         if self.TestResultCode(r.status_code):
                             doc = json.loads(r.text)
@@ -300,28 +305,37 @@ class OWASPGitHub:
                                 gtype = 'More info soon...' 
                             addrepo['pitch'] = gtype.strip()
                             
-                            ndx = content.find('meetup.com/')
+                            ndx = content.find('meetup-group:')
                             if ndx > -1:
-                                ndx += 11
-                                eolfs = content.find('/', ndx)
-                                
-                                if eolfs - ndx <= 6:
-                                    ndx = eolfs
-                                    eolfs = content.find('/', ndx + 1)
-
-                                eolp = content.find(')', ndx + 1)
-                                eols = content.find(' ', ndx + 1)
-                                eol = eolfs
-                                if eolp > -1 and eolp < eol:
-                                    eol = eolp
-                                if eols > -1 and eols < eol:
-                                    eol = eols
-
+                                ndx += 13
+                                eol=content.find('\n', ndx)
                                 mu = content[ndx:eol]
-                                if '/' in mu:
-                                    mu = mu.replace('/','')
                                 if len(mu.strip()) > 0:
                                     addrepo['meetup-group'] = mu.strip()
+
+                            if 'meetup-group' not in addrepo:        
+                                ndx = content.find('meetup.com/')
+                                if ndx > -1:
+                                    ndx += 11
+                                    eolfs = content.find('/', ndx)
+                                    
+                                    if eolfs - ndx <= 6:
+                                        ndx = eolfs
+                                        eolfs = content.find('/', ndx + 1)
+
+                                    eolp = content.find(')', ndx + 1)
+                                    eols = content.find(' ', ndx + 1)
+                                    eol = eolfs
+                                    if eolp > -1 and eolp < eol:
+                                        eol = eolp
+                                    if eols > -1 and eols < eol:
+                                        eol = eols
+
+                                    mu = content[ndx:eol]
+                                    if '/' in mu:
+                                        mu = mu.replace('/','')
+                                    if len(mu.strip()) > 0:
+                                        addrepo['meetup-group'] = mu.strip()
 
                             results.append(addrepo)
 
