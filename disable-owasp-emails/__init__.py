@@ -46,7 +46,7 @@ def main(mytimer: func.TimerRequest) -> None:
         test_copper_logic()
         return
 
-    test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', False)
+    test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
     test_users = [
         'ulysses.one.suspender@owasp.org', 
         'ulysses.two.suspender@owasp.org',
