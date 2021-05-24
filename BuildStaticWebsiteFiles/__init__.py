@@ -248,6 +248,12 @@ def main(mytimer: func.TimerRequest) -> None:
     except Exception as err:
         logging.error(f"Exception building committees json file: {err}")
 
+    logging.info('Building sitedata/events yml file')
+    try:
+        update_events_sitedata(gh)
+    except Exception as err:
+        logging.error(f"Exception building sitedata/events yml: {err}")
+
     logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)    
 
 class Leader:
