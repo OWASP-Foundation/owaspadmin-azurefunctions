@@ -38,7 +38,7 @@ def add_to_leaders(repo, content, all_leaders, stype):
                 leader = {}
                 leader['name'] = name
                 leader['email'] = email.replace('mailto://', '').replace('mailto:','').lower()
-                leader['group'] = repo['title']
+                leader['group'] = repo['title'].replace("\"", "" )
                 leader['group-type'] = stype
                 leader['group_url'] = repo['url']
                 

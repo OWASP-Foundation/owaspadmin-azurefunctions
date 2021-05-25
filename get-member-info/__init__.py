@@ -66,6 +66,7 @@ def get_token_data(token):
             data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
             break
         except Exception as err:
+            logging.info(f"Exception decoding token: {err}")
             pass
 
     return data
