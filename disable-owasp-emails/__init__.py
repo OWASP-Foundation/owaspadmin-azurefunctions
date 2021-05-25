@@ -46,6 +46,8 @@ def main(mytimer: func.TimerRequest) -> None:
         test_copper_logic()
         return
 
+    emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
+
     test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
     test_users = [
         'ulysses.one.suspender@owasp.org', 
@@ -84,6 +86,10 @@ def main(mytimer: func.TimerRequest) -> None:
                                 if  test_mode == 'true' and user_email not in test_users:
                                     continue
                                 
+                                #skip emails that should be ignored
+                                if user_email in emails_to_ignore:
+                                    continue
+
                                 # check if they are in Copper
                                 if(email_found_with_copper(user_email)):
                                     save_leaders_file.write(
