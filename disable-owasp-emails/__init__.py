@@ -73,9 +73,9 @@ def main(mytimer: func.TimerRequest) -> None:
         count = 0
         errors_count = 0
 
-        with open('save-email-leaders.txt', 'w') as save_leaders_file:
-            with open('owasp-email-removed.txt', 'w') as remove_file:
-                with open('notified-users.txt', 'w') as notified_file:
+        with open('/tmp/save-email-leaders.txt', 'w') as save_leaders_file:
+            with open('/tmp/owasp-email-removed.txt', 'w') as remove_file:
+                with open('/tmp/notified-users.txt', 'w') as notified_file:
                     while True:
                         google_users = og.GetActiveUsers(next_page_token)
                         for user in google_users['users']:
@@ -147,7 +147,7 @@ def get_leader_emails():
             doc = json.loads(gr.text)
             content = base64.b64decode(doc['content']).decode()
             data = json.loads(content)
-            with open('github-leaders-data.json', 'w') as outfile:
+            with open('/tmp/github-leaders-data.json', 'w') as outfile:
                 json.dump(data, outfile)
         else:
             logging.error('Error retreiving leaders file from Github')
@@ -326,8 +326,8 @@ def cleanup_customer_metadata():
 
 
 def test_copper_logic():
-    with open('email-found-in-copper.txt', 'w') as in_copper_file:
-        with open('email-not-in-copper.txt', 'w') as not_in_copper_file:
+    with open('/tmp/email-found-in-copper.txt', 'w') as in_copper_file:
+        with open('/tmp/email-not-in-copper.txt', 'w') as not_in_copper_file:
             try:
                 og = OWASPGoogle()
                 cp = copper.OWASPCopper()

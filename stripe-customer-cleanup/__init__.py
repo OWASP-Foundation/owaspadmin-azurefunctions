@@ -32,10 +32,10 @@ def main(mytimer: func.TimerRequest) -> None:
             removed = remove_invalid_customer(customer)
             if not removed:
                 fix_emailing_casing(customer)
-                with open('stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
+                with open('/tmp/stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
                     processed_file.write(customer['id'])
             else:
-                with open('deletedCustomers.txt', 'a') as deleted_file:
+                with open('/tmp/deletedCustomers.txt', 'a') as deleted_file:
                     if customer['email'] is not None:
                         deleted_file.write(customer['email'] + '\r') 
             
@@ -45,7 +45,7 @@ def main(mytimer: func.TimerRequest) -> None:
             logging.info('done processing customer: ' + customer['id'] + 'count up to ' + str(num_processed))
         
         logging.info("finished processing all customers.  Cleaning up last processed file.")
-        with open('stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
+        with open('/tmp/stripe-customer-cleanup-last-processed.txt', 'w') as processed_file:
                 processed_file.write('') 
 
     except Exception as ex:
