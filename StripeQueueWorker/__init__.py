@@ -238,7 +238,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
         try:
             member = cop.FindPersonByEmail(customer_email)
             if member:
-                owasp_email = helperfuncs.get_owasp_email(member)
+                owasp_email = helperfuncs.get_owasp_email(member, cop)
                 helperfuncs.unsuspend_google_user(owasp_email)
             else:
                 logging.warn("No member found in copper")        

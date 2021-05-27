@@ -130,7 +130,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     cop = OWASPCopper()
                     member = cop.FindPersonByEmail(email)
                     if member:
-                        owasp_email = helperfuncs.get_owasp_email(member)
+                        owasp_email = helperfuncs.get_owasp_email(member, cop)
                         helperfuncs.unsuspend_google_user(owasp_email)
                     else:
                         logging.warn("No member found in copper")        
