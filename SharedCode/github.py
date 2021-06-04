@@ -26,6 +26,7 @@ class OWASPGitHub:
     GH_REPOTYPE_PROJECT = 0
     GH_REPOTYPE_CHAPTER = 1
     GH_REPOTYPE_COMMITTEE = 2
+    GH_REPOTYPE_EVENT = 3
 
     def CreateRepository(self, repoName, rtype):
         repoName = self.FormatRepoName(repoName, rtype)
@@ -120,10 +121,12 @@ class OWASPGitHub:
     def FormatRepoName(self, repoName, rtype):
         
         resName = ""
-        if rtype == 0:
+        if rtype == self.GH_REPOTYPE_PROJECT:
             resName = "www-project-"
-        elif rtype == 1:
+        elif rtype == self.GH_REPOTYPE_CHAPTER:
             resName = "www-chapter-"
+        elif rtype == self.GH_REPOTYPE_EVENT:
+            resName = "www-revent-"
         else:
             resName = "www-committee-"
     

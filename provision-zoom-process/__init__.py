@@ -93,7 +93,7 @@ def create_zoom_account(chapter_url):
     #  3.) determining which zoom group to put them in (currently 4 groups)
 
     #  4.) sending onetimesecret link with password to person who requested access
-    chapter_name = chapter_url.replace('www-projectchapter-','').replace('www-chapter-', '').replace('www-project-', '').replace('www-committee-','').replace(' ', '-')
+    chapter_name = chapter_url.replace('www-projectchapter-','').replace('www-chapter-', '').replace('www-project-', '').replace('www-committee-','').replace('www-revent', '').replace(' ', '-')
     leadersemail = f"{chapter_name}-leaders@owasp.org"
     zoom_accounts = json.loads(os.environ['SHARED_ZOOM_ACCOUNTS'])
     if IsAlreadyProvisioned(leadersemail, zoom_accounts):
