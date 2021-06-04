@@ -60,6 +60,8 @@ def build_leaders_json(gh, repos):
             stype = 'committee'
         elif 'www-project' in repo['url']:
             stype = 'project'
+        elif 'www-revent' in repo['url']:
+            stype = 'event'
         else:
             continue
 
@@ -142,7 +144,7 @@ def add_to_events(mue, events, repo):
     if len(mue) <= 0 or 'errors' in mue:
         return events
     
-    group = repo.replace('www-chapter-','').replace('www-project-','').replace('www-committee-','').replace('-', ' ')
+    group = repo.replace('www-chapter-','').replace('www-project-','').replace('www-committee-','').replace('www-revent-','').replace('-', ' ')
     group = " ".join(w.capitalize() for w in group.split())
                 
     for mevent in mue:
@@ -172,7 +174,8 @@ def create_community_events(gh, mu, repos):
     
     events = []
     for repo in repos:
-        if 'www-chapter' not in repo['name'] and 'www-project' not in repo['name'] and 'www-committee' not in repo['name']:
+        rname = repo['name']
+        if 'www-chapter' not in rname and 'www-project' not in rname and 'www-committee' not in rname and 'www-revent' not in rname:
             continue
 
         if 'meetup-group' in repo and repo['meetup-group']:
@@ -180,7 +183,7 @@ def create_community_events(gh, mu, repos):
                 mstr = mu.GetGroupEvents(repo['meetup-group'])
                 if mstr:
                     muej = json.loads(mstr)
-                    add_to_events(muej, events, repo['name'])
+                    add_to_events(muej, events, rname)
                 
 
     if len(events) <= 0:
