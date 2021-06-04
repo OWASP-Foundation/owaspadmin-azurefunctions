@@ -48,11 +48,12 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding project leader...")
 
             emaillinks.append(f'[{leader}](mailto:{email})')
-            logging.info("Creating github repository")
-            resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers)
-            # do copper integration here
-            if not 'Failed' in resString:
-                resString = CreateCopperObjects(project_name, leaders, emails)
+            
+        logging.info("Creating github repository")
+        resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers)
+        # do copper integration here
+        if not 'Failed' in resString:
+            resString = CreateCopperObjects(project_name, leaders, emails)
     else:
         resString = "Failed due to non matching leader names with emails"
 
