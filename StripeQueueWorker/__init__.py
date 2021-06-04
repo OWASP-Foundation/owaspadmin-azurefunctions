@@ -211,6 +211,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
+        
         subscription_data['membership_recurring'] = recurring
         subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
         
@@ -260,7 +261,7 @@ def get_subscription_data_from_event(event):
         add_days = 730
     elif "Lifetime" in description:
         membership_type = 'lifetime'
-        period_end = None
+        period_end = '' #if pass None, the modify call in stripe skips it (unlike the customer.save call)
         add_days = None
     # no need to worry with complimentary here as it isn't an option to pay for in Stripe
 
@@ -431,10 +432,10 @@ def get_merge_fields(metadata, subscription_data, customer_id):
         membership_type = customer_metadata.get('membership_type', '')
         membership_recurring = customer_metadata.get('membership_recurring', 'no')
 
-        if membership_end is not None:
-            merge_fields['MEMEND'] = membership_end
-        elif 'lifetime' in membership_type:
+        if 'lifetime' in membership_type:
             merge_fields['MEMEND'] = ''
+        elif membership_end is not None:
+            merge_fields['MEMEND'] = membership_end
 
         if membership_type is not None:
             merge_fields['MEMTYPE'] = membership_type
