@@ -5,17 +5,31 @@ from pathlib import Path
 import os
 import logging
 import datetime
+import urllib
+
+# Major update 6.7.2021 to match, upgrade Azure version of similar file
 
 class OWASPGitHub:
     apitoken = os.environ["GH_APITOKEN"]
     user = "harold.blankenship@owasp.com"
     gh_endpoint = "https://api.github.com/"
     org_fragment = "orgs/OWASP/repos"
+    repo_fragment = "repos/OWASP/:repo"
+    commit_fragment = "repos/OWASP/:repo/commits"
     content_fragment = "repos/OWASP/:repo/contents/:path"
     pages_fragment = "repos/OWASP/:repo/pages"
     team_addrepo_fragment = "teams/:team_id/repos/OWASP/:repo"
     team_getbyname_fragment = "orgs/OWASP/teams/:team_slug"
-    collab_fragment = "repos/OWASP/:repo/collaborators/:username"
+    search_repos_fragment = "search/repositories"
+
+    of_org_fragment = "orgs/OWASP-Foundation/repos"
+    of_content_fragment = "repos/OWASP-Foundation/:repo/contents/:path"
+    of_pages_fragment = "repos/OWASP-Foundation/:repo/pages"
+    of_team_addrepo_fragment = "teams/:team_id/repos/OWASP-Foundation/:repo"
+    of_team_getbyname_fragment = "orgs/OWASP-Foundation/teams/:team_slug"
+    
+    user_fragment = "users/:username"
+    collaborator_fragment = "repos/OWASP/:repo/collaborators/:username"
 
     PERM_TYPE_PULL = "pull"
     PERM_TYPE_PUSH = "push"
@@ -69,6 +83,22 @@ class OWASPGitHub:
         #bytestosend = base64.b64encode(filecstr.encode())   
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.get(url = url, headers=headers)
+        return r
+
+    def GetOFFile(self, repo, filepath):
+        return self.GetFile(repo, filepath, self.of_content_fragment)
+
+    def DeleteFile(self, repo, filepath):
+        url = self.gh_endpoint + self.content_fragment
+        url = url.replace(":repo", repo)
+        url = url.replace(":path", filepath)
+
+        committer = {
+            "name" : "OWASP Foundation",
+            "email" : "owasp.foundation@owasp.org"
+        }
+        headers = {"Authorization": "token " + self.apitoken}
+        r = requests.delete(url = url, headers=headers)
         return r
 
     def SendFile(self, url, filename, replacetags = None, replacestrs = None):
@@ -213,6 +243,14 @@ class OWASPGitHub:
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
         }
         
+        qurl = "org:owasp is:public"
+        if matching:
+            qurl = qurl + f" {matching} in:name"
+        qdata = {
+            'q': qurl,
+            'per_page':100
+        }
+
         done = False
         pageno = 1
         pageend = -1
@@ -220,7 +258,8 @@ class OWASPGitHub:
         results = []
         while not done:
             pagestr = "?page=%d" % pageno
-            url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
+            #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
+            url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata)
             r = requests.get(url=url, headers = headers)
             
             if self.TestResultCode(r.status_code):
@@ -234,12 +273,13 @@ class OWASPGitHub:
                 
                 pageno = pageno + 1
                 
-                for repo in repos:
+                for repo in repos['items']:
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
                         
-                    if not matching or matching in repoName:
+                    # even if matching, we still only really want project, chapter, event, or committee repos here....
+                    if not matching or (matching in repoName and ('-project-' in repoName or '-chapter-' in repoName or '-committee-' in repoName or '-revent-' in repoName)):
                         if not istemplate:
                             pages = None
                             if haspages:
@@ -402,9 +442,12 @@ class OWASPGitHub:
 
         url = self.gh_endpoint + collabfrag
 
-        data = { "permission" : self.PERM_TYPE_ADMIN}
-        jsonData = json.dumps(data)
-        r = requests.put(url = url, headers=headers, data=jsonData)
+        # first do a get to see if they are already a user
+        r = requests.get(url = url, headers=headers)
+        if not r.ok:
+            data = { "permission" : self.PERM_TYPE_ADMIN}
+            jsonData = json.dumps(data)
+            r = requests.put(url = url, headers=headers, data=jsonData)
 
         return r
 
@@ -447,3 +490,69 @@ class OWASPGitHub:
                         repo_leaders.append(leader)
 
         return repo_leaders
+
+
+    def MoveFromOFtoOWASP(self, frompath, topath):
+        r = self.GetOFFile('OWASP-wiki-md', frompath)
+        r2 = self.GetFile('www-community', topath)
+        if r.ok and not r2.ok: # exists in 1, not in other
+            doc = json.loads(r.text)
+            content = base64.b64decode(doc["content"]).decode()
+            fcontent = '---\n\n'
+            fcontent += 'layout: col-sidebar\n'
+            fcontent += f"title: {frompath.replace('_', ' ')}\n"
+            fcontent += f'author: \n'
+            fcontent += f'contributors: \n'
+            if 'attacks/' in topath:
+                fcontent += f"permalink: /attacks/{frompath.replace('.md','')}\n"
+                fcontent += f"tag: attack, {frompath.replace('_', ' ')}\n"
+            else :
+                fcontent += f"permalink: /vulnerabilities/{frompath.replace('.md','')}\n"
+                fcontent += f"tag: vulnerability, {frompath.replace('_', ' ')}\n"
+
+            fcontent += 'auto-migrated: 1\n\n---\n\n'
+            fcontent += content
+
+            r = self.UpdateFile('www-community', topath, fcontent, '')
+
+        return r
+
+    def RepoExists(self, repoName):
+        repofrag = self.repo_fragment.replace(':repo', repoName)
+        headers = {"Authorization": "token " + self.apitoken,
+                "Accept":"application/vnd.github.nebula-preview+json"
+            }
+
+        url = self.gh_endpoint + repofrag
+        r = requests.get(url = url, headers=headers)
+        return r
+
+    def GetLastUpdate(self, repoName, file):
+        repofrag = self.commit_fragment.replace(':repo', repoName)
+        repofrag += f"?path={file}&page=1&per_page=1"
+        headers = {"Authorization": "token " + self.apitoken,
+                "Accept":"application/vnd.github.nebula-preview+json"
+            }
+
+        url = self.gh_endpoint + repofrag
+        r = requests.get(url = url, headers=headers)
+        datecommit = None
+        if r.ok:
+            res = json.loads(r.text)
+            datecommit = res[0]['commit']['committer']['date']
+
+        return datecommit
+
+    def FindUser(self, user):
+        url = self.gh_endpoint + self.user_fragment
+        url = url.replace(":username", user)
+        headers = {"Authorization": "token " + self.apitoken}
+        r = requests.get(url = url, headers=headers)
+        user = None
+        if r.ok:
+            try:
+                user = json.loads(r.text)
+            except json.JSONDecodeError:
+                pass
+
+        return user
