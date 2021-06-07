@@ -8,7 +8,8 @@ def main(req: func.HttpRequest,
          chmsg: func.Out[func.QueueMessage],
          prmsg: func.Out[func.QueueMessage],
          evtmsg: func.Out[func.QueueMessage],
-         cmmsg: func.Out[func.QueueMessage]
+         cmmsg: func.Out[func.QueueMessage],
+         evmsg: func.Out[func.QueueMessage]
          ) -> func.HttpResponse:
     logging.info('Slack Action Trigger')
     body = req.get_body()
@@ -17,6 +18,7 @@ def main(req: func.HttpRequest,
     #logging.info(jsonstr)
 
     # call event bot code if it is an interactive component related to events
+    # does not conflict with event-create which is for repo creation for event info pages
     if is_event_action(jsonstr):
         return event_bot(req, evtmsg)
 
@@ -31,6 +33,8 @@ def main(req: func.HttpRequest,
         prmsg.set(jsonstr)
     elif 'Committee Name' in jsonstr:
         cmmsg.set(jsonstr)
+    elif 'Event Name' in jsonstr:
+        evmsg.set(jsonstr)
 
     headers = {"Content-Type":"application/json;charset=utf-8"}
     

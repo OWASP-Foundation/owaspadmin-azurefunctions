@@ -43,6 +43,13 @@
       "name": "cmmsg",
       "queueName": "committeequeue",
       "connection": "AzureWebJobsStorage"
+    },
+    {
+      "type": "queue",
+      "direction": "out",
+      "name": "evmsg",
+      "queueName": "reventqueue",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }

@@ -1,0 +1,98 @@
+{
+    "type": "modal",
+    "title": {
+        "type": "plain_text",
+        "text": "owaspadmin",
+        "emoji": true
+    },
+    "submit": {
+        "type": "plain_text",
+        "text": "Submit",
+        "emoji": true
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+    },
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "The following information is required to create a committee:"
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "input",
+            "block_id": "cname-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "cname-value"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Event Name (omit OWASP and year)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "csite-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "csite-value"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Event Website (general website, not year-based usually)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "leadernames-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "leadernames-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Event Leader Names (one per line, first name last name format)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "emails-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "emails-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Event Leader Emails (one per line)",
+                "emoji": true
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "github-id",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "github-value",
+                "multiline": true
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Event Github Usernames (one per line)",
+                "emoji": true
+            }
+        }
+    ]
+}
