@@ -1,2 +1,2 @@
 ### [GROUPNAME] Information
-* [GROUPNAME Website]([:GROUPSITE_URL])
+* [Official Website]([:GROUPSITE_URL])
