@@ -46,12 +46,14 @@ class OWASPMeetup:
 
         return result    
 
-    def GetGroupEvents(self, groupname):
+    def GetGroupEvents(self, groupname, earliest = ''):
         headers = {
             'Accept': 'application/json',
             'Authorization': f'Bearer {self.oauth_token}'
         }
         event_url = self.meetup_api_url + f'/{groupname}/events?desc=true&sign=true'
+        if earliest:
+            event_url = event_url + f"&status=past&no_earlier_than={earliest}"
         res = requests.get(event_url, headers=headers)
         json_res = ''
         if res.ok:

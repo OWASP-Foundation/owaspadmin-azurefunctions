@@ -5,6 +5,7 @@ import re
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import helperfuncs
+from ..SharedCode import meetup
 import base64
 
 def build_groups_jsons(gh):
@@ -175,6 +176,22 @@ def build_chapter_json(repos, gh):
             repo['updated'] = dobj.strftime("%Y-%m-%d")
         except ValueError:
             pass
+        
+        ecount = 0
+        today = datetime.datetime.today()
+        earliest = f"{today.year - 1}-01-01T00:00:00.000"
+        if 'meetup-group' in repo:
+            mu = meetup.OWASPMeetup()
+            mu.Login()
+            estr = mu.GetGroupEvents(repo['meetup-group'], earliest)
+            if estr:
+                events = json.loads(estr)
+                for event in events:
+                    eventdate = datetime.datetime.strptime(event['local_date'], '%Y-%m-%d')
+                    tdelta = today = eventdate
+                    if tdelta.days > 0 and tdelta.days < 365:
+                        ecount = ecount + 1    
+        repo['meetings'] = ecount
 
     repos.sort(key=lambda x: x['name'])
     repos.sort(key=lambda x: x['region'], reverse=True)

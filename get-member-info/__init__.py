@@ -130,7 +130,7 @@ def fill_leader_details(memberinfo):
         content = base64.b64decode(doc['content']).decode(encoding='utf-8')
         leaders = json.loads(content)
         for email in memberinfo['emails']:
-            leader = next((sub for sub in leaders if sub['email'] == email), None)
+            leader = next((sub for sub in leaders if sub['email'] == email['email']), None)
             if leader:
                 leader_infos.append(leader)
         
