@@ -121,6 +121,23 @@ def LogIpFromRequestHeaders(req):
     if ':authority:' in req.headers:
         logging.info(f"Authority: {req.headers.get(':authority:')}")
 
+def fill_leader_details(memberinfo):
+    gh = OWASPGitHub()
+    r = gh.GetFile('owasp.github.io', '_data/leaders.json')
+    leader_infos = []
+    if r.ok:
+        doc = json.loads(r.text)
+        content = base64.b64decode(doc['content']).decode(encoding='utf-8')
+        leaders = json.loads(content)
+        for email in memberinfo['emails']:
+            leader = next((sub for sub in leaders if sub['email'] == email), None)
+            if leader:
+                leader_infos.append(leader)
+        
+        memberinfo['leader_info'] = leader_infos
+
+    return memberinfo
+
 
 def get_member_info(data):
     logging.info(data)
@@ -149,6 +166,7 @@ def get_member_info(data):
         member_info['address'] = person['address']
         member_info['phone_numbers'] = person['phone_numbers']
         member_info['member_number'] = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_stripe_number)
+        member_info = fill_leader_details(member_info)
     elif not opp:
         logging.info(f"Failed to get opportunity")
     else:
