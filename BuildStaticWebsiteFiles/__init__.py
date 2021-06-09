@@ -188,7 +188,7 @@ def build_chapter_json(repos, gh):
                 events = json.loads(estr)
                 for event in events:
                     eventdate = datetime.datetime.strptime(event['local_date'], '%Y-%m-%d')
-                    tdelta = today = eventdate
+                    tdelta = today - eventdate
                     if tdelta.days > 0 and tdelta.days < 365:
                         ecount = ecount + 1    
         repo['meetings'] = ecount
