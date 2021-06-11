@@ -434,7 +434,7 @@ class OWASPGitHub:
         return r
 
     def AddPersonToRepo(self, person, repo):
-        collabfrag = self.collab_fragment.replace(':repo', repo)
+        collabfrag = self.collaborator_fragment.replace(':repo', repo)
         collabfrag = collabfrag.replace(':username', person)
         headers = {"Authorization": "token " + self.apitoken,
             "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
