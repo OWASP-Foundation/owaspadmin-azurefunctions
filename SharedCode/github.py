@@ -223,7 +223,7 @@ class OWASPGitHub:
 
     def GetPages(self, repoName):
         headers = {"Authorization": "token " + self.apitoken,
-            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
+            "Accept":"application/vnd.github.v3+json"
         }
         result = ''
         url = self.gh_endpoint + self.pages_fragment
