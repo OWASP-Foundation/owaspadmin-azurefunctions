@@ -139,18 +139,34 @@
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Oceania",
+                            "text": "Central America",
                             "emoji": true
                         },
-                        "value": "Oceania"
+                        "value": "Central America"
                     },
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Europe",
+                            "text": "Eastern Europe",
                             "emoji": true
                         },
-                        "value": "Europe"
+                        "value": "Eastern Europe"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "European Union",
+                            "emoji": true
+                        },
+                        "value": "European Union"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Middle East",
+                            "emoji": true
+                        },
+                        "value": "Middle East"
                     },
                     {
                         "text": {
@@ -163,10 +179,26 @@
                     {
                         "text": {
                             "type": "plain_text",
+                            "text": "Oceania",
+                            "emoji": true
+                        },
+                        "value": "Oceania"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
                             "text": "South America",
                             "emoji": true
                         },
                         "value": "South America"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "The Caribbean",
+                            "emoji": true
+                        },
+                        "value": "The Caribbean"
                     },
                     {
                         "text": {

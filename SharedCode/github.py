@@ -262,7 +262,7 @@ class OWASPGitHub:
             url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata)
             r = requests.get(url=url, headers = headers)
             
-            if self.TestResultCode(r.status_code):
+            if r.ok:
                 repos = json.loads(r.text)
                 if pageend == -1:
                     endlink = r.links['last']['url']
