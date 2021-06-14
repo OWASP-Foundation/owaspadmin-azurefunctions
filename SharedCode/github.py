@@ -41,6 +41,13 @@ class OWASPGitHub:
     GH_REPOTYPE_CHAPTER = 1
     GH_REPOTYPE_COMMITTEE = 2
     GH_REPOTYPE_EVENT = 3
+    
+    def GetHeaders(self):
+        headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
+            "Accept":"application/vnd.github.v3+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
+        }
+
+        return headers
 
     def CreateRepository(self, repoName, rtype):
         repoName = self.FormatRepoName(repoName, rtype)
@@ -239,9 +246,7 @@ class OWASPGitHub:
        return self.GetPublicRepositories(matching=matching, inactive=True)
 
     def GetPublicRepositories(self, matching="", inactive=False):
-        headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
-            "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
-        }
+        headers = self.GetHeaders()
         
         qurl = "org:owasp is:public"
         if matching:
@@ -258,8 +263,8 @@ class OWASPGitHub:
         results = []
         while not done:
             pagestr = "?page=%d" % pageno
-            #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
-            url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata)
+            url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
+            #url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) # concerned this uses a cache and wonder how often it is updated?
             r = requests.get(url=url, headers = headers)
             
             if r.ok:
@@ -275,7 +280,8 @@ class OWASPGitHub:
                 
                 pageno = pageno + 1
                 
-                for repo in repos['items']:
+                #for repo in repos['items']: # used for search fragment
+                for repo in repos:
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
@@ -307,7 +313,7 @@ class OWASPGitHub:
                             addrepo['build'] = 'no pages'
 
                         r = self.GetFile(repoName, 'index.md')
-                        if self.TestResultCode(r.status_code):
+                        if r.ok:
                             doc = json.loads(r.text)
                             content = base64.b64decode(doc['content']).decode()
                             ndx = content.find('title:')
