@@ -163,6 +163,8 @@ def build_chapter_json(repos, gh):
     #write json file out to github.owasp.io _data folder
     #Thu Sep 12 20:51:21 2019
     fmt_str = "%a %b %d %H:%M:%S %Y"
+    mu = meetup.OWASPMeetup()
+    mu.Login()
     for repo in repos:
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
@@ -181,8 +183,6 @@ def build_chapter_json(repos, gh):
         today = datetime.datetime.today()
         earliest = f"{today.year - 1}-01-01T00:00:00.000"
         if 'meetup-group' in repo:
-            mu = meetup.OWASPMeetup()
-            mu.Login()
             estr = mu.GetGroupEvents(repo['meetup-group'], earliest)
             if estr:
                 events = json.loads(estr)

@@ -152,7 +152,7 @@ def add_to_events(mue, events, repo):
         today = datetime.datetime.today()
         eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
         tdelta = eventdate - today
-        if tdelta.days >= 0 and tdelta.days < 30:
+        if tdelta.days >= -1 and tdelta.days <= 30:
             event['group'] = group
             event['repo'] = repo
             event['name'] = mevent['name']
@@ -173,6 +173,9 @@ def create_community_events(gh, mu, repos):
     #repos = gh.GetPublicRepositories('www-')
     
     events = []
+    edate = datetime.datetime.today() + datetime.timedelta(-30)
+    earliest = edate.strptime('%Y-%m-')+"01T00:00:00.000"
+
     for repo in repos:
         rname = repo['name']
         if 'www-chapter' not in rname and 'www-project' not in rname and 'www-committee' not in rname and 'www-revent' not in rname:
@@ -180,7 +183,7 @@ def create_community_events(gh, mu, repos):
 
         if 'meetup-group' in repo and repo['meetup-group']:
             if mu.Login():
-                mstr = mu.GetGroupEvents(repo['meetup-group'])
+                mstr = mu.GetGroupEvents(repo['meetup-group'], earliest)
                 if mstr:
                     muej = json.loads(mstr)
                     add_to_events(muej, events, rname)
