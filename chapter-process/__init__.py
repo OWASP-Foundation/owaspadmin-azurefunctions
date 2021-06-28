@@ -32,20 +32,26 @@ def process_form(values, view_id, function_directory):
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]
-    valid_regions = ['Unknown', 'Africa', 'Asia', 'Europe', 'North America', 'Oceania', 'South America']
+    valid_regions = ['Unknown', 'Africa', 'Asia', 'Central America', 'Eastern Europe', 'European Union', 'North America', 'Oceania', 'South America', 'The Caribbean']
     if region not in valid_regions:
         if region == 'North Americ':
             region = 'North America'
         elif region == 'South Americ':
             region = 'South America'
-        elif region == 'Europ':
-            region = 'Europe'
+        elif region == 'European Unio':
+            region = 'European Union'
         elif region == 'Asi':
             region = 'Asia'
         elif region == 'Afric':
             region = 'Africa'
         elif region == 'Oceani':
             region = 'Oceania'
+        elif region == 'Central Americ':
+            region = 'Central America'
+        elif region == 'Eastern Europ':
+            region = 'Eastern Europe'
+        elif region == 'The Caribbea':
+            region = 'The Caribbean'
         else:
             region = 'Unknown'
             
