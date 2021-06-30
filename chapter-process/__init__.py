@@ -96,14 +96,22 @@ def GetCopperRegion(region):
         cp_region = copper.OWASPCopper.cp_project_chapter_region_option_northamerica
     elif 'South' in region:
         cp_region = copper.OWASPCopper.cp_project_chapter_region_option_southamerica
+    elif 'Central' in region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_centralamerica
     elif 'Oceania' == region:
         cp_region = copper.OWASPCopper.cp_project_chapter_region_option_oceania
     elif 'Asia' == region:
         cp_region = copper.OWASPCopper.cp_project_chapter_region_option_asia
     elif 'Africa' == region:
         cp_region = copper.OWASPCopper.cp_project_chapter_region_option_africa
-    elif 'Europe' == region:
-        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_europe
+    elif 'European' in region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_european_union
+    elif 'Eastern' in region:
+         cp_region = copper.OWASPCopper.cp_project_chapter_region_option_eastern_europe
+    elif 'Caribbean' in region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_the_caribbean
+    elif 'Middle' in region:
+        cp_region = copper.OWASPCopper.cp_project_chapter_region_option_middle_east
 
     return cp_region
 
