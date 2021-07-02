@@ -221,7 +221,10 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
                 "membership_start": subscription_data['membership_start'],
                 "membership_type": subscription_data['membership_type'],
                 "membership_end": subscription_data['membership_end'],
-                "membership_recurring": subscription_data['membership_recurring']
+                "membership_recurring": subscription_data['membership_recurring'],
+                "membership_notified": "",
+                "membership_notified_date": "",
+                "membership_last_notification": ""
             },
             api_key=os.environ["STRIPE_SECRET"]
         )
