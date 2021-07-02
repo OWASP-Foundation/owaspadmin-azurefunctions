@@ -40,7 +40,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     acl = json.loads(os.environ['MP_ACL'])
     
     if data and len(data) >0: 
-        if os.environ['MEMBER_PORTAL_TEST'] and ('owasp.com' in data['email'] or data['email'] in acl['acl']):
+        if 'MEMBER_PORTAL_TEST' in os.environ and os.environ['MEMBER_PORTAL_TEST'] and ('owasp.com' in data['email'] or data['email'] in acl['acl']):
             member_info = get_member_info(data)
         else:
             member_info = get_member_info(data)
