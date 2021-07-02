@@ -39,7 +39,9 @@ def main(req: func.HttpRequest, chmsg: func.Out[func.QueueMessage]) -> func.Http
         chmsg.set(json.dumps({ 'job_type': event.type, 'payload': event_data }))
     elif event.type == 'charge.refunded':
         chmsg.set(json.dumps({ 'job_type': event.type, 'payload': event_data }))
-    
+    elif event.type == 'invoice.paid': # this could be any invoice but also includes things like subscriptions....
+        chmsg.set(json.dumps({ 'job_type': event.type, 'payload': event_data }))
+        
     return func.HttpResponse(status_code=200)
 
 
