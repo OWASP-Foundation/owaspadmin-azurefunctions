@@ -32,7 +32,7 @@ def main(msg: func.QueueMessage) -> None:
     elif job_type == 'charge.refunded':
         handle_order_refunded(job_payload.get('id'), job_payload.get('amount_refunded'))
     elif job_type == 'invoice.paid': # includes things like subscriptions (see Stripe subscription)
-        subscription = job_type.get('subscription', None)
+        subscription = job_payload.get('subscription', None)
         if subscription:
             submeta = subscription.get('metadata', None)
             if submeta:
@@ -144,7 +144,10 @@ def handle_checkout_session_completed(event: Dict):
         if price == None:
             price = event.get('amount', None)
         if price == None:
-            price = event.get('amount_total', 0)
+            price = event.get('amount_total', None)
+        if price == None:
+            price = event.get('amount_paid', 0)
+
         update_customer_record(customer_id, metadata, subscription_data, payment_id, price)
         add_to_mailing_list(customer_email, metadata, subscription_data, customer_id)
         
