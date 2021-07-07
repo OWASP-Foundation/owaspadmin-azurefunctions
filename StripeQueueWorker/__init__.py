@@ -3,6 +3,7 @@ import json
 import logging
 import stripe
 import hashlib
+import html
 import base64
 from datetime import datetime
 from datetime import timedelta
@@ -13,6 +14,7 @@ from ..SharedCode.eventbot import registrant
 from ..SharedCode.copper import OWASPCopper
 from ..SharedCode.googleapi import OWASPGoogle
 from ..SharedCode import helperfuncs
+from ..SharedCode import github
 
 from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
