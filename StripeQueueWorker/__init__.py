@@ -228,7 +228,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
                             api_key=os.environ["STRIPE_SECRET"]
                         )
                         recurring="no"
-        
+             
         subscription_data['membership_recurring'] = recurring
         subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
         
@@ -284,7 +284,7 @@ def get_subscription_data_from_event(event):
         period_end = '' #if pass None, the modify call in stripe skips it (unlike the customer.save call)
         add_days = None
     # no need to worry with complimentary here as it isn't an option to pay for in Stripe
-
+    
     return {
         "membership_start": datetime.now(),
         "membership_end": period_end,
@@ -297,10 +297,11 @@ def get_subscription_data_from_event(event):
 def get_subscription_data(subscription):
     period_end = datetime.utcfromtimestamp(subscription["current_period_end"]).strftime('%m/%d/%Y')
     membership_type = 'one'
+    period_start = datetime.utcfromtimestamp(subscription['start_date']).strftime('%m/%d/%Y')
     add_days = 365
 
     return {
-        "membership_start": datetime.now(),
+        "membership_start": period_start,
         "membership_end": period_end,
         "membership_type": membership_type,
         "days_added": add_days,
