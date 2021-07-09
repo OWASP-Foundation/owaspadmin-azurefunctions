@@ -169,16 +169,17 @@ def get_member_info(data):
         member_info['emails'] = person['emails']
         if not person['address']:
             person['address'] = "{'street':'','city':'','state':'','postal_code':'','country':''}"
-        if not person['address']['street']:
-            person['address']['street'] = ''
-        if not person['address']['city']:
-            person['address']['city'] = ''
-        if not person['address']['state']:
-            person['address']['state']=''
-        if not person['address']['postal_code']:
-            person['addresss']['postal_code']=''
-        if not person['address']['country']:
-            person['address']['country']=''
+        else:
+            if not person['address']['street']:
+                person['address']['street'] = ''
+            if not person['address']['city']:
+                person['address']['city'] = ''
+            if not person['address']['state']:
+                person['address']['state']=''
+            if not person['address']['postal_code']:
+                person['addresss']['postal_code']=''
+            if not person['address']['country']:
+                person['address']['country']=''
         member_info['address'] = person['address']
         member_info['phone_numbers'] = person['phone_numbers']
         member_info['member_number'] = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_stripe_number)
