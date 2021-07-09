@@ -230,8 +230,12 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
                         recurring="no"
              
         subscription_data['membership_recurring'] = recurring
-        subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
-        
+        memstart = helperfuncs.get_datetime_helper(membership_start)
+        if memstart:
+            subscription_data['membership_start'] = memstart.strftime('%m/%d/%Y')
+        else:
+            subscription_data['membership_start'] = membership_start
+            
         stripe.Customer.modify(
             customer_id,
             metadata={
