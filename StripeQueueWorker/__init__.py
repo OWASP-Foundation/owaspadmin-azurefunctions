@@ -235,7 +235,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
             subscription_data['membership_start'] = memstart.strftime('%m/%d/%Y')
         else:
             subscription_data['membership_start'] = membership_start
-            
+
         stripe.Customer.modify(
             customer_id,
             metadata={
@@ -325,7 +325,11 @@ def add_to_mailing_list(email, metadata, subscription_data, customer_id):
         "marketing_permissions": get_marketing_permissions(metadata)
     }
 
-    list_member = mailchimp.lists.members.create_or_update(os.environ["MAILCHIMP_LIST_ID"], subscriber_hash, request_data)
+    list_member = None
+    try:
+        list_member = mailchimp.lists.members.create_or_update(os.environ["MAILCHIMP_LIST_ID"], subscriber_hash, request_data)
+    except MailChimpError as me:
+        logging.warn(f"Failed to add {email} to mailing list: {me.args[0]['title']}")
 
     return list_member
 
