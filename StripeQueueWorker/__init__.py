@@ -95,6 +95,12 @@ def handle_checkout_session_completed(event: Dict):
     setup_intent = event.get('setup_intent', None)
     subscription_data = {}
     metadata = {}
+    customer = None
+    custmetadata = None
+    if customer_id != None:
+        customer = stripe.Customer.retrieve(customer_id, api_key=os.environ['STRIPE_SECRET'])
+        if customer:
+            custmetadata = customer.get('metadata', None)
     if payment_intent is not None:
         payment_intent = stripe.PaymentIntent.retrieve(
             payment_intent,
@@ -135,7 +141,7 @@ def handle_checkout_session_completed(event: Dict):
             purchase_type = metadata.get('purchase_type', 'donation')
             
             if purchase_type == 'membership':
-                subscription_data = get_subscription_data_from_event(event)
+                subscription_data = get_subscription_data_from_event(event, custmetadata)
 
         if subscription is not None:
             subscription = stripe.Subscription.retrieve(
@@ -261,7 +267,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
         except Exception as err:
             logging.error(f'Failed attempting to find and possibly unsuspend Google email: {err}')
     
-def get_subscription_data_from_event(event):
+def get_subscription_data_from_event(event, custmetadata = None):
     description = event["display_items"][0]["custom"]["description"]
     
     if "One Year" in description:
@@ -279,9 +285,15 @@ def get_subscription_data_from_event(event):
         period_end = '' #if pass None, the modify call in stripe skips it (unlike the customer.save call)
         add_days = None
     # no need to worry with complimentary here as it isn't an option to pay for in Stripe
-    
+    period_start = datetime.now()
+    meta_start = None
+    if custmetadata:
+        meta_start = custmetadata.get('membership_start', None)
+        if meta_start:
+            period_start = helperfuncs.get_datetime_helper(meta_start)
+            
     return {
-        "membership_start": datetime.now(),
+        "membership_start": period_start.strftime('%m/%d/%Y'),
         "membership_end": period_end,
         "membership_type": membership_type,
         "days_added": add_days,
