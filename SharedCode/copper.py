@@ -274,6 +274,7 @@ class OWASPCopper:
         
         if subscription_data != None:
             membership_end = None
+            membership_start = None
             try:
                 membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
             except:
@@ -407,6 +408,7 @@ class OWASPCopper:
 
         if subscription_data != None:
             membership_end = None
+            membership_start = None
             try:
                 membership_end = datetime.strptime(subscription_data['membership_end'], "%m/%d/%Y")
             except:
