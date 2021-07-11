@@ -32,7 +32,10 @@ def get_datetime_helper(datestr):
                 try:
                     retdate = datetime.fromtimestamp(datestr)
                 except:
-                    pass
+                    try:
+                        retdate = datetime.utcfromtimestamp(datestr)
+                    except:
+                        pass
 
     return retdate
 
