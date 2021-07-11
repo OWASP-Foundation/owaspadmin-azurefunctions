@@ -196,15 +196,10 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
         membership_end = customer_metadata.get('membership_end', None)
         membership_start = customer_metadata.get('membership_start', None)
         if membership_start == None or membership_start == '':
-            membership_start = subscription_data['membership_start']
+            membership_start = helperfuncs.get_datetime_helper(subscription_data['membership_start'])
         else:
-            try:
-                membership_start = datetime.strptime(membership_start, "%m/%d/%Y")
-            except:
-                try:
-                    membership_start = datetime.strptime(membership_start, "%Y-%m-%d")
-                except:
-                    pass
+            membership_start = helperfuncs.get_datetime_helper(membership_start)
+            
 
         # if already a membership, we must add the days to the end
         if membership_end is not None and subscription_data['membership_type'] != 'lifetime':
@@ -230,11 +225,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
                         recurring="no"
              
         subscription_data['membership_recurring'] = recurring
-        memstart = helperfuncs.get_datetime_helper(membership_start)
-        if memstart:
-            subscription_data['membership_start'] = memstart.strftime('%m/%d/%Y')
-        else:
-            subscription_data['membership_start'] = membership_start
+        subscription_data['membership_start'] = membership_start.strftime('%m/%d/%Y')
 
         stripe.Customer.modify(
             customer_id,
