@@ -167,7 +167,7 @@ def get_member_info(data):
         member_info['membership_recurring'] = get_membership_recurring(cp, opp)
         member_info['name'] = person['name']
         member_info['emails'] = person['emails']
-        if not person['address']:
+        if 'address' not in person or not person['address']:
             person['address'] = "{'street':'','city':'','state':'','postal_code':'','country':''}"
         else:
             if not person['address']['street']:
@@ -177,7 +177,7 @@ def get_member_info(data):
             if not person['address']['state']:
                 person['address']['state']=''
             if not person['address']['postal_code']:
-                person['addresss']['postal_code']=''
+                person['address']['postal_code']=''
             if not person['address']['country']:
                 person['address']['country']=''
         member_info['address'] = person['address']
