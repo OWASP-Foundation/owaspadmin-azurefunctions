@@ -263,8 +263,8 @@ class OWASPGitHub:
         results = []
         while not done:
             pagestr = "?page=%d" % pageno
-            url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
-            #url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) # concerned this uses a cache and wonder how often it is updated?
+            #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100' #going back to seach - this times out too much
+            url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) # concerned this uses a cache and wonder how often it is updated?
             r = requests.get(url=url, headers = headers)
             
             if r.ok:
@@ -279,9 +279,8 @@ class OWASPGitHub:
                     done = True
                 
                 pageno = pageno + 1
-                
-                #for repo in repos['items']: # used for search fragment
-                for repo in repos:
+                #for repo in repos: # Used for standard repo fragment
+                for repo in repos['items']: # used for search fragment
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
