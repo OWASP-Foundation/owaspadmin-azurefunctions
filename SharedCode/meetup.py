@@ -53,7 +53,7 @@ class OWASPMeetup:
         }
         event_url = self.meetup_api_url + f'/{groupname}/events?desc=true&sign=true'
         if earliest:
-            event_url = event_url + f"&status=past&no_earlier_than={earliest}"
+            event_url = event_url + f"&no_earlier_than={earliest}"
         res = requests.get(event_url, headers=headers)
         json_res = ''
         if res.ok:
