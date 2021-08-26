@@ -4,8 +4,6 @@ azure-core
 azure-nspkg
 azure-functions
 azure-functions-durable
-azure-storage
-azure-storage-queue
 certifi==2019.6.16
 cffi==1.13.2
 chardet==3.0.4
