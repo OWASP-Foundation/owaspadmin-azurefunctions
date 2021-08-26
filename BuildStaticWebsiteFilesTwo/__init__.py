@@ -174,7 +174,7 @@ def create_community_events(gh, mu, repos):
     
     events = []
     edate = datetime.datetime.today() + datetime.timedelta(-30)
-    earliest = edate.strptime('%Y-%m-')+"01T00:00:00.000"
+    earliest = edate.strftime('%Y-%m-')+"01T00:00:00.000"
 
     for repo in repos:
         rname = repo['name']
