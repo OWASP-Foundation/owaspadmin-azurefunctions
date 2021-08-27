@@ -10,4 +10,5 @@ import logging
 
 
 def main(name: str) -> str:
+    logging.info('Called BuildSiteFiles')
     return f"Hello {name}!"
