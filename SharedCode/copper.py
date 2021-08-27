@@ -170,6 +170,8 @@ class OWASPCopper:
             url = url + '/opportunities'
             r = requests.get(url, headers=self.GetHeaders())
             if r.ok and r.text:
+                today = datetime.today()
+                tdstamp = int(today.timestamp())
                 for item in json.loads(r.text):
                     url = url = f"{self.cp_base_url}{self.cp_opp_fragment}{item['id']}"
                     r = requests.get(url, headers=self.GetHeaders())
@@ -185,10 +187,9 @@ class OWASPCopper:
                                 mend = cfield['value']
                                 if mend is not None:
                                     if subscription_data == None: # no data, just find first non-expired membership, if any
-                                        today = datetime.today()
-                                        tdstamp = int(today.timestamp())
-                                        if mend > tdstamp: # no membership end...assume valid until known for certain
-                                            return r.text
+                                        if mend > tdstamp: 
+                                            opp = r.text
+                                            tdstamp = mend # set this to current mend...later opp might be greater date
                                     elif subscription_data['membership_end']:
                                         tend = int(datetime.strptime(subscription_data['membership_end'], "%Y-%m-%d").timestamp())
                                         if mend == tend:
