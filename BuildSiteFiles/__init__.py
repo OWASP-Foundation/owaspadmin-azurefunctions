@@ -207,6 +207,9 @@ def create_community_events(gh, mu, repos):
         logging.error(f"Failed to update _data/community_events.json: {r.text}")
 
 def main(name: str) -> None:
+    if str != 'orchestrator':
+        logging.warn('Returning from func due to missing str')
+        return
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 
