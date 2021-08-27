@@ -213,27 +213,28 @@ def main(mytimer: func.TimerRequest) -> None:
         logging.info('The timer is past due!')
 
     gh = github.OWASPGitHub()
-    logging.info('Python timer trigger function ran at %s', utc_timestamp)
-
-    #call get repos like this once because leaders and community events both use it
-    repos = gh.GetPublicRepositories('www-')
-    logging.info('Building leaders json file')
-    try:
-        build_leaders_json(gh, repos)
-    except Exception as err:
-        logging.error(f"Exception updating leaders json file: {err}")
+    logging.info('BuildStatisWebsiteFilesTwo ran at %s but will do nothing for now.', utc_timestamp)
+    return
     
-    logging.info('Updating community events')
-    mu = meetup.OWASPMeetup()
-    try:
-        create_community_events(gh, mu, repos)
-    except Exception as err:
-        logging.error(f"Exception updating community events: {err}")
+    #call get repos like this once because leaders and community events both use it
+    # repos = gh.GetPublicRepositories('www-')
+    # logging.info('Building leaders json file')
+    # try:
+    #     build_leaders_json(gh, repos)
+    # except Exception as err:
+    #     logging.error(f"Exception updating leaders json file: {err}")
+    
+    # logging.info('Updating community events')
+    # mu = meetup.OWASPMeetup()
+    # try:
+    #     create_community_events(gh, mu, repos)
+    # except Exception as err:
+    #     logging.error(f"Exception updating community events: {err}")
 
-    logging.info('Updating inactive chapters')
-    try:
-        build_inactive_chapters_json(gh)
-    except Exception as err:
-        logging.error(f"Exception updating inactive chapters: {err}")
+    # logging.info('Updating inactive chapters')
+    # try:
+    #     build_inactive_chapters_json(gh)
+    # except Exception as err:
+    #     logging.error(f"Exception updating inactive chapters: {err}")
 
-    logging.info('BuildStaticWebsiteFilesTwo timer trigger function ran at %s', utc_timestamp)
+    # logging.info('BuildStaticWebsiteFilesTwo timer trigger function ran at %s', utc_timestamp)
