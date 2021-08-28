@@ -67,10 +67,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
     try:
         og = OWASPGoogle()
-        cp = copper.OWASPCopper()
         next_page_token = None
-
-        count = 0
         errors_count = 0
 
         with open('/tmp/save-email-leaders.txt', 'w') as save_leaders_file:
