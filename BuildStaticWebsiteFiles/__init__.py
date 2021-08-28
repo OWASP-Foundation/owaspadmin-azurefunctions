@@ -303,36 +303,39 @@ def main(mytimer: func.TimerRequest) -> None:
     if mytimer.past_due:
         logging.info('The timer is past due!')
 
-    gh = github.OWASPGitHub()
+    logging.info('BuildStatisWebsiteFiles ran at %s but will do nothing for now.', utc_timestamp)
+    return
+
+    # gh = github.OWASPGitHub()
     
-    build_groups_jsons(gh)
+    # build_groups_jsons(gh)
 
-    logging.info("Building staff projects and milestones json files")
-    try:
-        helperfuncs.build_staff_project_json(gh)
-    except Exception as err:
-        logging.error(f"Exception building staff projects json: {err}")
+    # logging.info("Building staff projects and milestones json files")
+    # try:
+    #     helperfuncs.build_staff_project_json(gh)
+    # except Exception as err:
+    #     logging.error(f"Exception building staff projects json: {err}")
 
-    logging.info('Updating Chapter Administration Team repositories')
-    try:
-        update_chapter_admin_team(gh)
-    except Exception as err:
-        logging.error(f"Exception updating Chapter Administration team: {err}")
+    # logging.info('Updating Chapter Administration Team repositories')
+    # try:
+    #     update_chapter_admin_team(gh)
+    # except Exception as err:
+    #     logging.error(f"Exception updating Chapter Administration team: {err}")
 
-    logging.info('Updating corp_members.yml sitedata from site.data')
-    try:
-        update_corp_members(gh)
-    except Exception as err:
-        logging.error(f"Exception updating corp_members.yml: {err}")
+    # logging.info('Updating corp_members.yml sitedata from site.data')
+    # try:
+    #     update_corp_members(gh)
+    # except Exception as err:
+    #     logging.error(f"Exception updating corp_members.yml: {err}")
     
 
-    logging.info('Building sitedata/events yml file')
-    try:
-        update_events_sitedata(gh)
-    except Exception as err:
-        logging.error(f"Exception building sitedata/events yml: {err}")
+    # logging.info('Building sitedata/events yml file')
+    # try:
+    #     update_events_sitedata(gh)
+    # except Exception as err:
+    #     logging.error(f"Exception building sitedata/events yml: {err}")
 
-    logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)    
+    # logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)    
 
 class Leader:
     def __init__(self, name, email):
