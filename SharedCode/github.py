@@ -6,7 +6,7 @@ import os
 import logging
 import datetime
 import urllib
-
+import time
 # Major update 6.7.2021 to match, upgrade Azure version of similar file
 
 class OWASPGitHub:
@@ -89,7 +89,17 @@ class OWASPGitHub:
         
         #bytestosend = base64.b64encode(filecstr.encode())   
         headers = {"Authorization": "token " + self.apitoken}
-        r = requests.get(url = url, headers=headers)
+        trycount = 1
+        while trycount <= 3:
+            try:
+                r = requests.get(url = url, headers=headers)
+                trycount = 4
+            except ConnectionError as err:
+                time.sleep(10 * trycount)
+                trycount = trycount + 1
+                if trycount == 4:
+                   raise err
+
         return r
 
     def GetOFFile(self, repo, filepath):
