@@ -90,14 +90,14 @@ class OWASPGitHub:
         #bytestosend = base64.b64encode(filecstr.encode())   
         headers = {"Authorization": "token " + self.apitoken}
         trycount = 1
-        while trycount <= 3:
+        while trycount <= 4:
             try:
                 r = requests.get(url = url, headers=headers)
-                trycount = 4
+                trycount = 5
             except ConnectionError as err:
                 time.sleep(10 * trycount)
                 trycount = trycount + 1
-                if trycount == 4:
+                if trycount == 5:
                    raise err
 
         return r
@@ -246,18 +246,19 @@ class OWASPGitHub:
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(':repo', repoName)
         trycount = 1
-        while trycount <= 3:
+        while trycount <= 4:
             try:
                 r = requests.get(url=url, headers = headers)
                 if r.ok:
                     result = json.loads(r.text)
+                    trycount = 5
             except ConnectionError as err:
+                time.sleep(trycount * 10)
                 trycount += 1
-                if trycount == 4:
+                if trycount == 5:
                     raise err
-                else:
-                    time.sleep(trycount * 10)
                     
+
         return result
 
     def GetInactiveRepositories(self, matching=""):
