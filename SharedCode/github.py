@@ -245,11 +245,19 @@ class OWASPGitHub:
         result = ''
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(':repo', repoName)
-
-        r = requests.get(url=url, headers = headers)
-        if r.ok:
-            result = json.loads(r.text)
-        
+        trycount = 1
+        while trycount <= 3:
+            try:
+                r = requests.get(url=url, headers = headers)
+                if r.ok:
+                    result = json.loads(r.text)
+            except ConnectionError as err:
+                trycount += 1
+                if trycount == 4:
+                    raise err
+                else:
+                    time.sleep(trycount * 10)
+                    
         return result
 
     def GetInactiveRepositories(self, matching=""):
