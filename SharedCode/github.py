@@ -7,6 +7,7 @@ import logging
 import datetime
 import urllib
 import time
+import random
 # Major update 6.7.2021 to match, upgrade Azure version of similar file
 
 class OWASPGitHub:
@@ -82,8 +83,13 @@ class OWASPGitHub:
 
         return r
 
-    def GetFile(self, repo, filepath):
-        url = self.gh_endpoint + self.content_fragment
+    def GetFile(self, repo, filepath, of_content_fragment = None):        
+        url = self.gh_endpoint 
+        if not of_content_fragment:
+            url = url + self.content_fragment
+        else:
+            url = url + of_content_fragment
+
         url = url.replace(":repo", repo)
         url = url.replace(":path", filepath)
         
@@ -110,10 +116,6 @@ class OWASPGitHub:
         url = url.replace(":repo", repo)
         url = url.replace(":path", filepath)
 
-        committer = {
-            "name" : "OWASP Foundation",
-            "email" : "owasp.foundation@owasp.org"
-        }
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.delete(url = url, headers=headers)
         return r
@@ -305,15 +307,15 @@ class OWASPGitHub:
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
                         
                     # even if matching, we still only really want project, chapter, event, or committee repos here....
-                    if not matching or (matching in repoName and ('-project-' in repoName or '-chapter-' in repoName or '-committee-' in repoName or '-revent-' in repoName)):
-                        if not istemplate:
-                            pages = None
-                            if haspages:
-                                pages = self.GetPages(repoName)
+                    if haspages and not istemplate and (not matching or (matching in repoName)):
+                        if '-project-' in repoName or '-chapter-' in repoName or '-committee-' in repoName or '-revent-' in repoName:
+                            pages = self.GetPages(repoName)                            
                             if (not pages or pages['status'] == None) and not inactive:
+                                time.sleep(1 + random.randint(0, 3))
                                 continue
                             elif (pages and pages['status'] != None) and inactive:
-                                continue
+                                time.sleep(1 + random.randint(0, 3))
+                                continue                            
                         else:
                             continue
                         
