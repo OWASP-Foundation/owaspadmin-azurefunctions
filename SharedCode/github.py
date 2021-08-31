@@ -266,12 +266,13 @@ class OWASPGitHub:
     def GetInactiveRepositories(self, matching=""):
        return self.GetPublicRepositories(matching=matching, inactive=True)
 
+
     def GetPublicRepositories(self, matching="", inactive=False):
         headers = self.GetHeaders()
         
         qurl = "org:owasp is:public"
         if matching:
-            qurl = qurl + f" {matching} in:name"
+            qurl = qurl + f" in:name {matching} "
         qdata = {
             'q': qurl,
             'per_page':100
@@ -284,8 +285,8 @@ class OWASPGitHub:
         results = []
         while not done:
             pagestr = "?page=%d" % pageno
-            url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100' #going back to seach - this times out too much
-            #url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) # concerned this uses a cache and wonder how often it is updated?
+            #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
+            url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) + "&per_page=100" # I am concerned that this search might use a cache and I wonder how often the cache is updated...
             r = requests.get(url=url, headers = headers)
             
             if r.ok:
@@ -295,124 +296,281 @@ class OWASPGitHub:
                     pageend = int(endlink[endlink.find('?page=') + 6:endlink.find('&')])
                 elif pageend == -1:
                     pageend = pageno
-
+                    
                 if pageno == pageend:
                     done = True
                 
                 pageno = pageno + 1
-                for repo in repos: # Used for standard repo fragment
-                #for repo in repos['items']: # used for search fragment
+
+                final_repos = []
+                for repo in repos['items']:# This works for search fragment
+                #for repo in repos:
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
                         
                     # even if matching, we still only really want project, chapter, event, or committee repos here....
-                    if haspages and not istemplate and (not matching or (matching in repoName)):
-                        if '-project-' in repoName or '-chapter-' in repoName or '-committee-' in repoName or '-revent-' in repoName:
-                            pages = self.GetPages(repoName)                            
+                    if not matching or (matching in repoName):
+                        if not istemplate:
+                            pages = None
+                            if haspages:
+                                pages = self.GetPages(repoName)
                             if (not pages or pages['status'] == None) and not inactive:
-                                time.sleep(1 + random.randint(0, 3))
                                 continue
                             elif (pages and pages['status'] != None) and inactive:
-                                time.sleep(1 + random.randint(0, 3))
-                                continue                            
+                                continue
+                            final_repos.append(repo)
                         else:
                             continue
-                        
-                        addrepo = {}
-                        addrepo['name'] = repoName
-                        addrepo['url'] = f"https://owasp.org/{ repoName }/"
-                    
-                        cdate = datetime.datetime.strptime(repo['created_at'], "%Y-%m-%dT%H:%M:%SZ")
-                        udate = datetime.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
-                        addrepo['created'] = cdate.strftime('%c')
-                        addrepo['updated'] = udate.strftime('%c')
-                        if pages:
-                            addrepo['build'] = pages['status']
-                        else:
-                            addrepo['build'] = 'no pages'
 
-                        r = self.GetFile(repoName, 'index.md')
-                        if r.ok:
-                            doc = json.loads(r.text)
-                            content = base64.b64decode(doc['content']).decode()
-                            ndx = content.find('title:')
-                            eol = content.find('\n', ndx + 7)
-                            if ndx >= 0:
-                                title = content[ndx + 7:eol]
-                                addrepo['title'] = title.strip()
-                            else:
-                                addrepo['title'] = repoName
-                                
-                            ndx = content.find('level:') + 6
-                            eol = content.find("\n", ndx)
-                            not_updated = (content.find("This is an example of a Project") >= 0)
-                            if ndx < 0 or not_updated:
-                                level = "-1"
-                            else:
-                                level = content[ndx:eol]
-                            addrepo['level'] = level.strip() 
-                            ndx = content.find('type:') + 5
+                
+                for repo in final_repos: 
+                    repoName = repo['name'].lower()
+                    istemplate = repo['is_template']
+                    haspages = repo['has_pages'] #false for Iran...maybe was never activated?
+                                                    
+                    addrepo = {}
+                    addrepo['name'] = repoName
+                    addrepo['url'] = f"https://owasp.org/{ repoName }/"
+                
+                    cdate = datetime.datetime.strptime(repo['created_at'], "%Y-%m-%dT%H:%M:%SZ")
+                    udate = datetime.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
+                    addrepo['created'] = cdate.strftime('%c')
+                    addrepo['updated'] = udate.strftime('%c')
+                    if pages:
+                        addrepo['build'] = pages['status']
+                    else:
+                        addrepo['build'] = 'no pages'
+
+                    r = self.GetFile(repoName, 'index.md')
+                    if r.ok:
+                        doc = json.loads(r.text)
+                        content = base64.b64decode(doc['content']).decode()
+                        ndx = content.find('title:')
+                        eol = content.find('\n', ndx + 7)
+                        if ndx >= 0:
+                            title = content[ndx + 7:eol]
+                            addrepo['title'] = title.strip()
+                        else:
+                            addrepo['title'] = repoName
+                            
+                        ndx = content.find('level:') + 6
+                        eol = content.find("\n", ndx)
+                        not_updated = (content.find("This is an example of a Project") >= 0)
+                        if ndx < 0 or not_updated:
+                            level = "-1"
+                        else:
+                            level = content[ndx:eol]
+                        addrepo['level'] = level.strip() 
+                        ndx = content.find('type:') + 5
+                        eol = content.find("\n", ndx)
+                        gtype = content[ndx:eol]
+                        addrepo['type'] = gtype.strip()
+                        ndx = content.find('region:') + 7
+                        
+                        if not_updated:
+                            gtype = 'Needs Website Update'
+                        elif ndx > 6: # -1 + 7
                             eol = content.find("\n", ndx)
                             gtype = content[ndx:eol]
-                            addrepo['type'] = gtype.strip()
-                            ndx = content.find('region:') + 7
+                        else: 
+                            gtype = 'Unknown'
                             
-                            if not_updated:
-                                gtype = 'Needs Website Update'
-                            elif ndx > 6: # -1 + 7
-                                eol = content.find("\n", ndx)
-                                gtype = content[ndx:eol]
-                            else: 
-                                gtype = 'Unknown'
-                                
-                            addrepo['region'] = gtype.strip()
+                        addrepo['region'] = gtype.strip()
 
-                            ndx = content.find('pitch:') + 6
-                            if ndx > 5: # -1 + 6
-                                eol = content.find('\n', ndx)
-                                gtype = content[ndx:eol]
-                            else:
-                                gtype = 'More info soon...' 
-                            addrepo['pitch'] = gtype.strip()
-                            
-                            ndx = content.find('meetup-group:')
+                        ndx = content.find('pitch:') + 6
+                        if ndx > 5: # -1 + 6
+                            eol = content.find('\n', ndx)
+                            gtype = content[ndx:eol]
+                        else:
+                            gtype = 'More info soon...' 
+                        addrepo['pitch'] = gtype.strip()
+                        
+                        ndx = content.find('meetup-group:')
+                        if ndx > -1:
+                            ndx += 13
+                            eol=content.find('\n', ndx)
+                            mu = content[ndx:eol]
+                            if len(mu.strip()) > 0:
+                                addrepo['meetup-group'] = mu.strip()
+
+                        if 'meetup-group' not in addrepo:        
+                            ndx = content.find('meetup.com/')
                             if ndx > -1:
-                                ndx += 13
-                                eol=content.find('\n', ndx)
+                                ndx += 11
+                                eolfs = content.find('/', ndx)
+                                
+                                if eolfs - ndx <= 6:
+                                    ndx = eolfs
+                                    eolfs = content.find('/', ndx + 1)
+
+                                eolp = content.find(')', ndx + 1)
+                                eols = content.find(' ', ndx + 1)
+                                eol = eolfs
+                                if eolp > -1 and eolp < eol:
+                                    eol = eolp
+                                if eols > -1 and eols < eol:
+                                    eol = eols
+
                                 mu = content[ndx:eol]
+                                if '/' in mu:
+                                    mu = mu.replace('/','')
                                 if len(mu.strip()) > 0:
                                     addrepo['meetup-group'] = mu.strip()
 
-                            if 'meetup-group' not in addrepo:        
-                                ndx = content.find('meetup.com/')
-                                if ndx > -1:
-                                    ndx += 11
-                                    eolfs = content.find('/', ndx)
-                                    
-                                    if eolfs - ndx <= 6:
-                                        ndx = eolfs
-                                        eolfs = content.find('/', ndx + 1)
-
-                                    eolp = content.find(')', ndx + 1)
-                                    eols = content.find(' ', ndx + 1)
-                                    eol = eolfs
-                                    if eolp > -1 and eolp < eol:
-                                        eol = eolp
-                                    if eols > -1 and eols < eol:
-                                        eol = eols
-
-                                    mu = content[ndx:eol]
-                                    if '/' in mu:
-                                        mu = mu.replace('/','')
-                                    if len(mu.strip()) > 0:
-                                        addrepo['meetup-group'] = mu.strip()
-
-                            results.append(addrepo)
+                        results.append(addrepo)
 
 
 
         return results
+
+    # def GetPublicRepositories(self, matching="", inactive=False):
+    #     headers = self.GetHeaders()
+        
+    #     qurl = "org:owasp is:public"
+    #     if matching:
+    #         qurl = qurl + f" {matching} in:name"
+    #     qdata = {
+    #         'q': qurl,
+    #         'per_page':100
+    #     }
+
+    #     done = False
+    #     pageno = 1
+    #     pageend = -1
+        
+    #     results = []
+    #     while not done:
+    #         pagestr = "?page=%d" % pageno
+    #         #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100' #going back to seach - this times out too much
+    #         url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) # concerned this uses a cache and wonder how often it is updated?
+    #         r = requests.get(url=url, headers = headers)
+            
+    #         if r.ok:
+    #             repos = json.loads(r.text)
+    #             if pageend == -1 and r.links and 'last' in r.links:
+    #                 endlink = r.links['last']['url']
+    #                 pageend = int(endlink[endlink.find('?page=') + 6:endlink.find('&')])
+    #             elif pageend == -1:
+    #                 pageend = pageno
+
+    #             if pageno == pageend:
+    #                 done = True
+                
+    #             pageno = pageno + 1
+    #             #for repo in repos: # Used for standard repo fragment
+    #             for repo in repos['items']: # used for search fragment
+    #                 repoName = repo['name'].lower()
+    #                 istemplate = repo['is_template']
+    #                 haspages = repo['has_pages'] #false for Iran...maybe was never activated?
+                        
+    #                 # even if matching, we still only really want project, chapter, event, or committee repos here....
+    #                 if haspages and not istemplate and (not matching or (matching in repoName)):
+    #                     if '-project-' in repoName or '-chapter-' in repoName or '-committee-' in repoName or '-revent-' in repoName:
+    #                         pages = self.GetPages(repoName)                            
+    #                         if (not pages or pages['status'] == None) and not inactive:
+    #                             time.sleep(1 + random.randint(0, 3))
+    #                             continue
+    #                         elif (pages and pages['status'] != None) and inactive:
+    #                             time.sleep(1 + random.randint(0, 3))
+    #                             continue                            
+    #                     else:
+    #                         continue
+                        
+    #                     addrepo = {}
+    #                     addrepo['name'] = repoName
+    #                     addrepo['url'] = f"https://owasp.org/{ repoName }/"
+                    
+    #                     cdate = datetime.datetime.strptime(repo['created_at'], "%Y-%m-%dT%H:%M:%SZ")
+    #                     udate = datetime.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
+    #                     addrepo['created'] = cdate.strftime('%c')
+    #                     addrepo['updated'] = udate.strftime('%c')
+    #                     if pages:
+    #                         addrepo['build'] = pages['status']
+    #                     else:
+    #                         addrepo['build'] = 'no pages'
+
+    #                     r = self.GetFile(repoName, 'index.md')
+    #                     if r.ok:
+    #                         doc = json.loads(r.text)
+    #                         content = base64.b64decode(doc['content']).decode()
+    #                         ndx = content.find('title:')
+    #                         eol = content.find('\n', ndx + 7)
+    #                         if ndx >= 0:
+    #                             title = content[ndx + 7:eol]
+    #                             addrepo['title'] = title.strip()
+    #                         else:
+    #                             addrepo['title'] = repoName
+                                
+    #                         ndx = content.find('level:') + 6
+    #                         eol = content.find("\n", ndx)
+    #                         not_updated = (content.find("This is an example of a Project") >= 0)
+    #                         if ndx < 0 or not_updated:
+    #                             level = "-1"
+    #                         else:
+    #                             level = content[ndx:eol]
+    #                         addrepo['level'] = level.strip() 
+    #                         ndx = content.find('type:') + 5
+    #                         eol = content.find("\n", ndx)
+    #                         gtype = content[ndx:eol]
+    #                         addrepo['type'] = gtype.strip()
+    #                         ndx = content.find('region:') + 7
+                            
+    #                         if not_updated:
+    #                             gtype = 'Needs Website Update'
+    #                         elif ndx > 6: # -1 + 7
+    #                             eol = content.find("\n", ndx)
+    #                             gtype = content[ndx:eol]
+    #                         else: 
+    #                             gtype = 'Unknown'
+                                
+    #                         addrepo['region'] = gtype.strip()
+
+    #                         ndx = content.find('pitch:') + 6
+    #                         if ndx > 5: # -1 + 6
+    #                             eol = content.find('\n', ndx)
+    #                             gtype = content[ndx:eol]
+    #                         else:
+    #                             gtype = 'More info soon...' 
+    #                         addrepo['pitch'] = gtype.strip()
+                            
+    #                         ndx = content.find('meetup-group:')
+    #                         if ndx > -1:
+    #                             ndx += 13
+    #                             eol=content.find('\n', ndx)
+    #                             mu = content[ndx:eol]
+    #                             if len(mu.strip()) > 0:
+    #                                 addrepo['meetup-group'] = mu.strip()
+
+    #                         if 'meetup-group' not in addrepo:        
+    #                             ndx = content.find('meetup.com/')
+    #                             if ndx > -1:
+    #                                 ndx += 11
+    #                                 eolfs = content.find('/', ndx)
+                                    
+    #                                 if eolfs - ndx <= 6:
+    #                                     ndx = eolfs
+    #                                     eolfs = content.find('/', ndx + 1)
+
+    #                                 eolp = content.find(')', ndx + 1)
+    #                                 eols = content.find(' ', ndx + 1)
+    #                                 eol = eolfs
+    #                                 if eolp > -1 and eolp < eol:
+    #                                     eol = eolp
+    #                                 if eols > -1 and eols < eol:
+    #                                     eol = eols
+
+    #                                 mu = content[ndx:eol]
+    #                                 if '/' in mu:
+    #                                     mu = mu.replace('/','')
+    #                                 if len(mu.strip()) > 0:
+    #                                     addrepo['meetup-group'] = mu.strip()
+
+    #                         results.append(addrepo)
+
+
+
+    #     return results
 
     def GetFilesMatching(self, repo, path, matching=''):
         rfiles = []
