@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import json
 
 import azure.functions as func
 from azure.cosmosdb.table.tableservice import TableService
@@ -22,7 +23,7 @@ def main(mytimer: func.TimerRequest) -> None:
     repos_entry = {
         'PartitionKey':'ghrepos',
         'RowKey': 'current',
-        'Repos': repos
+        'Repos': json.dumps(repos)
     }
 
     table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
