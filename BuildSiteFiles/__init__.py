@@ -269,6 +269,7 @@ def main(name: str) -> None:
     if name != 'orchestrator':
         logging.warn('Returning from func due to missing str')
         return
+        
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 

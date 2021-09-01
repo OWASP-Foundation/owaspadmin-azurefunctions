@@ -101,7 +101,7 @@ class OWASPGitHub:
                 r = requests.get(url = url, headers=headers)
                 trycount = 5
             except ConnectionError as err:
-                time.sleep(10 * trycount)
+                #time.sleep(10 * trycount)
                 trycount = trycount + 1
                 if trycount == 5:
                    raise err
@@ -255,7 +255,7 @@ class OWASPGitHub:
                     result = json.loads(r.text)
                     trycount = 5
             except ConnectionError as err:
-                time.sleep(trycount * 10)
+                #time.sleep(trycount * 10)
                 trycount += 1
                 if trycount == 5:
                     raise err

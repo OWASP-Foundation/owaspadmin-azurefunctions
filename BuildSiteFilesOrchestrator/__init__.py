@@ -12,11 +12,11 @@ from datetime import timedelta
 import azure.functions as func
 import azure.durable_functions as df
 
-
 def orchestrator_function(context: df.DurableOrchestrationContext):
-    start_two = context.current_utc_datetime + timedelta(minutes=30)
+    
     yield context.call_activity('BuildSiteFiles', "orchestrator")
-    yield context.create_timer(start_two)
+    start_next = context.current_utc_datetime + timedelta(minutes=5)
+    yield context.create_timer(start_next)
     yield context.call_activity('BuildSiteFilesTwo', "orchestrator")
   
 main = df.Orchestrator.create(orchestrator_function)
