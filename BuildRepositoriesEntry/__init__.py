@@ -27,7 +27,7 @@ def main(mytimer: func.TimerRequest) -> None:
         repos_entry = {
             'PartitionKey':'ghrepos',
             'RowKey': repo['name'],
-            'Repos': json.dumps(repo)
+            'Repo': json.dumps(repo)
         }
         
         

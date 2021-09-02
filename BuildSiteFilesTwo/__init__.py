@@ -207,6 +207,21 @@ def build_chapter_json(repos, gh):
         logging.info('Updated _data/chapters.json successfully')
     else:
         logging.error(f"Failed to update _data/chapters.json: {r.text}")
+def get_repos():
+    repos = []
+    repos_entry = {
+            'PartitionKey':'ghrepos',
+            'RowKey': repo['name'],
+            'Repo': json.dumps(repo)
+        }
+    table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
+    #table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
+    results = table_service.query_entities(os.environ['REPOSITORY_TABLE'])
+    for result in results:
+        repo = json.loads(result['Repo'])
+        repos.append(repo)
+
+    return repos
 
 def main(name: str) -> None:
     if name != 'orchestrator':
@@ -221,5 +236,5 @@ def main(name: str) -> None:
     gh = github.OWASPGitHub()
    
     #call get repos like this once because leaders and community events both use it
-    repos = gh.GetPublicRepositories('www-')
+    repos = get_repos()
     build_groups_jsons(gh, repos)
