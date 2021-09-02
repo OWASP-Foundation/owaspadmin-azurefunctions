@@ -7,7 +7,7 @@ import azure.functions as func
 from azure.cosmosdb.table.tableservice import TableService
 from azure.cosmosdb.table.models import Entity
 
-from ..SharedCode.github import OWASPGitHub
+from ..SharedCode import github
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -17,7 +17,7 @@ def main(mytimer: func.TimerRequest) -> None:
         logging.info('The timer is past due!')
     logging.info('BuildRespositoriesEntry function ran at %s', utc_timestamp)
 
-    gh = OWASPGitHub()
+    gh = github.OWASPGitHub()
     repos = gh.GetPublicRepositories('www-')
     
     logging.info(f"Got {len(repos)} repositories.")
