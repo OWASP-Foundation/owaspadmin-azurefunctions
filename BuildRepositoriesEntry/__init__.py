@@ -20,21 +20,24 @@ def main(mytimer: func.TimerRequest) -> None:
     gh = OWASPGitHub()
     repos = gh.GetPublicRepositories('www-')
 
-    repos_entry = {
-        'PartitionKey':'ghrepos',
-        'RowKey': 'current',
-        'Repos': json.dumps(repos)
-    }
-
     table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
     table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
-    ip_row = None
-    try:
-        ip_row = table_service.get_entity(os.environ['REPOSITORY_TABLE'], repos_entry['PartitionKey'], repos_entry['RowKey'])
-    except:
-        pass
-    if not ip_row:
-        table_service.insert_entity(table_name=os.environ['REPOSITORY_TABLE'], entity=repos_entry)
-        ip_row = repos_entry
-    else:
-        table_service.update_entity(os.environ['REPOSITORY_TABLE'], ip_row)
+    
+    for repo in repos:
+        repos_entry = {
+            'PartitionKey':'ghrepos',
+            'RowKey': repo['name'],
+            'Repos': json.dumps(repo)
+        }
+        
+        
+        ip_row = None
+        try:
+            ip_row = table_service.get_entity(os.environ['REPOSITORY_TABLE'], repos_entry['PartitionKey'], repos_entry['RowKey'])
+        except:
+            pass
+        if not ip_row:
+            table_service.insert_entity(table_name=os.environ['REPOSITORY_TABLE'], entity=repos_entry)
+            ip_row = repos_entry
+        else:
+            table_service.update_entity(os.environ['REPOSITORY_TABLE'], ip_row)
