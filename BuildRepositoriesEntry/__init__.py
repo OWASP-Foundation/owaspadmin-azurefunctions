@@ -19,10 +19,13 @@ def main(mytimer: func.TimerRequest) -> None:
 
     gh = OWASPGitHub()
     repos = gh.GetPublicRepositories('www-')
-
+    
+    logging.info(f"Got {len(repos)} repositories.")
+    
     table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
     table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
+    logging.info("Looping through repositories")
     for repo in repos:
         repos_entry = {
             'PartitionKey':'ghrepos',
@@ -41,3 +44,5 @@ def main(mytimer: func.TimerRequest) -> None:
             ip_row = repos_entry
         else:
             table_service.update_entity(os.environ['REPOSITORY_TABLE'], ip_row)
+
+    logging.info("function complete")
