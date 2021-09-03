@@ -230,7 +230,7 @@ def main(name: str) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
 
-    logging.info('BuildSiteFiles function ran at %s', utc_timestamp)
+    logging.info('BuildSiteFilesTwo function ran at %s', utc_timestamp)
     
     gh = github.OWASPGitHub()
    

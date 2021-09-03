@@ -8,15 +8,15 @@
 
 import logging
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 import azure.functions as func
 import azure.durable_functions as df
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
     
-    yield context.call_activity('BuildSiteFiles', "orchestrator")
-    start_next = context.current_utc_datetime + timedelta(minutes=5)
-    yield context.create_timer(start_next)
     yield context.call_activity('BuildSiteFilesTwo', "orchestrator")
+    start_next = context.current_utc_datetime + timedelta(minutes=30)
+    yield context.create_timer(start_next)
+    yield context.call_activity('BuildSiteFiles', "orchestrator")
   
 main = df.Orchestrator.create(orchestrator_function)
