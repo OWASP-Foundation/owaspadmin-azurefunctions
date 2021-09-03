@@ -1,12 +1,15 @@
 import datetime
 import json
 import re
+import os
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import helperfuncs
 from ..SharedCode import meetup
 import base64
 import logging
+from azure.cosmosdb.table.tableservice import TableService
+from azure.cosmosdb.table.models import Entity
 
 def build_groups_jsons(gh, repos):
     committee_repos = []
@@ -209,11 +212,7 @@ def build_chapter_json(repos, gh):
         logging.error(f"Failed to update _data/chapters.json: {r.text}")
 def get_repos():
     repos = []
-    repos_entry = {
-            'PartitionKey':'ghrepos',
-            'RowKey': repo['name'],
-            'Repo': json.dumps(repo)
-        }
+    
     table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
     #table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     results = table_service.query_entities(os.environ['REPOSITORY_TABLE'])
