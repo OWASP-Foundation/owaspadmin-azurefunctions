@@ -18,7 +18,15 @@ def main(mytimer: func.TimerRequest) -> None:
     logging.info('BuildRespositoriesEntry function ran at %s', utc_timestamp)
 
     gh = github.OWASPGitHub()
-    repos = gh.GetPublicRepositories('www-')
+    ch_repos = gh.GetPublicRepositories('www-chapter-')
+    pr_repos = gh.GetPublicRepositories('www-project-')
+    cm_repos = gh.GetPublicRepositories('www-committee-')
+    ev_repos = gh.GetPublicRepositories('www-revent-')
+    repos = []
+    repos.append(ch_repos)
+    repos.append(pr_repos)
+    repos.append(cm_repos)
+    repos.append(ev_repos)
     
     logging.info(f"Got {len(repos)} repositories.")
     
