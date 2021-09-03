@@ -17,5 +17,6 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     on_stage = 1
     while on_stage <= stages:        
         yield context.call_activity('BuildSiteFiles', f"stage{on_stage}")
+        on_stage = on_stage + 1
     
 main = df.Orchestrator.create(orchestrator_function)
