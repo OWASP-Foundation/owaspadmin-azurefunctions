@@ -17,17 +17,20 @@ def main(mytimer: func.TimerRequest) -> None:
         logging.info('The timer is past due!')
     logging.info('BuildRespositoriesEntry function ran at %s', utc_timestamp)
 
-    gh = github.OWASPGitHub()
-    ch_repos = gh.GetPublicRepositories('www-chapter-')
-    pr_repos = gh.GetPublicRepositories('www-project-')
-    cm_repos = gh.GetPublicRepositories('www-committee-')
-    ev_repos = gh.GetPublicRepositories('www-revent-')
-    repos = []
-    repos.append(ch_repos)
-    repos.append(pr_repos)
-    repos.append(cm_repos)
-    repos.append(ev_repos)
-    
+    try:
+        gh = github.OWASPGitHub()
+        ch_repos = gh.GetPublicRepositories('www-chapter-')
+        pr_repos = gh.GetPublicRepositories('www-project-')
+        cm_repos = gh.GetPublicRepositories('www-committee-')
+        ev_repos = gh.GetPublicRepositories('www-revent-')
+        repos = []
+        repos.extend(ch_repos)
+        repos.extend(pr_repos)
+        repos.extend(cm_repos)
+        repos.extend(ev_repos)
+    except Exception as err: 
+        logging.warn(f'exception in getting repos: {err}')
+
     logging.info(f"Got {len(repos)} repositories.")
     
     table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
