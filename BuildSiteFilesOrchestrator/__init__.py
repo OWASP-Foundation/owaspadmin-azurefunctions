@@ -16,6 +16,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     stages = 8
     on_stage = 1
     while on_stage <= stages:        
+        logging.info(f'Calling activity with stage {on_stage}')
         yield context.call_activity('BuildSiteFiles', f"stage{on_stage}")
         on_stage = on_stage + 1
     
