@@ -210,6 +210,7 @@ def build_chapter_json(repos, gh):
         logging.info('Updated _data/chapters.json successfully')
     else:
         logging.error(f"Failed to update _data/chapters.json: {r.text}")
+        
 def get_repos():
     repos = []
     

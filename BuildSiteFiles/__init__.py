@@ -12,6 +12,161 @@ from azure.cosmosdb.table.tableservice import TableService
 from azure.cosmosdb.table.models import Entity
 
 
+def build_event_json(repos, gh):
+    fmt_str = "%a %b %d %H:%M:%S %Y"
+    for repo in repos: #change to use title in project repo.....
+        repo['name'] = repo['name'].replace('www-revent-','').replace('-', ' ')
+        repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    repos.sort(key=lambda x: x['name'])
+    repos.sort(key=lambda x: x['level'], reverse=True)
+   
+    sha = ''
+    r = gh.GetFile('owasp.github.io', '_data/revents.json')
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    contents = json.dumps(repos)
+    r = gh.UpdateFile('owasp.github.io', '_data/revents.json', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated _data/events.json successfully')
+    else:
+        logging.error(f"Failed to update _data/revents.json: {r.text}")
+
+def build_committee_json(repos, gh):
+    fmt_str = "%a %b %d %H:%M:%S %Y"
+    for repo in repos: #change to use title in project repo.....
+        repo['name'] = repo['name'].replace('www-committee-','').replace('-', ' ')
+        repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    repos.sort(key=lambda x: x['name'])
+    repos.sort(key=lambda x: x['level'], reverse=True)
+   
+    sha = ''
+    r = gh.GetFile('owasp.github.io', '_data/committees.json')
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    contents = json.dumps(repos)
+    r = gh.UpdateFile('owasp.github.io', '_data/committees.json', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated _data/committees.json successfully')
+    else:
+        logging.error(f"Failed to update _data/committees.json: {r.text}")
+
+def build_project_json(repos, gh):
+    # we want to build certain json data files every now and then to keep the website data fresh.
+    #for each repository, public, with www-project
+    #get name of project, level, and type
+    # store in json
+    #write json file out to github.owasp.io _data folder
+    fmt_str = "%a %b %d %H:%M:%S %Y"
+    for repo in repos: #change to use title in project repo.....
+        repo['name'] = repo['name'].replace('www-project-','').replace('-', ' ')
+        repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    repos.sort(key=lambda x: x['name'])
+    repos.sort(key=lambda x: x['level'], reverse=True)
+   
+    sha = ''
+    r = gh.GetFile('owasp.github.io', '_data/projects.json')
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    contents = json.dumps(repos)
+    r = gh.UpdateFile('owasp.github.io', '_data/projects.json', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated _data/projects.json successfully')
+    else:
+        logging.error(f"Failed to update _data/projects.json: {r.text}")
+
+def build_chapter_json(repos, gh):
+    # we want to build certain json data files every now and then to keep the website data fresh.
+    #for each repository, public, with www-project
+    #get name of project, level, and type
+    # store in json
+    #write json file out to github.owasp.io _data folder
+    #Thu Sep 12 20:51:21 2019
+    fmt_str = "%a %b %d %H:%M:%S %Y"
+    mu = meetup.OWASPMeetup()
+    mu.Login()
+    for repo in repos:
+        repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
+        repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
+        try:
+            dobj = datetime.datetime.strptime(repo['created'], fmt_str)
+            repo['created'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        try:
+            dobj = datetime.datetime.strptime(repo['updated'], fmt_str)
+            repo['updated'] = dobj.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+        
+        ecount = 0
+        today = datetime.datetime.today()
+        earliest = f"{today.year - 1}-01-01T00:00:00.000"
+        if 'meetup-group' in repo:
+            estr = mu.GetGroupEvents(repo['meetup-group'], earliest, 'past')
+            if estr:
+                events = json.loads(estr)
+                for event in events:
+                    eventdate = datetime.datetime.strptime(event['local_date'], '%Y-%m-%d')
+                    tdelta = today - eventdate
+                    if tdelta.days > 0 and tdelta.days < 365:
+                        ecount = ecount + 1    
+        repo['meetings'] = ecount
+
+    repos.sort(key=lambda x: x['name'])
+    repos.sort(key=lambda x: x['region'], reverse=True)
+   
+    sha = ''
+    r = gh.GetFile('owasp.github.io', '_data/chapters.json')
+    if gh.TestResultCode(r.status_code):
+        doc = json.loads(r.text)
+        sha = doc['sha']
+
+    contents = json.dumps(repos, indent=4)
+    r = gh.UpdateFile('owasp.github.io', '_data/chapters.json', contents, sha)
+    if gh.TestResultCode(r.status_code):
+        logging.info('Updated _data/chapters.json successfully')
+    else:
+        logging.error(f"Failed to update _data/chapters.json: {r.text}")
+
 def parse_leaderline(line):
     ename = line.find(']')
     name = line[line.find('[') + 1:line.find(']')]
@@ -210,12 +365,12 @@ def create_community_events(gh, mu, repos):
 
 
 def update_chapter_admin_team(gh):
-    team_id = gh.GetTeamId('chapter-administration')
-    if team_id:
-        repos = gh.GetPublicRepositories('www-chapter')
-        for repo in repos:
+    repos = gh.GetPublicRepositories('www-chapter-')
+    team_repos = gh.GetTeamRepos("chapter-administration")
+    for repo in repos:
+        if repo['name'] not in team_repos:
             repoName = repo['name']
-            r = gh.AddRepoToTeam(str(team_id), repoName)
+            r = gh.AddRepoToTeam("chapter-administration", repoName)
             if not r.ok:
                 logging.info(f'Failed to add repo: {r.text}')
 
@@ -279,26 +434,75 @@ def get_repos():
 
     return repos
 
+def do_stage_one():
+    repos = get_repos()
+    chapter_repos = []
+    gh = github.OWASPGitHub()
+    for repo in repos:
+        if 'www-chapter-' in repo['name']:
+            chapter_repos.append(repo)
 
-def main(name: str) -> None:
-    if name != 'orchestrator':
-        logging.warn('Returning from func due to missing str')
-        return
-        
-    utc_timestamp = datetime.datetime.utcnow().replace(
-        tzinfo=datetime.timezone.utc).isoformat()
+    if len(chapter_repos) > 0:
+        logging.info("Building chapter json file")
+        try:
+            build_chapter_json(chapter_repos, gh)
+        except Exception as err:
+            logging.error(f"Exception building chapter json: {err}")
 
-    logging.info('BuildSiteFiles function ran at %s', utc_timestamp)
-    
-    #call get repos like this once because leaders and community events both use it
+def do_stage_two():
+    repos = get_repos()
+    project_repos = []
+    gh = github.OWASPGitHub()
+    for repo in repos:
+        if 'www-project-' in repo['name']:
+            project_repos.append(repo)
+
+    if len(project_repos) > 0:
+        logging.info("Building project json file")
+        try:
+            build_project_json(project_repos, gh)
+        except Exception as err:
+            logging.error(f"Exception building project json: {err}")
+
+def do_stage_three():
+    repos = get_repos()
+    committee_repos = []
+    event_repos = []
+    gh = github.OWASPGitHub()
+    for repo in repos:
+        if 'www-committee-' in repo['name']:
+            committee_repos.append(repo)
+        elif 'www-revent-' in repo['name']:
+            event_repos.append(repo)            
+
+    if len(committee_repos) > 0:
+        logging.info('Building committees json file')
+        try:
+            build_committee_json(committee_repos, gh)
+        except Exception as err:
+            logging.error(f"Exception building committees json file: {err}")
+
+    if len(event_repos) > 0:
+        logging.info("Building event json file")
+        try:
+            build_event_json(event_repos, gh)
+        except Exception as err:
+            logging.error(f"Exception building event json: {err}")
+
+def do_stage_four():
     repos = get_repos()
     gh = github.OWASPGitHub()
+    
     logging.info('Building leaders json file')
     try:
         build_leaders_json(gh, repos)
     except Exception as err:
         logging.error(f"Exception updating leaders json file: {err}")
-    
+
+def do_stage_five():
+    repos = get_repos()
+    gh = github.OWASPGitHub()
+
     logging.info('Updating community events')
     mu = meetup.OWASPMeetup()
     try:
@@ -306,17 +510,8 @@ def main(name: str) -> None:
     except Exception as err:
         logging.error(f"Exception updating community events: {err}")
 
-    logging.info('Updating inactive chapters')
-    try:
-        build_inactive_chapters_json(gh)
-    except Exception as err:
-        logging.error(f"Exception updating inactive chapters: {err}")    
-
-    logging.info("Building staff projects and milestones json files")
-    try:
-        helperfuncs.build_staff_project_json(gh)
-    except Exception as err:
-        logging.error(f"Exception building staff projects json: {err}")
+def do_stage_six():
+    gh = github.OWASPGitHub()
 
     logging.info('Updating Chapter Administration Team repositories')
     try:
@@ -324,6 +519,16 @@ def main(name: str) -> None:
     except Exception as err:
         logging.error(f"Exception updating Chapter Administration team: {err}")
 
+def do_stage_seven():
+    gh = github.OWASPGitHub()
+    logging.info('Updating inactive chapters')
+    try:
+        build_inactive_chapters_json(gh)
+    except Exception as err:
+        logging.error(f"Exception updating inactive chapters: {err}")  
+
+def do_stage_eight():
+    gh = github.OWASPGitHub()
     logging.info('Updating corp_members.yml sitedata from site.data')
     try:
         update_corp_members(gh)
@@ -337,7 +542,42 @@ def main(name: str) -> None:
     except Exception as err:
         logging.error(f"Exception building sitedata/events yml: {err}")
 
-    logging.info('BuildStaticWebsiteFiles timer trigger function ran at %s', utc_timestamp)    
 
+def main(name: str) -> None:
+    if 'stage' not in name:
+        logging.warn('Returning from func due to bad stage')
+        return
+        
+    utc_timestamp = datetime.datetime.utcnow().replace(
+        tzinfo=datetime.timezone.utc).isoformat()
 
+    logging.info('BuildSiteFiles function ran at %s with stage %s', utc_timestamp, name)
     
+    if name == 'stage1':
+        do_stage_one()
+    elif name == 'stage2':
+        do_stage_two()
+    elif name == 'stage3':
+        do_stage_three()
+    elif name == 'stage4':
+        do_stage_four()
+    elif name == 'stage5':
+        do_stage_five()
+    elif name == 'stage6':
+        do_stage_six()
+    elif name == 'stage7':
+        do_stage_seven()
+    elif name == 'stage8':
+        do_stage_eight()
+      
+
+    # Staff Projects no longer located on website (sarcasm:thanks for that :p )
+    # logging.info("Building staff projects and milestones json files")
+    # try:
+    #     helperfuncs.build_staff_project_json(gh)
+    # except Exception as err:
+    #     logging.error(f"Exception building staff projects json: {err}")
+    
+    utc_timestamp = datetime.datetime.utcnow().replace(
+        tzinfo=datetime.timezone.utc).isoformat()
+    logging.info(f"BuildSiteFiles finished at {utc_timestamp} with stage {name}")

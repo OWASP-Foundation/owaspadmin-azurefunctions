@@ -19,8 +19,9 @@ class OWASPGitHub:
     commit_fragment = "repos/OWASP/:repo/commits"
     content_fragment = "repos/OWASP/:repo/contents/:path"
     pages_fragment = "repos/OWASP/:repo/pages"
-    team_addrepo_fragment = "teams/:team_id/repos/OWASP/:repo"
+    team_addrepo_fragment = "orgs/OWASP/teams/:team_slug/repos/OWASP/:repo" #"teams/:team_id/repos/OWASP/:repo"
     team_getbyname_fragment = "orgs/OWASP/teams/:team_slug"
+    team_listrepo_fragment = "orgs/OWASP/teams/:team_slug/repos"
     search_repos_fragment = "search/repositories"
 
     of_org_fragment = "orgs/OWASP-Foundation/repos"
@@ -590,11 +591,24 @@ class OWASPGitHub:
     
         return r, rfiles
 
+    def GetTeamRepos(self, team_name):
+        repofrag = self.team_listrepo_fragment.replace(':team_slug', team_name)
+        headers = self.GetHeaders()
+
+        url = self.gh_endpoint + repofrag
+        r = requests.get(url = url, headers=headers)
+        repo_names = []
+        if r.ok:
+            jsonRepos = json.loads(r.text)
+            for repo in jsonRepos:
+                repo_names.append(repo['name'])
+
+        return repo_names
+
     def GetTeamId(self, team_name):
         getTeamUrl = self.team_getbyname_fragment.replace(':team_slug', team_name)
-        headers = {"Authorization": "token " + self.apitoken,
-            "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
-        }
+        headers = self.GetHeaders()
+
         url = self.gh_endpoint + getTeamUrl
         r = requests.get(url = url, headers=headers)
         team_id = None
@@ -605,11 +619,9 @@ class OWASPGitHub:
         return team_id
 
     def AddRepoToTeam(self, team_id, repo):
-        repofrag = self.team_addrepo_fragment.replace(':team_id', team_id)
+        repofrag = self.team_addrepo_fragment.replace(':team_slug', team_id)
         repofrag = repofrag.replace(':repo', repo)
-        headers = {"Authorization": "token " + self.apitoken,
-            "Accept":"application/vnd.github.hellcat-preview+json, application/vnd.github.inertia-preview+json"
-        }
+        headers = self.GetHeaders()
 
         url = self.gh_endpoint + repofrag
 
