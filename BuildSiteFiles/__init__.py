@@ -543,7 +543,7 @@ def do_stage_eight():
         logging.error(f"Exception building sitedata/events yml: {err}")
 
 
-def main(name: str) -> None:
+def main(name: str) -> str:
     if 'stage' not in name:
         logging.warn('Returning from func due to bad stage')
         return
@@ -577,7 +577,9 @@ def main(name: str) -> None:
     #     helperfuncs.build_staff_project_json(gh)
     # except Exception as err:
     #     logging.error(f"Exception building staff projects json: {err}")
-    
+
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
     logging.info(f"BuildSiteFiles finished at {utc_timestamp} with stage {name}")
+
+    return name

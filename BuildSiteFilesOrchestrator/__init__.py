@@ -15,9 +15,13 @@ import azure.durable_functions as df
 def orchestrator_function(context: df.DurableOrchestrationContext):
     stages = 8
     on_stage = 1
+    outputs = []
     while on_stage <= stages:        
         logging.info(f'Calling activity with stage {on_stage}')
-        yield context.call_activity('BuildSiteFiles', f"stage{on_stage}")
+        res = yield context.call_activity('BuildSiteFiles', f"stage{on_stage}")
+        outputs.append(res)
         on_stage = on_stage + 1
+
+    return outputs
     
 main = df.Orchestrator.create(orchestrator_function)
