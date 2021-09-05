@@ -45,11 +45,14 @@ class OWASPGitHub:
     GH_REPOTYPE_EVENT = 3
     
     def HandleRateLimit(self, r):
+        retry = False
         if 'RetryAfter' in r.headers:
-            time.sleep(r.headers['RetryAfter'])
+            retry = True
+            time.sleep(r.headers['Retry-After'])
         elif 'X-RateLimit-Remaining' in r.headers and r.headers['X-RateLimit-Remaining'] < 50:
             time.sleep(1 * random.randint(0, 3))
 
+        return retry
 
     def GetHeaders(self):
         headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
@@ -103,19 +106,10 @@ class OWASPGitHub:
         
         #bytestosend = base64.b64encode(filecstr.encode())   
         headers = {"Authorization": "token " + self.apitoken}
-        trycount = 1
-        while trycount <= 4:
-            try:
-                r = requests.get(url = url, headers=headers)
-                self.HandleRateLimit(r)
-                trycount = 5
-            except ConnectionError as err:
-                #time.sleep(10 * trycount)
-                trycount = trycount + 1
-                if trycount == 5:
-                   raise err
-
-
+        r = requests.get(url = url, headers=headers)
+        while(self.HandleRateLimit(r)):
+            r = requests.get(url = url, headers=headers)
+    
         return r
 
     def GetOFFile(self, repo, filepath):
@@ -156,7 +150,9 @@ class OWASPGitHub:
         }
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.put(url = url, headers=headers, data=json.dumps(data))
-        self.HandleRateLimit(r)
+        while(self.HandleRateLimit(r)):
+            r = requests.put(url = url, headers=headers, data=json.dumps(data))
+
         return r
 
     def EnablePages(self, repoName, rtype):
@@ -299,9 +295,10 @@ class OWASPGitHub:
             #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
             url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) + "&per_page=100" # I am concerned that this search might use a cache and I wonder how often the cache is updated...
             r = requests.get(url=url, headers = headers)
-            
+            while(self.HandleRateLimit(r)):
+                r = requests.get(url=url, headers = headers)
+
             if r.ok:
-                self.HandleRateLimit(r)
                 repos = json.loads(r.text)
                 if pageend == -1 and r.links and 'last' in r.links:
                     endlink = r.links['last']['url']
@@ -639,7 +636,9 @@ class OWASPGitHub:
         data = { "permission" : self.PERM_TYPE_ADMIN}
         jsonData = json.dumps(data)
         r = requests.put(url = url, headers=headers, data=jsonData)
-        self.HandleRateLimit(r)
+        while(self.HandleRateLimit(r)):
+            r = requests.put(url = url, headers=headers, data=jsonData)
+
         return r
 
     def AddPersonToRepo(self, person, repo):
