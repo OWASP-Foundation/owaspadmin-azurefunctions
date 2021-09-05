@@ -2,6 +2,8 @@ import datetime
 import json
 import re
 import os
+import time
+import random
 import azure.functions as func
 from ..SharedCode import github
 from ..SharedCode import helperfuncs
@@ -333,15 +335,16 @@ def create_community_events(gh, mu, repos):
     events = []
     edate = datetime.datetime.today() + datetime.timedelta(-30)
     earliest = edate.strftime('%Y-%m-')+"01T00:00:00.000"
+    if mu.Login():
+        for repo in repos:
+            rname = repo['name']
+            if 'www-chapter-' not in rname and 'www-project-' not in rname and 'www-committee-' not in rname and 'www-revent-' not in rname:
+                continue
 
-    for repo in repos:
-        rname = repo['name']
-        if 'www-chapter' not in rname and 'www-project' not in rname and 'www-committee' not in rname and 'www-revent' not in rname:
-            continue
-
-        if 'meetup-group' in repo and repo['meetup-group']:
-            if mu.Login():
+            if 'meetup-group' in repo and repo['meetup-group']:
+                # Meetup throttling is likely occuring. We should slow these down....
                 mstr = mu.GetGroupEvents(repo['meetup-group'], earliest)
+                time.sleep(0 + random.randint(0, 2))
                 if mstr:
                     muej = json.loads(mstr)
                     add_to_events(muej, events, rname)
