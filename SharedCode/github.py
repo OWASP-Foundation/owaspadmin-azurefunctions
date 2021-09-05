@@ -44,6 +44,13 @@ class OWASPGitHub:
     GH_REPOTYPE_COMMITTEE = 2
     GH_REPOTYPE_EVENT = 3
     
+    def HandleRateLimit(self, r):
+        if 'RetryAfter' in r.headers:
+            time.sleep(r.headers['RetryAfter'])
+        elif 'X-RateLimit-Remaining' in r.headers and r.headers['X-RateLimit-Remaining'] < 50:
+            time.sleep(1 * random.randint(0, 3))
+
+
     def GetHeaders(self):
         headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
             "Accept":"application/vnd.github.v3+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
@@ -100,12 +107,14 @@ class OWASPGitHub:
         while trycount <= 4:
             try:
                 r = requests.get(url = url, headers=headers)
+                self.HandleRateLimit(r)
                 trycount = 5
             except ConnectionError as err:
                 #time.sleep(10 * trycount)
                 trycount = trycount + 1
                 if trycount == 5:
                    raise err
+
 
         return r
 
@@ -147,6 +156,7 @@ class OWASPGitHub:
         }
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.put(url = url, headers=headers, data=json.dumps(data))
+        self.HandleRateLimit(r)
         return r
 
     def EnablePages(self, repoName, rtype):
@@ -291,6 +301,7 @@ class OWASPGitHub:
             r = requests.get(url=url, headers = headers)
             
             if r.ok:
+                self.HandleRateLimit(r)
                 repos = json.loads(r.text)
                 if pageend == -1 and r.links and 'last' in r.links:
                     endlink = r.links['last']['url']
@@ -628,7 +639,7 @@ class OWASPGitHub:
         data = { "permission" : self.PERM_TYPE_ADMIN}
         jsonData = json.dumps(data)
         r = requests.put(url = url, headers=headers, data=jsonData)
-
+        self.HandleRateLimit(r)
         return r
 
     def AddPersonToRepo(self, person, repo):

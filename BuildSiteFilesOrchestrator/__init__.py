@@ -16,9 +16,11 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     stages = 8
     on_stage = 1
     outputs = []
+    ro = df.RetryOptions(60000, 3)
+
     while on_stage <= stages:        
         logging.info(f'Calling activity with stage {on_stage}')
-        res = yield context.call_activity('BuildSiteFiles', f"stage{on_stage}")
+        res = yield context.call_activity_with_rety('BuildSiteFiles', ro, f"stage{on_stage}")
         outputs.append(res)
         on_stage = on_stage + 1
 

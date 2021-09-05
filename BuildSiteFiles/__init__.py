@@ -448,6 +448,7 @@ def do_stage_one():
             build_chapter_json(chapter_repos, gh)
         except Exception as err:
             logging.error(f"Exception building chapter json: {err}")
+            raise err
 
 def do_stage_two():
     repos = get_repos()
@@ -463,8 +464,10 @@ def do_stage_two():
             build_project_json(project_repos, gh)
         except Exception as err:
             logging.error(f"Exception building project json: {err}")
+            raise err
 
 def do_stage_three():
+    lasterr = None
     repos = get_repos()
     committee_repos = []
     event_repos = []
@@ -481,13 +484,16 @@ def do_stage_three():
             build_committee_json(committee_repos, gh)
         except Exception as err:
             logging.error(f"Exception building committees json file: {err}")
-
+            lasterr = err
     if len(event_repos) > 0:
         logging.info("Building event json file")
         try:
             build_event_json(event_repos, gh)
         except Exception as err:
             logging.error(f"Exception building event json: {err}")
+            lasterr = err
+    if lasterr:
+        raise lasterr
 
 def do_stage_four():
     repos = get_repos()
@@ -498,6 +504,7 @@ def do_stage_four():
         build_leaders_json(gh, repos)
     except Exception as err:
         logging.error(f"Exception updating leaders json file: {err}")
+        raise err
 
 def do_stage_five():
     repos = get_repos()
@@ -509,6 +516,7 @@ def do_stage_five():
         create_community_events(gh, mu, repos)
     except Exception as err:
         logging.error(f"Exception updating community events: {err}")
+        raise err
 
 def do_stage_six():
     gh = github.OWASPGitHub()
@@ -518,6 +526,7 @@ def do_stage_six():
         update_chapter_admin_team(gh)
     except Exception as err:
         logging.error(f"Exception updating Chapter Administration team: {err}")
+        raise err
 
 def do_stage_seven():
     gh = github.OWASPGitHub()
@@ -526,22 +535,27 @@ def do_stage_seven():
         build_inactive_chapters_json(gh)
     except Exception as err:
         logging.error(f"Exception updating inactive chapters: {err}")  
+        raise err
 
 def do_stage_eight():
+    lasterr = None
     gh = github.OWASPGitHub()
     logging.info('Updating corp_members.yml sitedata from site.data')
     try:
         update_corp_members(gh)
     except Exception as err:
         logging.error(f"Exception updating corp_members.yml: {err}")
-    
+        lasterr = err
 
     logging.info('Building sitedata/events yml file')
     try:
         update_events_sitedata(gh)
     except Exception as err:
         logging.error(f"Exception building sitedata/events yml: {err}")
+        lasterr = err
 
+    if lasterr:
+        raise lasterr
 
 def main(name: str) -> str:
     if 'stage' not in name:
