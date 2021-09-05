@@ -46,7 +46,7 @@ class OWASPGitHub:
     
     def HandleRateLimit(self, r):
         retry = False
-        if 'RetryAfter' in r.headers:
+        if 'Retry-After' in r.headers:
             retry = True
             time.sleep(r.headers['Retry-After'])
         elif 'X-RateLimit-Remaining' in r.headers and r.headers['X-RateLimit-Remaining'] < 50:
