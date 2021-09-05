@@ -49,7 +49,7 @@ class OWASPGitHub:
         if 'Retry-After' in r.headers:
             retry = True
             time.sleep(r.headers['Retry-After'])
-        elif 'X-RateLimit-Remaining' in r.headers and r.headers['X-RateLimit-Remaining'] < 50:
+        elif 'X-RateLimit-Remaining' in r.headers and int(r.headers['X-RateLimit-Remaining']) < 50:
             time.sleep(1 * random.randint(0, 3))
 
         return retry
