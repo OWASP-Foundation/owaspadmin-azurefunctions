@@ -33,7 +33,7 @@ def main(msg: func.QueueMessage) -> None:
         handle_checkout_session_completed(job_payload)
     elif job_type == 'charge.refunded':
         handle_order_refunded(job_payload.get('id'), job_payload.get('amount_refunded'))
-    elif job_type == 'invoice.paid': # includes things like subscriptions (see Stripe subscription)
+    elif job_type == 'invoice.paid' and job_payload.get('billing_reason', None) != 'subscription_update': # includes things like subscriptions (see Stripe subscription)
         subscription_id = job_payload.get('subscription', None)
         if subscription_id:
             subscription = stripe.Subscription.retrieve(
