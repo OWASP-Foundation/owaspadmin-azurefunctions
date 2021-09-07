@@ -40,7 +40,7 @@ def main(msg: func.QueueMessage) -> None:
                 subscription_id,
                 api_key=os.environ["STRIPE_SECRET"]
             )
-            if subscription:
+            if subscription and subscription.get('status', None) != 'canceled':
                 submeta = subscription.get('metadata', None)
                 if submeta:
                     if submeta.get('purchase_type', None) == 'membership':
