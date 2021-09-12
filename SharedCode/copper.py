@@ -9,7 +9,7 @@ import time
 
 class OWASPCopper:
 
-    cp_base_url = "https://api.prosperworks.com/developer_api/v1/"
+    cp_base_url = "https://api.copper.com/developer_api/v1/"
     cp_projects_fragment = "projects/"
     cp_opp_fragment = "opportunities/"
     cp_pipeline_fragment = "pipelines/"
