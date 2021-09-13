@@ -44,16 +44,7 @@ def main(mytimer: func.TimerRequest) -> None:
             'Repo': json.dumps(repo)
         }
         
+        table_service.insert_or_replace_entity(os.environ['REPOSITORY_TABLE'], entity=repos_entry)
         
-        ip_row = None
-        try:
-            ip_row = table_service.get_entity(os.environ['REPOSITORY_TABLE'], repos_entry['PartitionKey'], repos_entry['RowKey'])
-        except:
-            pass
-        if not ip_row:
-            table_service.insert_entity(table_name=os.environ['REPOSITORY_TABLE'], entity=repos_entry)
-            ip_row = repos_entry
-        else:
-            table_service.update_entity(os.environ['REPOSITORY_TABLE'], ip_row)
 
     logging.info("function complete")
