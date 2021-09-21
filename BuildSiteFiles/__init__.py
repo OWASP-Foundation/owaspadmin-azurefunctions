@@ -181,7 +181,7 @@ def add_to_leaders(repo, content, all_leaders, stype):
     leader_count = 0
     in_leaders = False
     for line in lines:
-        testline = line.lower()
+        testline = line.lower().strip()
         if in_leaders and leader_count > 0 and not testline.startswith('*'):
             break
         
