@@ -191,9 +191,9 @@ def add_to_leaders(repo, content, all_leaders, stype):
             in_leaders = True
             continue
 
-        fstr = line.find('[')
-        if((line.startswith('-') or line.startswith('*')) and fstr > -1 and fstr < 4):
-            name, email = parse_leaderline(line)
+        fstr = testline.find('[')
+        if((testline.startswith('-') or testline.startswith('*')) and fstr > -1 and fstr < 4):
+            name, email = parse_leaderline(testline)
             if 'leader.email@owasp.org' not in email and leader_count < max_leaders: # default
                 leader = {}
                 leader['name'] = name
