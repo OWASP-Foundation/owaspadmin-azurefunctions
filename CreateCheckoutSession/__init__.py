@@ -340,10 +340,10 @@ def make_subscription_api_request(request: Dict) -> Dict:
             amount = 9500 
             description = 'OWASP Two Year Membership'
         elif discount and membership_type == 'Lifetime':
-            amount = 18000 # 20000
+            amount = 20000
             description = 'OWASP Discounted Lifetime Membership'
         elif membership_type == 'Lifetime':
-            amount = 45000 # 50000
+            amount = 50000
             description = 'OWASP Lifetime Membership'
 
         api_request['payment_intent_data'] = {
