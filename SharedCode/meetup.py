@@ -3,6 +3,7 @@ import json
 import base64
 from pathlib import Path
 import os
+import logging
 
 class OWASPMeetup:
     meetup_api_url = "https://api.meetup.com"
@@ -61,4 +62,6 @@ class OWASPMeetup:
         json_res = ''
         if res.ok:
             json_res = res.text
+        else:
+            logging.warn(f"GetGroupEvents failed with {res.text}")
         return json_res
