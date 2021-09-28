@@ -143,7 +143,7 @@ def build_chapter_json(repos, gh):
         today = datetime.datetime.today()
         earliest = f"{today.year - 1}-01-01T00:00:00.000"
         if 'meetup-group' in repo:
-            estr = mu.GetGroupEvents(repo['meetup-group'], earliest, 'past')
+            estr = mu.GetGroupEvents(repo['meetup-group'], earliest=earliest, status='past')
             if estr:
                 events = json.loads(estr)
                 for event in events:
