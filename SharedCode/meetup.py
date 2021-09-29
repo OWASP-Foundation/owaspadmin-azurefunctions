@@ -4,6 +4,8 @@ import base64
 from pathlib import Path
 import os
 import logging
+import time
+import random
 
 class OWASPMeetup:
     meetup_api_url = "https://api.meetup.com"
@@ -11,6 +13,10 @@ class OWASPMeetup:
     refresh_token = ''
     oauth_token = ''
     oauth_token_secret = ''
+
+    def HandleRateLimit(self):
+        time.sleep(1 * random.randint(0, 3))
+
 
     def Login(self):
         login_url  = f"https://secure.meetup.com/oauth2/authorize?scope=basic+event_management+group_content_edit&client_id={os.environ['MU_CONSUMER_KEY']}&redirect_uri={os.environ['MU_REDIRECT_URI']}&response_type=anonymous_code"
@@ -57,11 +63,22 @@ class OWASPMeetup:
             event_url = event_url + f"&no_earlier_than={earliest}"
         if status:
             event_url = event_url + f"&status={status}"
-            
-        res = requests.get(event_url, headers=headers)
+        
         json_res = ''
-        if res.ok:
-            json_res = res.text
-        else:
-            logging.warn(f"GetGroupEvents failed with {res.text}")
+        tryagain = True
+        count = 0
+        maxcount = 5
+        while(tryagain and count < maxcount):
+            res = requests.get(event_url, headers=headers)
+            json_res = ''
+            if res.ok:
+                json_res = res.text
+                tryagain = False
+            elif 'throttled' in res.text:
+                self.HandleRateLimit()
+                count = count + 1
+            else:
+                logging.warn(f"GetGroupEvents failed with {res.text}")
+                tryagain = False
+                
         return json_res
