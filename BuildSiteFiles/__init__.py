@@ -173,6 +173,7 @@ def parse_leaderline(line):
     ename = line.find(']')
     name = line[line.find('[') + 1:line.find(']')]
     email = line[line.find('(', ename) + 1:line.find(')', ename)]
+    email = email.lower()
     return name, email
 
 def add_to_leaders(repo, content, all_leaders, stype):
@@ -181,13 +182,13 @@ def add_to_leaders(repo, content, all_leaders, stype):
     leader_count = 0
     in_leaders = False
     for line in lines:
-        testline = line.lower().strip()
+        testline = line.strip()
         if in_leaders and leader_count > 0 and not testline.startswith('*'):
             break
         
-        if(testline.startswith('###') and 'leader' not in testline):
+        if(testline.startswith('###') and 'leader' not in testline.lower()):
             break
-        elif testline.startswith('###') and 'leader' in testline:
+        elif testline.startswith('###') and 'leader' in testline.lower():
             in_leaders = True
             continue
 
