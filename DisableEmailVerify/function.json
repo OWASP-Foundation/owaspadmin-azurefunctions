@@ -1,0 +1,40 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "msg",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "disableemailverifyqueue",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "msg",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "disableemail15daynoticequeue",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "msg",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "disableemail7daynoticequeue",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "msg",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "disableemail1daynoticequeue",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "name": "msg",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "disableowaspemailqueue",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}

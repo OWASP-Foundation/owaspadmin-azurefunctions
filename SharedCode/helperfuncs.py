@@ -13,7 +13,16 @@ from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.owaspmailchimp import OWASPMailchimp
 from ..SharedCode.copper import OWASPCopper
 from ..SharedCode.googleapi import OWASPGoogle
+from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Attachment
+from sendgrid.helpers.mail import FileContent
+from sendgrid.helpers.mail import FileName
+from sendgrid.helpers.mail import FileType
+from sendgrid.helpers.mail import Disposition
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import From
 
 def get_datetime_helper(datestr):
     retdate = None
@@ -397,6 +406,35 @@ def build_staff_project_json(gh):
         logging.info('Updated www-staff/_data/projects.json successfully')
     else:
         logging.error(f"Failed to update www-staff/_data/projects.json: {r.text}")
+
+
+def send_notification(user_email, day):
+    template_id = None
+    if day == 1:
+        template_id = os.environ.get('SG_MEMBER_TEMPLATE_1_DAY')
+    elif day == 7:
+        template_id = os.environ.get('SG_MEMBER_TEMPLATE_7_DAY')
+    elif day == 15:
+        template_id = os.environ.get('SG_MEMBER_TEMPLATE_15_DAY')
+    else:
+        logging.exception('SendGrid message not found')
+        return False
+    
+    message = Mail(
+        from_email=From('noreply@owasp.org', 'OWASP'),
+        to_emails=user_email,
+        html_content='<strong>Email Removal</strong>')
+    message.template_id = template_id
+    
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
+        return True
+    except Exception as ex:
+        template = "An exception of type {0} occurred while sending an email. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        logging.exception(message)
+        return False
 
 class Leader:
     def __init__(self, name, email):
