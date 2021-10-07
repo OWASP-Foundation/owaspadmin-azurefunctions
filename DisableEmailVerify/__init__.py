@@ -107,6 +107,7 @@ def membership_found(email): # check copper for membership data and then Stripe,
                     return True
 
                 membership_end = metadata.get('membership_end', None)
+                memend_date = None
                 if membership_end != None:
                     memend_date = datetime.strptime(membership_end, "%m/%d/%Y")
 
