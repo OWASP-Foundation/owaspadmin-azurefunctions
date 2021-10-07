@@ -9,28 +9,28 @@
       "connection": "AzureWebJobsStorage"
     },
     {
-      "name": "msg",
+      "name": "disableemail15daynoticequeue",
       "type": "queue",
       "direction": "out",
       "queueName": "disableemail15daynoticequeue",
       "connection": "AzureWebJobsStorage"
     },
     {
-      "name": "msg",
+      "name": "disableemail7daynoticequeue",
       "type": "queue",
       "direction": "out",
       "queueName": "disableemail7daynoticequeue",
       "connection": "AzureWebJobsStorage"
     },
     {
-      "name": "msg",
+      "name": "disableemail1daynoticequeue",
       "type": "queue",
       "direction": "out",
       "queueName": "disableemail1daynoticequeue",
       "connection": "AzureWebJobsStorage"
     },
     {
-      "name": "msg",
+      "name": "disableowaspemailqueue",
       "type": "queue",
       "direction": "out",
       "queueName": "disableowaspemailqueue",
