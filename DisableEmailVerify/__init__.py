@@ -81,12 +81,13 @@ def add_to_appropriate_queue(customer, email, fullName, queues):
         last_notification = metadata.get(
             'membership_last_notification', None)
 
-        if days_sent.days >= 7 and last_notification == '15 day':
-            queues['7day'].set(json.dumps(msg))
-        elif days_sent.days >= 15 and last_notification == '7 day':
-            queues['1day'].set(json.dumps(msg))
-        elif days_sent.days >= 15 and last_notification == '1 day':
+        if days_sent.days >= 1 and last_notification == '1 day':
             queues['0day'].set(json.dumps(msg))
+        elif days_sent.days >= 6 and last_notification == '7 day':
+            queues['1day'].set(json.dumps(msg))
+        elif days_sent.days >= 8 and last_notification == '15 day':
+            queues['7day'].set(json.dumps(msg))
+        
 
 def membership_found(email): # check copper for membership data and then Stripe, for good measure
     cp = copper.OWASPCopper()
