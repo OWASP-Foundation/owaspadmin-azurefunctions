@@ -13,6 +13,7 @@ from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.googleapi import OWASPGoogle
 import datetime
 from datetime import datetime
+from datetime import timezone
 import logging
 import azure.functions as func
 import json
@@ -74,7 +75,7 @@ cp = copper.OWASPCopper()
 def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.QueueMessage]) -> None:
     
     utc_timestamp = datetime.utcnow().replace(
-        tzinfo=datetime.timezone.utc).isoformat()
+        tzinfo=timezone.utc).isoformat()
 
     if mytimer.past_due:
         logging.info('The timer is past due!')
