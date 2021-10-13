@@ -19,15 +19,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
     try:
         gh = github.OWASPGitHub()
-        ch_repos = gh.GetPublicRepositories('www-chapter-')
-        pr_repos = gh.GetPublicRepositories('www-project-')
-        cm_repos = gh.GetPublicRepositories('www-committee-')
-        ev_repos = gh.GetPublicRepositories('www-revent-')
-        repos = []
-        repos.extend(ch_repos)
-        repos.extend(pr_repos)
-        repos.extend(cm_repos)
-        repos.extend(ev_repos)
+        repos = gh.GetPublicRepositories('www-')
     except Exception as err: 
         logging.warn(f'exception in getting repos: {err}')
 
