@@ -260,7 +260,7 @@ def process_member_report(datastr):
         retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.cp_opportunity_pipeline_id_membership]) # all Won Opportunities for Individual Membership
         if retopp != '':
             opportunities = json.loads(retopp)
-            if len(opportunities) < 200:
+            if len(opportunities) < 100:
                 logging.debug('listing opportunities done')
                 done = True
             for opp in opportunities:

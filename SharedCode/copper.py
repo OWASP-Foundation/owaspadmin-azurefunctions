@@ -139,7 +139,7 @@ class OWASPCopper:
         
     def ListOpportunities(self, page_number=1, pipeline_ids=None, status_ids=[0,1,2,3]):
         data = {
-            'page_size': 200,
+            'page_size': 100,
             'sort_by': 'name',
             'page_number':page_number,
             'status_ids':status_ids

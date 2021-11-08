@@ -131,7 +131,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
                     msg = {
                         'customer_id': -1,
                         'email': user_email,
-                        'fullName': user['fullName']
+                        'fullName': user['name']['fullName']
                     }
 
                     logging.info(f'Adding {user_email} to verify queue')

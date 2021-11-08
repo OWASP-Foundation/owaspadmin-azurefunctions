@@ -241,11 +241,11 @@ def build_leaders_json(gh, repos):
         doc = json.loads(r.text)
         sha = doc['sha']
     #logging.info("Updating leaders file in main website....")
-    r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders, ensure_ascii=False, indent = 4), sha)
+    r = gh.UpdateFile('owasp.github.io', '_data/leaders.json', json.dumps(all_leaders, ensure_ascii=False, indent=4), sha)
     if r.ok:
         logging.info('Update leaders json succeeded')
     else:
-        logging.error(f'Update leaders json failed: {r.status}')
+        logging.error('Update leaders json failed: %s', r.status)
 
 def build_inactive_chapters_json(gh):
     repos = gh.GetInactiveRepositories('www-chapter')
