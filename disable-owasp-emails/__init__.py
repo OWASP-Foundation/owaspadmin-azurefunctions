@@ -112,6 +112,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
 
         while True:
             google_users = og.GetActiveUsers(next_page_token)
+            next_page_token = google_users.get('nextPageToken')
             for user in google_users['users']:
                 try:
                     user_email = user['primaryEmail'].lower()
@@ -133,6 +134,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
                         'fullName': user['fullName']
                     }
 
+                    logging.info(f'Adding {user_email} to verify queue')
                     disableemailverifyqueue.set(json.dumps(msg))
 
                 except Exception as ex:
@@ -141,10 +143,10 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
                         type(ex).__name__, ex.args)
                     logging.error(message)
                     errors_count = errors_count + 1
-
-            next_page_token = google_users.get('nextPageToken')
+            
             if not next_page_token:
                 break
+
     except Exception as ex:
         template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
         message = template.format(type(ex).__name__, ex.args)

@@ -56,7 +56,8 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
             '0day': disableowaspemailqueue
         }
         add_to_appropriate_queue(customer, user_email, fullname, queues)
-
+    else:
+        logging.info(f'User {user_email} is a member or leader')
 def add_to_appropriate_queue(customer, email, fullName, queues):
     metadata = customer.get('metadata', None)
     customer_id = customer['id']
@@ -66,8 +67,9 @@ def add_to_appropriate_queue(customer, email, fullName, queues):
         'fullName': fullName
     }
 
-    if not metadata or not metadata.get('membership_notified'): # case of use not notified
+    if not metadata or not metadata.get('membership_notified'): # case of user not notified
         # add to DisableEmail15DayNoticeQueue
+        logging.info('adding {email} to 15 day notice queue')
         queues['15day'].set(json.dumps(msg))
     else:        
         membership_notified_date = metadata.get(
@@ -82,10 +84,13 @@ def add_to_appropriate_queue(customer, email, fullName, queues):
             'membership_last_notification', None)
 
         if days_sent.days >= 1 and last_notification == '1 day':
+            logging.info(f'adding {email} to 0 day notice queue')
             queues['0day'].set(json.dumps(msg))
         elif days_sent.days >= 6 and last_notification == '7 day':
+            logging.info(f'adding {email} to 1 day notice queue')
             queues['1day'].set(json.dumps(msg))
         elif days_sent.days >= 8 and last_notification == '15 day':
+            logging.info(f'adding {email} to 7 day notice queue')
             queues['7day'].set(json.dumps(msg))
         
 
