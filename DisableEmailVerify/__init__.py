@@ -58,6 +58,7 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
         add_to_appropriate_queue(customer, user_email, fullname, queues)
     else:
         logging.info(f'User {user_email} is a member or leader')
+        
 def add_to_appropriate_queue(customer, email, fullName, queues):
     metadata = customer.get('metadata', None)
     customer_id = customer['id']
