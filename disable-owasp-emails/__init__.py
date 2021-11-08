@@ -109,7 +109,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
         og = OWASPGoogle()
         next_page_token = None
         errors_count = 0
-
+        msg_list = []
         while True:
             google_users = og.GetActiveUsers(next_page_token)
             next_page_token = google_users.get('nextPageToken')
@@ -134,8 +134,9 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
                         'fullName': user['name']['fullName']
                     }
 
-                    logging.info(f'Adding {user_email} to verify queue')
-                    disableemailverifyqueue.set(json.dumps(msg))
+                    logging.info(f'Adding {user_email} to message list')
+                    msg_list.append(json.dumps(msg))
+                    
 
                 except Exception as ex:
                     template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
@@ -146,6 +147,8 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
             
             if not next_page_token:
                 break
+
+        disableemailverifyqueue.set(msg_list)
 
     except Exception as ex:
         template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
