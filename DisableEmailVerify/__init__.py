@@ -149,7 +149,7 @@ def get_leader_emails():
                 json.dump(data, outfile)
         else:
             logging.error('Error retreiving leaders file from Github')
-            return
+            return []
 
         # extract emails and cleanse
         emails = []
