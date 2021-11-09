@@ -196,13 +196,17 @@ class OWASPCopper:
                                             return r.text
                                 else:
                                     logging.error(f"Membership end is missing for {email}")
+                                    opp = f'Error: Membership end is missing for {email}'
 
                     else:
                         logging.info("Failed to get opportunity: {r.text}")
+                        opp = 'Error: ' + r.text
             else:
                 logging.info(f"Failed to list opportunities: {r.text}")
+                opp = 'Error: ' + r.text
         else:
             logging.info("Failed to get person inside Opportunity")
+            opp = 'Error: failed to get person'
 
         return opp
 

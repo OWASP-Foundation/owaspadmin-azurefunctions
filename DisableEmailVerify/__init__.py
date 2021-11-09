@@ -55,6 +55,7 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
             '1day': disableemail1daynoticequeue,
             '0day': disableowaspemailqueue
         }
+
         add_to_appropriate_queue(customer, user_email, fullname, queues)
     else:
         logging.info(f'User {user_email} is a member or leader')
@@ -99,7 +100,7 @@ def membership_found(email): # check copper for membership data and then Stripe,
     cp = copper.OWASPCopper()
     try:
         opp = cp.FindMemberOpportunity(email)
-        if opp != None:
+        if opp != None: # on error this will return something other than None, defaulting to valid member because we cannot determine otherwise...
             return True
         else:
             customers = stripe.Customer.list(email=email)
@@ -129,7 +130,7 @@ def membership_found(email): # check copper for membership data and then Stripe,
 
 def is_leader(email):
     leader_emails = get_leader_emails()
-    if len(leader_emails) == 0:
+    if not leader_emails or len(leader_emails) == 0:
         logging.error(
             "Did not load any emails for the leaders.  Aborting process.")
         return True # default to true because we could not get leader emails....

@@ -152,7 +152,7 @@ def get_member_info(data):
     opp = None
     person = None
     opptxt = cp.FindMemberOpportunity(emailaddress)
-    if opptxt != None:
+    if opptxt != None and 'Error:' not in opptxt:
         opp = json.loads(opptxt)
     pertext = cp.FindPersonByEmail(emailaddress)
     if pertext != '':
