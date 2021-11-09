@@ -97,13 +97,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
     emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
 
     test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
-    test_users = [
-        'ulysses.one.suspender@owasp.org', 
-        'ulysses.two.suspender@owasp.org',
-        'ulysses.three.suspender@owasp.org',
-        'ulysses.four.suspender@owasp.org',
-        'ulysses.five.suspender@owasp.org'
-        ]
+    test_users = os.environ.get('Disable.OWASP.Emails.TestUsers', None).replace(' ','').split(',')    
 
     try:
         og = OWASPGoogle()
