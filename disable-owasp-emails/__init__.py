@@ -97,6 +97,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
     emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
 
     test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
+    logging.info(f'Running with test_mode set to {test_mode}')
     test_users = os.environ.get('Disable.OWASP.Emails.TestUsers', None).replace(' ','').split(',')    
 
     try:
@@ -107,6 +108,8 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
         while True:
             google_users = og.GetActiveUsers(next_page_token)
             next_page_token = google_users.get('nextPageToken')
+            if test_mode == 'true':
+                logging.info('working on page...')
             for user in google_users['users']:
                 try:
                     user_email = user['primaryEmail'].lower()
@@ -119,7 +122,7 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
                     if user_email in emails_to_ignore:
                         continue
                     created = datetime.strptime(user['creationTime'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                    if (datetime.today() - created).days < 7:
+                    if test_mode == 'false' and ((datetime.today() - created).days < 7):
                         continue
     
                     msg = {
