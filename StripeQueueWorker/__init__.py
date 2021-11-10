@@ -28,12 +28,17 @@ def main(msg: func.QueueMessage) -> None:
     job_payload =  payload.get('payload', {})
 
     if job_type == 'order.created':
+        logging.info('Order Created')
         handle_order_created(job_payload.get('id'))
     elif job_type == 'checkout.session.completed':
+        logging.info('Checkout Session Completed')
         handle_checkout_session_completed(job_payload)
     elif job_type == 'charge.refunded':
+        logging.info('Charge Refunded')
         handle_order_refunded(job_payload.get('id'), job_payload.get('amount_refunded'))
     elif job_type == 'invoice.paid' and job_payload['total'] != 0: # and invoice without payment should not result in a subscription
+        logging.info('Invoice Paid')
+        logging.info(f"Invoice Total: {job_payload['total']}")
         subscription_id = job_payload.get('subscription', None)
         if subscription_id:
             subscription = stripe.Subscription.retrieve(
