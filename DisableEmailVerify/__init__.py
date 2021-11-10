@@ -138,6 +138,10 @@ def is_leader(email):
     return (email in leader_emails)
 
 def get_leader_emails():
+    if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true':
+        emails = os.environ.get('Disable.OWASP.Emails.Test.Leaders', None).replace(' ','').split(',')
+        return emails
+
     try:
         gh = OWASPGitHub()
         gr = gh.GetFile('owasp.github.io', '_data/leaders.json')
