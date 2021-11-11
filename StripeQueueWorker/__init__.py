@@ -36,20 +36,20 @@ def main(msg: func.QueueMessage) -> None:
     elif job_type == 'charge.refunded':
         logging.info('Charge Refunded')
         handle_order_refunded(job_payload.get('id'), job_payload.get('amount_refunded'))
-    elif job_type == 'invoice.paid' and job_payload['total'] != 0: # and invoice without payment should not result in a subscription
-        logging.info('Invoice Paid')
-        logging.info(f"Invoice Total: {job_payload['total']}")
-        subscription_id = job_payload.get('subscription', None)
-        if subscription_id:
-            subscription = stripe.Subscription.retrieve(
-                subscription_id,
-                api_key=os.environ["STRIPE_SECRET"]
-            )
-            if subscription and subscription.get('status', None) != 'canceled':
-                submeta = subscription.get('metadata', None)
-                if submeta:
-                    if submeta.get('purchase_type', None) == 'membership':
-                        handle_checkout_session_completed(job_payload)
+    # elif job_type == 'invoice.paid' and job_payload['total'] != 0: # and invoice without payment should not result in a subscription - these seem to be handled via checkout session completed...we should remove these?
+    #     logging.info('Invoice Paid')
+    #     logging.info(f"Invoice Total: {job_payload['total']}")
+    #     subscription_id = job_payload.get('subscription', None)
+    #     if subscription_id:
+    #         subscription = stripe.Subscription.retrieve(
+    #             subscription_id,
+    #             api_key=os.environ["STRIPE_SECRET"]
+    #         )
+    #         if subscription and subscription.get('status', None) != 'canceled':
+    #             submeta = subscription.get('metadata', None)
+    #             if submeta:
+    #                 if submeta.get('purchase_type', None) == 'membership':
+    #                     handle_checkout_session_completed(job_payload)
 
 
 def update_product_inventory(order):
