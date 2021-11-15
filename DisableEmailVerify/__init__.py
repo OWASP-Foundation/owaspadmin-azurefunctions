@@ -97,8 +97,8 @@ def add_to_appropriate_queue(customer, email, fullName, queues):
         
 
 def membership_found(email): # check copper for membership data and then Stripe, for good measure
-    if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true': # temporarily indicate all are members
-        return True
+    # if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true': # temporarily indicate all are members
+    #     return True
 
     cp = copper.OWASPCopper()
     try:
