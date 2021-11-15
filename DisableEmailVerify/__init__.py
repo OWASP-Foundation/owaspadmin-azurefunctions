@@ -69,7 +69,7 @@ def add_to_appropriate_queue(customer, email, fullName, queues):
         'fullName': fullName
     }
 
-    if not metadata or not metadata.get('membership_notified'): # case of user not notified
+    if not metadata or not metadata.get('membership_notified', None): # case of user not notified
         # add to DisableEmail15DayNoticeQueue
         logging.info('adding {email} to 15 day notice queue')
         queues['15day'].set(json.dumps(msg))
@@ -100,6 +100,7 @@ def membership_found(email): # check copper for membership data and then Stripe,
     cp = copper.OWASPCopper()
     try:
         opp = cp.FindMemberOpportunity(email)
+        
         if opp != None: # on error this will return something other than None, defaulting to valid member because we cannot determine otherwise...
             return True
         else:
@@ -123,7 +124,8 @@ def membership_found(email): # check copper for membership data and then Stripe,
                 if memend_date != None and memend_date > datetime.utcnow():
                     logging.warn(f"Customer found with Stripe membership but no Copper membership: {email}")
                     return True            
-                return False
+            
+            return False # no copper opp, no Stripe customer, this is not a member (that we can tell)
     except Exception as ex:
         logging.exception(f"An exception of type {type(ex).__name__} occurred while processing a customer: {ex}")
         raise
