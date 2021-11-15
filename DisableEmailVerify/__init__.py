@@ -36,7 +36,7 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
         logging.warn("Email not found in queue message")
     
     # check if they are in Copper
-    if not membership_found(user_email) and not is_leader(user_email):
+    if (not membership_found(user_email)) and (not is_leader(user_email)):
         # check if they are an active customer
         # could be an issue if casing isn't fixed
         customers = stripe.Customer.list(
@@ -97,6 +97,9 @@ def add_to_appropriate_queue(customer, email, fullName, queues):
         
 
 def membership_found(email): # check copper for membership data and then Stripe, for good measure
+    if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true': # temporarily indicate all are members
+        return True
+
     cp = copper.OWASPCopper()
     try:
         opp = cp.FindMemberOpportunity(email)
