@@ -215,7 +215,7 @@ def update_chapter_admin_team(gh):
         repos = gh.GetPublicRepositories('www-chapter')
         for repo in repos:
             repoName = repo['name']
-            r = gh.AddRepoToTeam(str(team_id), repoName)
+            r = gh.AddRepoToTeam('chapter-administration', repoName)
             if not r.ok:
                 logging.info(f'Failed to add repo: {r.text}')
 

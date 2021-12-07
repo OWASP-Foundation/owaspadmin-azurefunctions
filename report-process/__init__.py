@@ -277,6 +277,7 @@ def process_member_report(datastr):
                 if close_date.month == today.month:
                     member_data['month'] = member_data['month'] + 1
 
+                # check this doesn't count multiple yearly memberships for one person....
                 memtype = 'unknown'
                 if 'student' in opp['name'].lower():
                     memtype = 'student'
@@ -287,7 +288,7 @@ def process_member_report(datastr):
                 elif 'honorary' in opp['name'].lower():
                     memtype = 'honorary'
                     member_data['honorary'] = member_data['honorary'] + 1
-                elif 'one' in opp['name'].lower():
+                elif 'one' in opp['name'].lower(): 
                     memtype = 'one'
                     member_data['one'] = member_data['one'] + 1
                 elif 'two' in opp['name'].lower():
