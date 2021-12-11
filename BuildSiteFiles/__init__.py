@@ -251,6 +251,9 @@ def build_inactive_chapters_json(gh, repos):
     #repos = gh.GetInactiveRepositories('www-chapter') No longer in use, use repo['build'] == 'no pages' to mean inactive
     fmt_str = "%a %b %d %H:%M:%S %Y"
     for repo in repos:
+        if repo['build'] != 'no pages': # has a build status
+            continue
+
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
         repo['name'] = " ".join(w.capitalize() for w in repo['name'].split())
         try:
