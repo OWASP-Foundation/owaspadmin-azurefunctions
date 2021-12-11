@@ -8,6 +8,9 @@ from ..SharedCode import helperfuncs
 from ..SharedCode import meetup
 
 import base64
+##############################################################
+# THIS FILE IS DEPRECATED AND SHOULD NO LONGER BE IN SERVICE #
+##############################################################
 
 def parse_leaderline(line):
     ename = line.find(']')

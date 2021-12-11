@@ -272,11 +272,8 @@ class OWASPGitHub:
 
         return result
 
-    def GetInactiveRepositories(self, matching=""):
-       return self.GetPublicRepositories(matching=matching, inactive=True)
 
-
-    def GetPublicRepositories(self, matching="", inactive=False):
+    def GetPublicRepositories(self, matching=""):
         headers = self.GetHeaders()
         
         qurl = "org:owasp is:public"
@@ -318,23 +315,24 @@ class OWASPGitHub:
                 #for repo in repos:
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
+                    
+                    if istemplate: #probably should change this in case a project/chapter/etc decides to make their repo a template for some odd reason but for now....
+                        continue
+
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
                         
                     # even if matching, we still only really want project, chapter, event, or committee repos here....
                     if not matching or (matching in repoName):
-                        if not istemplate:
-                            pages = None
-                            if haspages:
-                                pages = self.GetPages(repoName)
-                            if (not pages or pages['status'] == None) and not inactive:
-                                continue
-                            elif (pages and pages['status'] != None) and inactive:
-                                continue
-                            final_repos.append(repo)
-                        else:
-                            continue
-
-                
+                        pages = None
+                        if haspages:
+                            pages = self.GetPages(repoName)
+                        # going to change below to use repo['build'] instead
+                        # if (not pages or pages['status'] == None) and not inactive:
+                        #     continue
+                        # elif (pages and pages['status'] != None) and inactive:
+                        #     continue
+                        final_repos.append(repo)
+                        
                 for repo in final_repos: 
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
@@ -351,7 +349,7 @@ class OWASPGitHub:
                     if pages:
                         addrepo['build'] = pages['status']
                     else:
-                        addrepo['build'] = 'no pages'
+                        addrepo['build'] = 'no pages' # in theory this should be 'inactive'
 
                     r = self.GetFile(repoName, 'index.md')
                     if r.ok:
@@ -430,8 +428,6 @@ class OWASPGitHub:
                                     addrepo['meetup-group'] = mu.strip()
 
                         results.append(addrepo)
-
-
 
         return results
 

@@ -247,8 +247,8 @@ def build_leaders_json(gh, repos):
     else:
         logging.error('Update leaders json failed: %s', r.status)
 
-def build_inactive_chapters_json(gh):
-    repos = gh.GetInactiveRepositories('www-chapter')
+def build_inactive_chapters_json(gh, repos):
+    #repos = gh.GetInactiveRepositories('www-chapter') No longer in use, use repo['build'] == 'no pages' to mean inactive
     fmt_str = "%a %b %d %H:%M:%S %Y"
     for repo in repos:
         repo['name'] = repo['name'].replace('www-chapter-','').replace('-', ' ')
@@ -533,10 +533,11 @@ def do_stage_six():
         raise err
 
 def do_stage_seven():
+    repos = get_repos()
     gh = github.OWASPGitHub()
     logging.info('Updating inactive chapters')
     try:
-        build_inactive_chapters_json(gh)
+        build_inactive_chapters_json(gh, repos)
     except Exception as err:
         logging.error(f"Exception updating inactive chapters: {err}")  
         raise err
