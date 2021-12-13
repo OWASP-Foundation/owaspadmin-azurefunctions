@@ -18,21 +18,25 @@ def main(mytimer: func.TimerRequest) -> None:
     logging.info('BuildRespositoriesEntry function ran at %s', utc_timestamp)
     repos = []
     try:
+        logging.info('Getting Chapter Repos')
         repos = GetChapterRepos()
     except Exception as err:
         logging.error(f'exception in getting chapter repos: {err}')
     
     try:
+        logging.info('Getting Project Repos')
         repos.append(GetProjectRepos())
     except Exception as err:
         logging.error(f'exception in getting project repos: {err}')
 
     try:
+        logging.info('Getting Committee Repos')
         repos.append(GetCommitteeRepos())
     except Exception as err:
         logging.error(f'exception in getting committee repos: {err}')
 
     try:
+        logging.info('Getting Event Repos')
         repos.append(GetEventRepos())
     except Exception as err:
         logging.error(f'exception in getting event repos: {err}')
