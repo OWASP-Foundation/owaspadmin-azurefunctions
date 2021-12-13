@@ -18,10 +18,24 @@ def main(mytimer: func.TimerRequest) -> None:
     logging.info('BuildRespositoriesEntry function ran at %s', utc_timestamp)
     repos = []
     try:
-        gh = github.OWASPGitHub()
-        repos = gh.GetPublicRepositories('www-')
-    except Exception as err: 
-        logging.error(f'exception in getting repos: {err}')
+        repos = GetChapterRepos()
+    except Exception as err:
+        logging.error(f'exception in getting chapter repos: {err}')
+    
+    try:
+        repos.append(GetProjectRepos())
+    except Exception as err:
+        logging.error(f'exception in getting project repos: {err}')
+
+    try:
+        repos.append(GetCommitteeRepos())
+    except Exception as err:
+        logging.error(f'exception in getting committee repos: {err}')
+
+    try:
+        repos.append(GetEventRepos())
+    except Exception as err:
+        logging.error(f'exception in getting event repos: {err}')
 
     logging.info(f"Got {len(repos)} repositories.")
     if repos and len(repos) > 0:
@@ -41,3 +55,24 @@ def main(mytimer: func.TimerRequest) -> None:
         
 
     logging.info("function complete")
+
+def GetChapterRepos():
+    gh = github.OWASPGitHub()
+    repos = gh.GetPublicRepositories('www-chapter')
+    return repos
+
+def GetProjectRepos():
+    gh = github.OWASPGitHub()
+    repos = gh.GetPublicRepositories('www-project')
+    return repos
+
+def GetCommitteeRepos():
+    gh = github.OWASPGitHub()
+    repos = gh.GetPublicRepositories('www-committee')
+    return repos
+
+def GetEventRepos():
+    gh = github.OWASPGitHub()
+    repos = gh.GetPublicRepositories('www-revent')
+    return repos
+

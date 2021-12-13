@@ -258,7 +258,7 @@ class OWASPGitHub:
         url = url.replace(':repo', repoName)
 
         r = requests.get(url=url, headers = headers)
-        while(self.HandleRateLimit(r)):            
+        while(self.HandleRateLimit(r)):
             r = requests.get(url=url, headers = headers)
 
         if r.ok:
@@ -326,7 +326,7 @@ class OWASPGitHub:
                         # elif (pages and pages['status'] != None) and inactive:
                         #     continue
                         final_repos.append(repo)
-                    time.sleep(.5) # Github is timing out in the evenings ... I can run this on my box without issue...not sure what is causing this.
+                    time.sleep(.5) # Github is timing out ... I can run this on my box without issue...not sure what is causing this.
 
                 for repo in final_repos: 
                     repoName = repo['name'].lower()
