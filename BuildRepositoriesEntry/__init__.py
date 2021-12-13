@@ -21,13 +21,13 @@ def main(mytimer: func.TimerRequest) -> None:
         gh = github.OWASPGitHub()
         repos = gh.GetPublicRepositories('www-')
     except Exception as err: 
-        logging.warn(f'exception in getting repos: {err}')
+        logging.error(f'exception in getting repos: {err}')
 
     logging.info(f"Got {len(repos)} repositories.")
-    
-    table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
-    table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
-    table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
+    if repos and len(repos) > 0:
+        table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
+        table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
+        table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
     logging.info("Looping through repositories")
     for repo in repos:

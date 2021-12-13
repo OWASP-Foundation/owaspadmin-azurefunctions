@@ -256,20 +256,14 @@ class OWASPGitHub:
         result = ''
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(':repo', repoName)
-        trycount = 1
-        while trycount <= 4:
-            try:
-                r = requests.get(url=url, headers = headers)
-                if r.ok:
-                    result = json.loads(r.text)
-                    trycount = 5
-            except ConnectionError as err:
-                #time.sleep(trycount * 10)
-                trycount += 1
-                if trycount == 5:
-                    raise err
-                    
 
+        r = requests.get(url=url, headers = headers)
+        while(self.HandleRateLimit(r)):            
+            r = requests.get(url=url, headers = headers)
+
+        if r.ok:
+            result = json.loads(r.text)
+        
         return result
 
 
@@ -332,7 +326,8 @@ class OWASPGitHub:
                         # elif (pages and pages['status'] != None) and inactive:
                         #     continue
                         final_repos.append(repo)
-                        
+                    time.sleep(.5) # Github is timing out in the evenings ... I can run this on my box without issue...not sure what is causing this.
+
                 for repo in final_repos: 
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
