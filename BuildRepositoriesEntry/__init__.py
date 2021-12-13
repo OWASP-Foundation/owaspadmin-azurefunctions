@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import json
+import time
 
 import azure.functions as func
 from azure.cosmosdb.table.tableservice import TableService
@@ -45,6 +46,7 @@ def main(mytimer: func.TimerRequest) -> None:
     if repos and len(repos) > 0:
         table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
         table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
+        time.sleep(20.0) # good grief...cannot rely on the function above to finish before next statement
         table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
         logging.info("Looping through repositories")
