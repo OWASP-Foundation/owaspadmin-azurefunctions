@@ -29,15 +29,15 @@ def main(mytimer: func.TimerRequest) -> None:
         table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
         table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
-    logging.info("Looping through repositories")
-    for repo in repos:
-        repos_entry = {
-            'PartitionKey':'ghrepos',
-            'RowKey': repo['name'],
-            'Repo': json.dumps(repo)
-        }
+        logging.info("Looping through repositories")
+        for repo in repos:
+            repos_entry = {
+                'PartitionKey':'ghrepos',
+                'RowKey': repo['name'],
+                'Repo': json.dumps(repo)
+            }
         
-        table_service.insert_or_replace_entity(os.environ['REPOSITORY_TABLE'], entity=repos_entry)
+            table_service.insert_or_replace_entity(os.environ['REPOSITORY_TABLE'], entity=repos_entry)
         
 
     logging.info("function complete")
