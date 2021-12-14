@@ -26,19 +26,19 @@ def main(mytimer: func.TimerRequest) -> None:
     
     try:
         logging.info('Getting Project Repos')
-        repos.append(GetProjectRepos())
+        repos.extend(GetProjectRepos())
     except Exception as err:
         logging.error(f'exception in getting project repos: {err}')
 
     try:
         logging.info('Getting Committee Repos')
-        repos.append(GetCommitteeRepos())
+        repos.extend(GetCommitteeRepos())
     except Exception as err:
         logging.error(f'exception in getting committee repos: {err}')
 
     try:
         logging.info('Getting Event Repos')
-        repos.append(GetEventRepos())
+        repos.extend(GetEventRepos())
     except Exception as err:
         logging.error(f'exception in getting event repos: {err}')
 
