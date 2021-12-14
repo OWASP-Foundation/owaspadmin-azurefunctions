@@ -18,32 +18,37 @@ def main(mytimer: func.TimerRequest) -> None:
         logging.info('The timer is past due!')
     logging.info('BuildRespositoriesEntry function ran at %s', utc_timestamp)
     repos = []
+    update = True
     try:
         logging.info('Getting Chapter Repos')
         repos = GetChapterRepos()
     except Exception as err:
         logging.error(f'exception in getting chapter repos: {err}')
+        update = False
     
     try:
         logging.info('Getting Project Repos')
         repos.extend(GetProjectRepos())
     except Exception as err:
         logging.error(f'exception in getting project repos: {err}')
+        update = False
 
     try:
         logging.info('Getting Committee Repos')
         repos.extend(GetCommitteeRepos())
     except Exception as err:
         logging.error(f'exception in getting committee repos: {err}')
+        update = False
 
     try:
         logging.info('Getting Event Repos')
         repos.extend(GetEventRepos())
     except Exception as err:
         logging.error(f'exception in getting event repos: {err}')
-
+        update = False
+    
     logging.info(f"Got {len(repos)} repositories.")
-    if repos and len(repos) > 0:
+    if repos and len(repos) > 0 and update:
         table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
         table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
         time.sleep(20.0) # good grief...cannot rely on the function above to finish before next statement
