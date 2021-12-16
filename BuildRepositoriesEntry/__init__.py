@@ -51,7 +51,13 @@ def main(mytimer: func.TimerRequest) -> None:
     if repos and len(repos) > 0 and update:
         table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
         table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
-        time.sleep(20.0) # good grief...cannot rely on the function above to finish before next statement
+        # now wait for actual deletion....
+        name_filter = f"TableName eq '{os.environ['REPOSITORY_TABLE']}'"
+        queried_tables = table_service.query_tables(name_filter)
+        while(os.environ['REPOSITORY_TABLE'] in queried_tables):
+            time.sleep(5.0)
+            queried_tables = table_service.query_tables(name_filter)
+
         table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
         logging.info("Looping through repositories")
