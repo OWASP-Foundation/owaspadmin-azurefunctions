@@ -54,7 +54,7 @@ def main(mytimer: func.TimerRequest) -> None:
         # now wait for actual deletion....
         name_filter = f"TableName eq '{os.environ['REPOSITORY_TABLE']}'"
         queried_tables = table_service.query_tables(name_filter)
-        while(os.environ['REPOSITORY_TABLE'] in queried_tables):
+        while(TableInList(os.environ['REPOSITORY_TABLE'], queried_tables)):
             time.sleep(5.0)
             queried_tables = table_service.query_tables(name_filter)
 
@@ -72,6 +72,13 @@ def main(mytimer: func.TimerRequest) -> None:
         
 
     logging.info("function complete")
+
+def TableInList(table_name, list_tables):
+    for table in list_tables:
+        if table.name == table_name:
+            return True
+
+    return False
 
 def GetChapterRepos():
     gh = github.OWASPGitHub()
