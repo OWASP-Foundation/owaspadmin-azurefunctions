@@ -52,11 +52,8 @@ def main(mytimer: func.TimerRequest) -> None:
         table_service = TableService(account_name=os.environ['STORAGE_ACCOUNT'], account_key=os.environ['STORAGE_KEY'])
         table_service.delete_table(table_name=os.environ['REPOSITORY_TABLE']) #delete it to start fresh
         # now wait for actual deletion....
-        name_filter = f"TableName eq '{os.environ['REPOSITORY_TABLE']}'"
-        queried_tables = table_service.query_tables(name_filter)
-        while(TableInList(os.environ['REPOSITORY_TABLE'], queried_tables)):
+        while(table_service.exists(os.environ['REPOSITORY_TABLE'])):
             time.sleep(5.0)
-            queried_tables = table_service.query_tables(name_filter)
 
         table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
@@ -73,12 +70,6 @@ def main(mytimer: func.TimerRequest) -> None:
 
     logging.info("function complete")
 
-def TableInList(table_name, list_tables):
-    for table in list_tables:
-        if table.name == table_name:
-            return True
-
-    return False
 
 def GetChapterRepos():
     gh = github.OWASPGitHub()
