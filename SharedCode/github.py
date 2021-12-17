@@ -318,8 +318,12 @@ class OWASPGitHub:
                     # even if matching, we still only really want project, chapter, event, or committee repos here....
                     if not matching or (matching in repoName):
                         pages = None
+                        repo['build'] = 'no pages' # start with this
                         if haspages:
                             pages = self.GetPages(repoName)
+                            if pages:
+                                repo['build'] = pages['status']
+                            
                         # going to change below to use repo['build'] instead
                         # if (not pages or pages['status'] == None) and not inactive:
                         #     continue
@@ -341,10 +345,7 @@ class OWASPGitHub:
                     udate = datetime.datetime.strptime(repo['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
                     addrepo['created'] = cdate.strftime('%c')
                     addrepo['updated'] = udate.strftime('%c')
-                    if pages:
-                        addrepo['build'] = pages['status']
-                    else:
-                        addrepo['build'] = 'no pages' # in theory this should be 'inactive'
+                    addrepo['build'] = repo['build']
 
                     r = self.GetFile(repoName, 'index.md')
                     if r.ok:
