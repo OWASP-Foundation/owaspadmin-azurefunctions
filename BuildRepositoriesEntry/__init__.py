@@ -57,6 +57,9 @@ def main(mytimer: func.TimerRequest) -> None:
 
         table_service.create_table(table_name=os.environ['REPOSITORY_TABLE']) #create if it doesn't exist
     
+        while(not table_service.exists(os.environ['REPOSITORY_TABLE'])): # now I have to wait for it here....
+            time.sleep(5.0)
+
         logging.info("Looping through repositories")
         for repo in repos:
             repos_entry = {
