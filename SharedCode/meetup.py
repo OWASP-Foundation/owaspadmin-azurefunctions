@@ -6,9 +6,11 @@ import os
 import logging
 import time
 import random
+from datetime import datetime, timedelta
 
 class OWASPMeetup:
     meetup_api_url = "https://api.meetup.com"
+    meetup_gql_url = "https://api.meetup.com/gql"
     access_token = ''
     refresh_token = ''
     oauth_token = ''
@@ -17,6 +19,13 @@ class OWASPMeetup:
     def HandleRateLimit(self):
         time.sleep(1 * random.randint(0, 3))
 
+    def GetHeaders(self):
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.oauth_token}'
+        }
+
+        return headers
 
     def Login(self):
         login_url  = f"https://secure.meetup.com/oauth2/authorize?scope=basic+event_management+group_content_edit&client_id={os.environ['MU_CONSUMER_KEY']}&redirect_uri={os.environ['MU_REDIRECT_URI']}&response_type=anonymous_code"
@@ -54,22 +63,33 @@ class OWASPMeetup:
         return result    
 
     def GetGroupEvents(self, groupname, earliest = '', status = ''):
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': f'Bearer {self.oauth_token}'
-        }
-        event_url = self.meetup_api_url + f'/{groupname}/events?desc=true&sign=true'
+        headers = self.GetHeaders()
+
+        id = self.GetGroupIdFromGroupname(groupname)
+        if not status:
+            status = "UPCOMING"
+        datemax = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        datemin = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         if earliest:
-            event_url = event_url + f"&no_earlier_than={earliest}"
-        if status:
-            event_url = event_url + f"&status={status}"
+            datemin = earliest #here, we are assuming an ISO 8601 format date
+
+        query = "query { proNetworkByUrlname(urlname: \"OWASP\") {"
+        query += "eventsSearch(filter: { status: :STATUS groups: [ \":GROUPID\" ] "
+        query += f"eventDateMin: \"{datemin}\" eventDateMax: \"{datemax}\"" 
+        query += "  }, input: { first: 3 }) {"
+        query += " count pageInfo { endCursor } edges { node { id title dateTime description }}}}}"
+        query = query.replace(":GROUPID",id).replace(":STATUS", status)
+        query_data = {
+            "query": query
+        }
+        
         
         json_res = ''
         tryagain = True
         count = 0
         maxcount = 5
         while(tryagain and count < maxcount):
-            res = requests.get(event_url, headers=headers)
+            res = requests.post(self.meetup_gql_url, headers=headers, data=json.dumps(query_data))
             json_res = ''
             if res.ok:
                 json_res = res.text
@@ -82,3 +102,21 @@ class OWASPMeetup:
                 tryagain = False
                 
         return json_res
+
+    def GetGroupIdFromGroupname(self, groupname):
+        headers = self.GetHeaders()
+        querystr = "query {"
+        querystr += " groupByUrlname(urlname: \"" + groupname + "\")"
+        querystr += "{ id }"
+        querystr += "}"
+
+        query_data = {
+            "query": querystr
+        }
+        
+        res = requests.post(self.meetup_gql_url, headers=headers, data=json.dumps(query_data))
+        id = ""
+        if res.ok:
+            jgroup = json.loads(res.text)
+            id = jgroup['data']['groupByUrlname']['id']
+        return id
