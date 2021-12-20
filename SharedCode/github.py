@@ -44,7 +44,10 @@ class OWASPGitHub:
     GH_REPOTYPE_COMMITTEE = 2
     GH_REPOTYPE_EVENT = 3
     
-    def HandleRateLimit(self, r):
+    def HandleRateLimit(self, r, count =0):
+        if r.ok:
+            return False
+
         retry = False
         if 'Retry-After' in r.headers:
             retry = True
@@ -54,7 +57,11 @@ class OWASPGitHub:
         elif 'Timeout' in r.text:
             time.sleep(15 + random.randint(0,5))
 
-        return retry
+        if not retry and count < 4:
+            retry = True
+            count = count + 1
+
+        return retry, count
 
     def GetHeaders(self):
         headers = {"Authorization": "token " + self.apitoken, "X-PrettyPrint":"1",
@@ -109,8 +116,11 @@ class OWASPGitHub:
         #bytestosend = base64.b64encode(filecstr.encode())   
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.get(url = url, headers=headers)
-        while(self.HandleRateLimit(r)):
+        count = 0
+        retry, count = self.HandlRateLimit(r, count)
+        while(retry):
             r = requests.get(url = url, headers=headers)
+            retry, count = self.HandlRateLimit(r, count)
     
         return r
 
@@ -152,8 +162,11 @@ class OWASPGitHub:
         }
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.put(url = url, headers=headers, data=json.dumps(data))
-        while(self.HandleRateLimit(r)):
+        count = 0
+        retry, count = self.HandlRateLimit(r, count)
+        while(retry):
             r = requests.put(url = url, headers=headers, data=json.dumps(data))
+            retry, count = self.HandleRateLimit(r, count)
 
         return r
 
@@ -258,8 +271,11 @@ class OWASPGitHub:
         url = url.replace(':repo', repoName)
 
         r = requests.get(url=url, headers = headers)
-        while(self.HandleRateLimit(r)):
+        count = 0
+        retry, count = self.HandleRateLimit(r, count)
+        while(retry):
             r = requests.get(url=url, headers = headers)
+            retry, count = self.HandleRateLimit(r, count)
 
         if r.ok:
             result = json.loads(r.text)
@@ -288,8 +304,11 @@ class OWASPGitHub:
             #url = self.gh_endpoint + self.org_fragment + pagestr + '&per_page=100'
             url = self.gh_endpoint + self.search_repos_fragment + pagestr + "&" + urllib.parse.urlencode(qdata) + "&per_page=100" # I am concerned that this search might use a cache and I wonder how often the cache is updated...
             r = requests.get(url=url, headers = headers)
-            while(self.HandleRateLimit(r)):
+            count = 0
+            retry, count = self.HandleRateLimit(r, count)
+            while(retry):
                 r = requests.get(url=url, headers = headers)
+                retry, count = self.HandleRateLimit(r, count)
 
             if r.ok:
                 repos = json.loads(r.text)
@@ -630,8 +649,11 @@ class OWASPGitHub:
         data = { "permission" : self.PERM_TYPE_ADMIN}
         jsonData = json.dumps(data)
         r = requests.put(url = url, headers=headers, data=jsonData)
-        while(self.HandleRateLimit(r)):
+        count = 0
+        retry, count = self.HandleRateLimit(r, count)
+        while(retry):
             r = requests.put(url = url, headers=headers, data=jsonData)
+            retry, count = self.HandleRateLimit(r, count)
 
         return r
 

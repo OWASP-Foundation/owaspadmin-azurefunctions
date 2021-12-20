@@ -22,7 +22,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
     gh = github.OWASPGitHub()
     gh.FindUser('hblankenship') # calling this just to load the libs, etc
-    
+
     try:
         logging.info('Getting Chapter Repos')
         repos = GetChapterRepos(gh)
@@ -79,33 +79,7 @@ def main(mytimer: func.TimerRequest) -> None:
 
 
 def GetChapterRepos(gh):
-    repos = gh.GetPublicRepositories('www-chapter-a')
-    repos.extend(gh.GetPublicRepositories('www-chapter-b'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-c'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-d'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-e'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-f'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-g'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-h'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-i'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-j'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-k'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-l'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-m'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-n'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-o'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-p'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-q'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-r'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-s'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-t'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-u'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-v'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-w'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-x'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-y'))
-    repos.extend(gh.GetPublicRepositories('www-chapter-z'))
-    
+    repos = gh.GetPublicRepositories('www-chapter-')    
     return repos
 
 def GetProjectRepos(gh):
