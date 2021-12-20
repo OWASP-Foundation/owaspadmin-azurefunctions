@@ -145,12 +145,18 @@ def build_chapter_json(repos, gh):
         if 'meetup-group' in repo:
             estr = mu.GetGroupEvents(repo['meetup-group'], earliest=earliest, status='past')
             if estr:
-                events = json.loads(estr)
+                event_json = json.loads(estr)
+                events = event_json['data']['proNetworkByUrlname']['eventsSearch']['edges']
+                
                 for event in events:
-                    eventdate = datetime.datetime.strptime(event['local_date'], '%Y-%m-%d')
-                    tdelta = today - eventdate
-                    if tdelta.days > 0 and tdelta.days < 365:
-                        ecount = ecount + 1    
+                    try:
+                        eventdate = datetime.datetime.strptime(event['node']['dateTime'][:10], '%Y-%m-%d')
+                        tdelta = today - eventdate
+                        if tdelta.days > 0 and tdelta.days < 365:
+                            ecount = ecount + 1    
+                    except:
+                        pass
+                    
         repo['meetings'] = ecount
 
     repos.sort(key=lambda x: x['name'])
