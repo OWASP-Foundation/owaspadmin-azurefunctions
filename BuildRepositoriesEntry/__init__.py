@@ -19,30 +19,34 @@ def main(mytimer: func.TimerRequest) -> None:
     logging.info('BuildRepositoriesEntry function ran at %s', utc_timestamp)
     repos = []
     update = True
+
+    gh = github.OWASPGitHub()
+    gh.FindUser('hblankenship') # calling this just to load the libs, etc
+    
     try:
         logging.info('Getting Chapter Repos')
-        repos = GetChapterRepos()
+        repos = GetChapterRepos(gh)
     except Exception as err:
         logging.error(f'exception in getting chapter repos: {err}')
         update = False
     
     try:
         logging.info('Getting Project Repos')
-        repos.extend(GetProjectRepos())
+        repos.extend(GetProjectRepos(gh))
     except Exception as err:
         logging.error(f'exception in getting project repos: {err}')
         update = False
 
     try:
         logging.info('Getting Committee Repos')
-        repos.extend(GetCommitteeRepos())
+        repos.extend(GetCommitteeRepos(gh))
     except Exception as err:
         logging.error(f'exception in getting committee repos: {err}')
         update = False
 
     try:
         logging.info('Getting Event Repos')
-        repos.extend(GetEventRepos())
+        repos.extend(GetEventRepos(gh))
     except Exception as err:
         logging.error(f'exception in getting event repos: {err}')
         update = False
@@ -74,8 +78,7 @@ def main(mytimer: func.TimerRequest) -> None:
     logging.info("function complete")
 
 
-def GetChapterRepos():
-    gh = github.OWASPGitHub()
+def GetChapterRepos(gh):
     repos = gh.GetPublicRepositories('www-chapter-a')
     repos.extend(gh.GetPublicRepositories('www-chapter-b'))
     repos.extend(gh.GetPublicRepositories('www-chapter-c'))
@@ -105,18 +108,15 @@ def GetChapterRepos():
     
     return repos
 
-def GetProjectRepos():
-    gh = github.OWASPGitHub()
+def GetProjectRepos(gh):
     repos = gh.GetPublicRepositories('www-project')
     return repos
 
-def GetCommitteeRepos():
-    gh = github.OWASPGitHub()
+def GetCommitteeRepos(gh):
     repos = gh.GetPublicRepositories('www-committee')
     return repos
 
-def GetEventRepos():
-    gh = github.OWASPGitHub()
+def GetEventRepos(gh):
     repos = gh.GetPublicRepositories('www-revent')
     return repos
 
