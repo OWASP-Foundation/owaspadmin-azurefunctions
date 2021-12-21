@@ -46,7 +46,7 @@ class OWASPGitHub:
     
     def HandleRateLimit(self, r, count =0):
         if r.ok:
-            return False
+            return False, 0
 
         retry = False
         if 'Retry-After' in r.headers:
@@ -117,10 +117,10 @@ class OWASPGitHub:
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.get(url = url, headers=headers)
         count = 0
-        retry, count = self.HandlRateLimit(r, count)
+        retry, count = self.HandleRateLimit(r, count)
         while(retry):
             r = requests.get(url = url, headers=headers)
-            retry, count = self.HandlRateLimit(r, count)
+            retry, count = self.HandleRateLimit(r, count)
     
         return r
 
@@ -163,7 +163,7 @@ class OWASPGitHub:
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.put(url = url, headers=headers, data=json.dumps(data))
         count = 0
-        retry, count = self.HandlRateLimit(r, count)
+        retry, count = self.HandleRateLimit(r, count)
         while(retry):
             r = requests.put(url = url, headers=headers, data=json.dumps(data))
             retry, count = self.HandleRateLimit(r, count)
