@@ -64,7 +64,9 @@ class OWASPMeetup:
 
     def GetGroupEvents(self, groupname, earliest = '', status = ''):
         headers = self.GetHeaders()
-
+        if not status:
+            status = 'UPCOMING'
+            
         id = self.GetGroupIdFromGroupname(groupname)
         if not status:
             status = "UPCOMING"
@@ -78,7 +80,7 @@ class OWASPMeetup:
         query += f"eventDateMin: \"{datemin}\" eventDateMax: \"{datemax}\"" 
         query += "  }, input: { first: 3 }) {"
         query += " count pageInfo { endCursor } edges { node { id title dateTime description }}}}}"
-        query = query.replace(":GROUPID",id).replace(":STATUS", status)
+        query = query.replace(":GROUPID",id).replace(":STATUS", status.upper())
         query_data = {
             "query": query
         }
