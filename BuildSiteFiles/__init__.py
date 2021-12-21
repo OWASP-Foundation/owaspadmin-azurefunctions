@@ -360,7 +360,7 @@ def create_community_events(gh, mu, repos):
                 time.sleep(0 + random.randint(0, 2))
                 if mstr:
                     muej = json.loads(mstr)
-                    if muej and meuj['data'] and muej['data']['proNetworkByUrlname']:
+                    if muej and muej['data'] and muej['data']['proNetworkByUrlname']:
                         mue_events = muej['data']['proNetworkByUrlname']['eventsSearch']['edges']
                         add_to_events(mue_events, events, rname)
 
