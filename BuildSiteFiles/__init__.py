@@ -312,6 +312,8 @@ def deEmojify(text):
 
 def add_to_events(mue, events, repo):
     
+    #eventdate = datetime.datetime.strptime(event['node']['dateTime'][:10], '%Y-%m-%d')
+
     if len(mue) <= 0 or 'errors' in mue:
         return events
     
@@ -321,18 +323,18 @@ def add_to_events(mue, events, repo):
     for mevent in mue:
         event = {}
         today = datetime.datetime.today()
-        eventdate = datetime.datetime.strptime(mevent['local_date'], '%Y-%m-%d')
+        eventdate = datetime.datetime.strptime(mevent['node']['dateTime'][:10], '%Y-%m-%d')
         tdelta = eventdate - today
         if tdelta.days >= -1 and tdelta.days <= 30:
             event['group'] = group
             event['repo'] = repo
-            event['name'] = mevent['name']
-            event['date'] = mevent['local_date']
-            event['time'] = mevent['local_time']
-            event['link'] = mevent['link']
-            event['timezone'] = mevent['group']['timezone']
-            if 'description' in mevent:
-                event['description'] = deEmojify(mevent['description'])
+            event['name'] = mevent['node']['name']
+            event['date'] = mevent['node']['dateTime'][:10]
+            event['time'] = mevent['node']['dateTime'][12:]
+            event['link'] = mevent['node']['eventUrl']
+            event['timezone'] = mevent['node']['timezone']
+            if mevent['node']['description']:
+                event['description'] = deEmojify(mevent['node']['description'])
             else:
                 event['description'] = ''
                 
@@ -358,8 +360,9 @@ def create_community_events(gh, mu, repos):
                 time.sleep(0 + random.randint(0, 2))
                 if mstr:
                     muej = json.loads(mstr)
-                    add_to_events(muej, events, rname)
-                
+                    if muej and meuj['data'] and muej['data']['proNetworkByUrlname']:
+                        mue_events = muej['data']['proNetworkByUrlname']['eventsSearch']['edges']
+                        add_to_events(mue_events, events, rname)
 
     if len(events) <= 0:
         return
