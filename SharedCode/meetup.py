@@ -120,5 +120,7 @@ class OWASPMeetup:
         id = ""
         if res.ok:
             jgroup = json.loads(res.text)
-            id = jgroup['data']['groupByUrlname']['id']
+            if jgroup['data']['groupByUrlname']:
+                id = jgroup['data']['groupByUrlname']['id']
+                
         return id
