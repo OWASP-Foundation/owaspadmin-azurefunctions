@@ -586,7 +586,8 @@ def main(name: str) -> str:
     logging.info('BuildSiteFiles function ran at %s with stage %s', utc_timestamp, name)
     
     if name == 'stage1':
-        do_stage_one()
+        #do_stage_one()
+        logging.info('Stage One now performed by Runbook')
     elif name == 'stage2':
         do_stage_two()
     elif name == 'stage3':
@@ -598,7 +599,7 @@ def main(name: str) -> str:
     elif name == 'stage6':
         do_stage_six()
     elif name == 'stage7':
-        do_stage_seven()
+        logging.info('Stage Seven no longer required - using build')
     elif name == 'stage8':
         do_stage_eight()
       
