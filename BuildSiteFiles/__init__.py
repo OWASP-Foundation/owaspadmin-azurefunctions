@@ -328,7 +328,7 @@ def add_to_events(mue, events, repo):
         if tdelta.days >= -1 and tdelta.days <= 30:
             event['group'] = group
             event['repo'] = repo
-            event['name'] = mevent['node']['name']
+            event['name'] = mevent['node']['title']
             event['date'] = mevent['node']['dateTime'][:10]
             event['time'] = mevent['node']['dateTime'][12:]
             event['link'] = mevent['node']['eventUrl']
