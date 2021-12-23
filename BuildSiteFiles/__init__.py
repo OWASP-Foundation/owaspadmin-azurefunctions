@@ -589,7 +589,8 @@ def main(name: str) -> str:
         #do_stage_one()
         logging.info('Stage One now performed by Runbook')
     elif name == 'stage2':
-        do_stage_two()
+        #do_stage_two()
+        logging.info('Stage One now performed by Runbook')
     elif name == 'stage3':
         do_stage_three()
     elif name == 'stage4':
