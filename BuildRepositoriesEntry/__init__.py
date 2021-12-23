@@ -10,6 +10,10 @@ from azure.cosmosdb.table.models import Entity
 
 from ..SharedCode import github
 
+#################################################
+# Function Disabled in favor of Runbook
+#################################################
+
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
