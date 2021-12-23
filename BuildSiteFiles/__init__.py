@@ -598,14 +598,16 @@ def main(name: str) -> str:
         #do_stage_four()
         logging.info('Stage Four now performed by Runbook')
     elif name == 'stage5':
-        do_stage_five()
+        #do_stage_five()
+        logging.info('Stage Five now performed by Runbook')
     elif name == 'stage6':
-        do_stage_six()
+        #do_stage_six()
+        logging.info('Stage Six now performed by Runbook for Nightly Chapter Maintenance')
     elif name == 'stage7':
         logging.info('Stage Seven no longer required - using build')
     elif name == 'stage8':
-        do_stage_eight()
-      
+        #do_stage_eight()
+        logging.info('Stage Six now performed by Runbook')
 
     # Staff Projects no longer located on website (sarcasm:thanks for that :p )
     # logging.info("Building staff projects and milestones json files")
