@@ -66,10 +66,14 @@ cp = copper.OWASPCopper()
 #    send 7 day notice
 #    update user metadata
 # 
-# DisableEmail7DayNotice does:
+# DisableEmail1DayNotice does:
 # for each queue item:
-#    send 7 day notice
+#    send 1 day notice
 #    update user metadata
+# 
+# DisableOWASPEmail does:
+# for each queue item:
+#    suspend user
 
 
 def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.QueueMessage]) -> None:
@@ -86,12 +90,6 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
     setting = os.environ.get('Disable.OWASP.Emails.Cleanup.Stripe.Meta', None)
     if setting is not None and setting == 'true':
         cleanup_customer_metadata()
-        return
-
-    # clean up metadata only
-    setting = os.environ.get('Disable.OWASP.Emails.Test.Copper', None)
-    if setting is not None and setting == 'true':
-        test_copper_logic()
         return
 
     emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
@@ -162,34 +160,3 @@ def cleanup_customer_metadata():
             stripe.Customer.modify(customer['id'], metadata={
                 "membership_notified": "", "membership_notified_date": "", "membership_last_notification": ""},)
 
-
-def test_copper_logic():
-    with open('/tmp/email-found-in-copper.txt', 'w') as in_copper_file:
-        with open('/tmp/email-not-in-copper.txt', 'w') as not_in_copper_file:
-            try:
-                og = OWASPGoogle()
-                cp = copper.OWASPCopper()
-                next_page_token = None
-
-                while True:
-                    google_users = og.GetActiveUsers(next_page_token)
-
-                    for user in google_users['users']:
-                        user_email = user['primaryEmail'].lower()
-
-                        # check if they are in Copper
-                        if(email_found_with_copper(user_email)):
-                            in_copper_file.write(user['primaryEmail'] + "\n")
-                        else:
-                            not_in_copper_file.write(
-                                user['primaryEmail'] + "\n")
-                    next_page_token = google_users.get('nextPageToken')
-                    if not next_page_token:
-                        break
-            except Exception as ex:
-                template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-                message = template.format(type(ex).__name__, ex.args)
-                logging.exception(message)
-                raise
-        in_copper_file.close()
-    not_in_copper_file.close()
