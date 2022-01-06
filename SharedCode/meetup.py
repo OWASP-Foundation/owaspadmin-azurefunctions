@@ -64,9 +64,7 @@ class OWASPMeetup:
 
     def GetGroupEvents(self, groupname, earliest = '', status = ''):
         headers = self.GetHeaders()
-        if not status:
-            status = 'UPCOMING'
-            
+        
         id = self.GetGroupIdFromGroupname(groupname)
         if not status:
             status = "UPCOMING"
@@ -77,8 +75,8 @@ class OWASPMeetup:
 
         query = "query { proNetworkByUrlname(urlname: \"OWASP\") {"
         query += "eventsSearch(filter: { status: :STATUS groups: [ \":GROUPID\" ] "
-        query += f"eventDateMin: \"{datemin}\" eventDateMax: \"{datemax}\"" 
-        query += "  }, input: { first: 3 }) {"
+        query += f"eventDateMin: \"{datemin}\" eventDateMax: \"{datemax}\""
+        query += "  }, input: { first: 100 }) {"
         query += " count pageInfo { endCursor } edges { node { id title eventUrl dateTime timezone description }}}}}"
         query = query.replace(":GROUPID",id).replace(":STATUS", status.upper())
         query_data = {
