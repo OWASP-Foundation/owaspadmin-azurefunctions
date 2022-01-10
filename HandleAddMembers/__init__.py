@@ -16,15 +16,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             file = req_body.get('file')
 
     if file:
+        logging.info("opening reader")
         csvreader = reader = csv.DictReader(file)
         email = 'No Email'
         for row in csvreader:
+            logging.info('row')
             email = row['Email']
             logging.info(f"Processing row for {email}")
 
+        logging.info('done with reader')
         return func.HttpResponse("Got the file.")
     else:
+        logging.error("failed to get file from post")
         return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
+             "Something is not right.",
+             status_code=400
         )
