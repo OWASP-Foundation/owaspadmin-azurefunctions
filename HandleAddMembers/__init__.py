@@ -20,8 +20,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         email = 'No Email'
         for row in csvreader:
             email = row['Email']
+            logging.info(f"Processing row for {email}")
 
-        return func.HttpResponse(f"Got the file and the first email is {email}.")
+        return func.HttpResponse("Got the file.")
     else:
         return func.HttpResponse(
              "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
