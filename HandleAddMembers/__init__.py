@@ -1,7 +1,7 @@
 import logging
 
 import azure.functions as func
-
+import csv
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
@@ -16,7 +16,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             file = req_body.get('file')
 
     if file:
-        return func.HttpResponse(f"Got the file. This HTTP triggered function executed successfully.")
+        csvreader = reader = csv.DictReader(file)
+        email = 'No Email'
+        for row in csvreader:
+            email = row['Email']
+
+        return func.HttpResponse(f"Got the file and the first email is {email}.")
     else:
         return func.HttpResponse(
              "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
