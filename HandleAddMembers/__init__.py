@@ -20,9 +20,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         csvreader = reader = csv.DictReader(file)
         email = 'No Email'
         for row in csvreader:
-            logging.info('row')
-            email = row['Email']
-            logging.info(f"Processing row for {email}")
+            logging.info(row)
+            #email = row['Email']
+            #logging.info(f"Processing row for {email}")
 
         logging.info('done with reader')
         return func.HttpResponse("Got the file.")
