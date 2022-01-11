@@ -181,8 +181,13 @@ def import_members(filestr, override_lifetime_add_tags=False):
                     results.append({ member.email: 'Membership found without an end date. Creating 2000-01-01 end date so it can be searched and fixed' })
 
                 sub_data['membership_end'] = '2000-01-01' # faking this data so we can look it up later and fix it
+            monetary_value = 0
+            if member.type == 'one':
+                monetary_value = 50
+            elif member.type == 'two':
+                monetary_value = 95
 
-            cop.CreateOWASPMembership(stripe_id, member.name, member.email, sub_data, tags)
+            cop.CreateOWASPMembership(stripe_id, None, member.name, member.email, sub_data, monetary_value, tags)
             mailchimp = OWASPMailchimp()
             mailchimpdata = {
                 'name': member.name,
