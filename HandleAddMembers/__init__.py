@@ -8,7 +8,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     filej = req.params.get('file')
-    if not file:
+    if not filej:
         try:
             req_body = req.get_json()
         except ValueError:
