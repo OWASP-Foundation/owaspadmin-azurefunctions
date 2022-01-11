@@ -120,7 +120,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
         tags = row['tags'].split(',') # for stripe purposes these 'tags' are simply true if they exist (for instance, distinguished: true will be the result)
         member.AddTags(tags)
         
-        if customer_with_tags_exists(cop, member.email, tags)
+        if customer_with_tags_exists(cop, member.email, tags):
             results.append({ member.email : 'Person with these tags exists. Possibly duplicate. Verify and remove tags to continue.'})
             continue
 
