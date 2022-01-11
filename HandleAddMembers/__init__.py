@@ -16,8 +16,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             file = req_body.get('file')
 
     if file:
+        logging.info(f"Received file { file.name }")
         logging.info("opening reader")
-        csvreader = reader = csv.DictReader(file)
+        csvreader = reader = csv.DictReader(file.read())
         email = 'No Email'
         for row in csvreader:
             logging.info(row)
