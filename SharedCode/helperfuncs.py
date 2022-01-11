@@ -486,6 +486,10 @@ class StaffProject:
 class MemberData:
     def __init__(self, name, email, company, country, postal_code, start, end, type, recurring, leader_agreement):
         self.name = name
+        self.first = ''
+        self.last = ''
+        self.CreateFirstAndLast()
+
         self.email = email
         self.company = company
         self.country = country
@@ -494,35 +498,53 @@ class MemberData:
         if leader_agreement:
           self.leader_agreement = leader_agreement
 
-        try:
-            self.start = datetime.strptime(start, "%Y-%m-%d")
-        except:
-            self.start = datetime.strptime(start, "%m/%d/%Y")
-        try:
-            self.end = datetime.strptime(end, "%Y-%m-%d")
-        except:
-            self.end = datetime.strptime(end, "%m/%d/%Y")
+        copper = OWASPCopper()
+        if end:
+            self.end = copper.GetDatetimeHelper(end)
+        else:
+            self.end = None
+
+        self.start = None
+        self.tags = []
+        
+        customers = stripe.Customer.list(email=email)
+        if len(customers.data) > 0:
+            customer = customers.data[0]
+            cmetadata = customer.get('metadata', None)
+            if cmetadata:
+                memstart = cmetadata.get('membership_start', None)
+                if memstart:
+                    start = memstart # don't change a start date
+        if start:
+            self.start = copper.GetDatetimeHelper(start)
             
         self.type = type
         self.recurring = recurring
         self.stripe_id = None
+
+    def CreateFirstAndLast(self):
+        names = self.name.split(' ')
+
+        for name in names:
+            if not self.first:
+                self.first = name
+            else:
+                self.last = self.last + name + ' '
+        
+        self.last = self.last.strip()
+
     def UpdateMetadata(self, customer_id, metadata):
         self.stripe_id = customer_id
         stripe.Customer.modify(
                             customer_id,
                             metadata=metadata
                         )
+
+    def AddTags(self, tags):
+        self.tags = tags
+
     def CreateCustomer(self):
-        metadata = {
-                                           'membership_type':self.type,
-                                           'membership_start':datetime.strftime(self.start, '%m/%d/%Y'),
-                                           'membership_end':datetime.strftime(self.end, '%m/%d/%Y'),
-                                           'membership_recurring':self.recurring,
-                                           'company':self.company,
-                                           'country':self.country,
-                                       }
-        if self.leader_agreement:
-            metadata['leader_agreement'] = self.leader_agreement
+        metadata = self.GetSubscriptionData()
 
         cust = stripe.Customer.create(email=self.email, 
                                        name=self.name,
@@ -533,14 +555,25 @@ class MemberData:
         return self.stripe_id
 
     def GetSubscriptionData(self):
+        mstart = None
+        mend = None
+        if self.start:
+            mstart = datetime.strftime(self.start, '%m/%d/%Y')
+        if self.end:
+            mend = datetime.strftime(self.end, '%m/%d/%Y')
+        
         metadata = {
                     'membership_type':self.type,
-                    'membership_start':datetime.strftime(self.start, '%Y-%m-%d'),
-                    'membership_end':datetime.strftime(self.end, '%Y-%m-%d'),
+                    'membership_start':mstart,
+                    'membership_end':mend,
                     'membership_recurring':self.recurring,
                     'company':self.company,
                     'country':self.country,
                 }
+        
+        for tag in self.tags:
+            metadata[tag] = True
+
         if(self.leader_agreement):
             metadata['leader_agreement'] = self.leader_agreement
 

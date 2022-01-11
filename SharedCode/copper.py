@@ -4,7 +4,7 @@ import requests
 import json
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 
 class OWASPCopper:
@@ -97,6 +97,40 @@ class OWASPCopper:
         
     def GetHeaders(self):
         return self.default_headers
+
+    def GetCustomFieldHelper(self, custom_field_id, fields):
+        for field in fields:
+            if field['custom_field_definition_id'] == custom_field_id:
+                return field['value']
+        
+        return None
+    
+    def GetDatetimeHelper(self, datestr):
+        retdate = None
+        try:
+            retdate = datetime.strptime(datestr, "%m/%d/%Y")
+        except:
+            try:
+                retdate = datetime.strptime(datestr, "%Y-%m-%d")
+            except:
+                try:
+                    retdate = datetime.strptime(datestr, "%m/%d/%y")
+                except:
+                    return retdate
+                    
+        return retdate
+
+    def GetStartdateHelper(self, subscription_data):
+        startdate = datetime.now()
+        mem_type = subscription_data['membership_type']
+        mem_end = self.GetDatetimeHelper(subscription_data['membership_end'])
+        if mem_end != None: 
+            if mem_type == 'one' or mem_type == 'complimentary' or mem_type == 'student':
+                startdate = mem_end - timedelta(days=365)
+            elif mem_type == 'two':
+                startdate = mem_end - timedelta(days=730)
+            
+        return startdate
 
     def ListProjects(self):
         data = {
@@ -526,6 +560,39 @@ class OWASPCopper:
             logging.error(f'Copper Failed UpdatePerson: {r.text}')
 
         return pid
+    
+    def GetPersonTags(self, pid):
+        pjson = self.GetPerson(pid)
+        rettags = []
+        person = None
+        if pjson:
+            person = json.loads(pjson)
+
+        if person:
+            if 'tags' in person:
+                rettags = person['tags']
+
+        return rettags
+
+    def AddTagsToPerson(self, pid, tags):
+        current_tags = self.GetPersonTags(pid)
+
+        for tag in current_tags:
+            if not tag in tags:
+                tags.append(tag)
+
+        data = {
+            'tags': tags # should be an array of string
+        }
+
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
+        r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
+        pid = None
+        if r.ok:
+            person = json.loads(r.text)
+            pid = person['id']
+        
+        return pid
 
     def CreateOpportunity(self, opp_name, contact_email):
 
@@ -756,42 +823,57 @@ class OWASPCopper:
         
         return None
 
-    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data, monetary_value):
-        logging.info('Copper CreateOWASPMembership')
-    
+    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data, monetary_value, tags = None):
+        # Multiple steps here
+        # CreatePerson
+        # CreateOpportunity
         contact_json = self.FindPersonByEmail(email)
+        person = None
         pid = None
-        if contact_json != '' and contact_json != '[]':
-            jsonp = json.loads(contact_json)
-            if len(jsonp) > 0:
-                pid = jsonp[0]['id']
+        if contact_json != '' and contact_json !='[]':
+            person = json.loads(contact_json)
+            if len(person) > 0:
+                person = person[0]
+                pid = person['id']
+        
+        mend=None
+
         if pid == None or pid <= 0:
             pid = self.CreatePerson(name, email, subscription_data, stripe_id)
-        else:
-            self.UpdatePerson(pid, subscription_data, stripe_id)
+            mend = self.GetDatetimeHelper(subscription_data['membership_end'])
+        else: #should only update if sub data membership end is later or nonexistent (and not a lifetime member)
+            memtype = self.GetCustomFieldHelper(self.cp_person_membership, person['custom_fields'])
+            if memtype == None:
+                self.UpdatePerson(pid, subscription_data, stripe_id)
+                mend = self.GetDatetimeHelper(subscription_data['membership_end'])
+            elif memtype != self.cp_person_membership_option_lifetime:
+                mend = self.GetDatetimeHelper(subscription_data['membership_end'])
+                cp_mend = self.GetCustomFieldHelper(self.cp_person_membership_end, person['custom_fields'])
+                cp_start = self.GetCustomFieldHelper(self.cp_person_membership_start, person['custom_fields'])
+                current_start = datetime.fromtimestamp(cp_start)
+                current_end = datetime.fromtimestamp(cp_mend)
+                new_start = self.GetDatetimeHelper(subscription_data['membership_start'])
+                if new_start < current_end: # set it back to the current start
+                    subscription_data['membership_start'] = current_start.strftime('%Y-%m-%d')
+
+                if mend == None or cp_mend == None or mend > current_end:
+                    self.UpdatePerson(pid, subscription_data, stripe_id)
+        
+        self.AddTagsToPerson(pid, tags)
 
         if pid == None or pid <= 0:
             logging.error(f'Failed to create person for {email}')
             return
 
         opp_name = subscription_data['membership_type'].capitalize()
-        memend = None
-        try:
-            memend = datetime.strptime(subscription_data['membership_end'], '%Y-%m-%d')
-        except:
-            try:
-                memend = datetime.strptime(subscription_data['membership_end'], '%m/%d/%Y')
-            except:
-                pass
-
-        if opp_name == "Honorary":
-            opp_name = "Honorary One"
-        if opp_name == "Complimentary":
+    
+        if opp_name == 'Honorary':
             opp_name = "Complimentary One"
         if subscription_data['membership_type'] != 'lifetime':
-            opp_name += f" Year Membership until {memend.strftime('%Y-%m-%d')}"
+            opp_name += f" Year Membership until {mend.strftime('%Y-%m-%d')}"
         else:
             opp_name += " Membership"
-
         
+        time.sleep(7.0) # seems to take copper a little while after a person is created for the relation to be able to see it
+
         self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data, monetary_value)
