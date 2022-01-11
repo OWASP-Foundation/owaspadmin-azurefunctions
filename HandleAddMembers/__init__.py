@@ -2,20 +2,24 @@ import logging
 
 import azure.functions as func
 import csv
+import json
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
-    file = req.params.get('file')
+    filej = req.params.get('file')
     if not file:
         try:
             req_body = req.get_json()
         except ValueError:
             pass
         else:
-            file = req_body.get('file')
+            filej = req_body.get('file')
 
-    if file:
+    if filej:
+        logging.info(filej)
+        
+        file = json.loads(filej)
         logging.info(f"Received file { file.name }")
         logging.info("opening reader")
         csvreader = reader = csv.DictReader(file.read())
