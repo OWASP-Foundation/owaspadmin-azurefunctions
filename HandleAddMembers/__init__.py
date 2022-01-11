@@ -83,13 +83,15 @@ def customer_with_tags_exists(cop, email, tags):
     exists = False
     persons = cop.FindPersonByEmail(email)
     if persons:
-        person = json.loads(persons)[0]
-        curr_tags = cop.GetPersonTags(person['id'])
+        jperson = json.loads(persons)
+        if len(jperson) > 0:
+            person = jperson[0]
+            curr_tags = cop.GetPersonTags(person['id'])
 
-        for tag in tags:
-            exists = tag in curr_tags
-            if exists:
-                break
+            for tag in tags:
+                exists = tag in curr_tags
+                if exists:
+                    break
 
     return exists
 
