@@ -21,7 +21,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         f64part = filej[filej.find('base64,') + 7:]
         file = base64.b64decode(f64part).decode(encoding='utf-8')
         logging.info("opening reader")
-        csvreader = reader = csv.DictReader(file.read())
+        csvreader = reader = csv.DictReader(file)
         email = 'No Email'
         for row in csvreader:
             email = row['Email']
