@@ -114,7 +114,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
             enddate = start + timedelta(days)
             memend = enddate.strftime('%Y-%m-%d')            
 
-        member = MemberData(nstr, row['Email'].lower(), row['Company'], row['Work Country'], row['Work Zip'], row['membership-start-date'], memend, row['membership-type'], row['membership-recurring'])
+        member = MemberData(nstr, row['Email'].lower(), row['Company'], row['Work Country'], row['Work Zip'], row['membership-start-date'], memend, row['membership-type'], row['membership-recurring'], None)
         customers = stripe.Customer.list(email=member.email)
         stripe_id = None
         tags = row['tags'].split(',') # for stripe purposes these 'tags' are simply true if they exist (for instance, distinguished: true will be the result)
