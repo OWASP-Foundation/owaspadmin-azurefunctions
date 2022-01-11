@@ -18,20 +18,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             filej = req_body.get('file')
 
     if filej:
-        logging.info(filej)
         f64part = filej[filej.find('base64,') + 7:]
-        fdecoded = base64.b64decode(f64part).decode(encoding='utf-8')
-        logging.info(fdecoded)
-
-        file = json.loads(fdecoded)
-        logging.info(f"Received file { file.name }")
+        file = base64.b64decode(f64part).decode(encoding='utf-8')
         logging.info("opening reader")
         csvreader = reader = csv.DictReader(file.read())
         email = 'No Email'
         for row in csvreader:
-            logging.info(row)
-            #email = row['Email']
-            #logging.info(f"Processing row for {email}")
+            email = row['Email']
+            logging.info(f"Processing row for {email}")
 
         logging.info('done with reader')
         return func.HttpResponse("Got the file.")
