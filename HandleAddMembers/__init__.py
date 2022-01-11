@@ -13,16 +13,9 @@ from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.owaspmailchimp import OWASPMailchimp
 from ..SharedCode.copper import OWASPCopper
 from ..SharedCode.googleapi import OWASPGoogle
-from sendgrid.helpers.mail import Mail
-from sendgrid.helpers.mail import Attachment
-from sendgrid.helpers.mail import FileContent
-from sendgrid.helpers.mail import FileName
-from sendgrid.helpers.mail import FileType
-from sendgrid.helpers.mail import Disposition
 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-from sendgrid.helpers.mail import From
+import sendgrid
+from sendgrid.helpers.mail import *
 from datetime import datetime, timedelta
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -52,13 +45,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
 def mail_results(results):
-    user_email = 'membership@owasp.com'
+    user_email = '[membership@owasp.com]'
     subject = 'Membership Import Results for {datetime.today()}'
     msg = ''
     if len(results) > 0:
         for result in results:
             if msg:
-                msg = msg + '<br>' + result
+                msg = msg + '\n' + result
             else:
                 msg = result                
     else:
@@ -66,17 +59,20 @@ def mail_results(results):
 
     message = Mail(
         from_email=From('noreply@owasp.org', 'OWASP'),
-        to_emails=user_email,
-        html_content=f'<strong>{subject}</strong><br><br>{msg}')
-
+        to_email=To(user_email),
+        subject=subject,
+        content=Content('text\plain', msg))
+    
     try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
+        mail = Mail(from_email, to_email, subject, content)
+        sg = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.client.mail.send.post(request_body=mail.get())
+        logging.info(response)
         return True
     except Exception as ex:
         template = "An exception of type {0} occurred while sending an email. Arguments:\n{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        logging.exception(message)
+        err = template.format(type(ex).__name__, ex.args)
+        logging.exception(err)
         return False
 
 def customer_with_tags_exists(cop, email, tags):
