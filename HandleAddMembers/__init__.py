@@ -3,6 +3,7 @@ import logging
 import azure.functions as func
 import csv
 import json
+import base64
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
@@ -18,8 +19,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     if filej:
         logging.info(filej)
-        
-        file = json.loads(filej)
+        f64part = filej[filej.find('base64,') + 7:]
+        fdecoded = base64.b64decode(f64part).decode(encoding='utf-8')
+        logging.info(fdecoded)
+
+        file = json.loads(fdecoded)
         logging.info(f"Received file { file.name }")
         logging.info("opening reader")
         csvreader = reader = csv.DictReader(file.read())
