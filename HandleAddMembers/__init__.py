@@ -61,12 +61,11 @@ def mail_results(results):
         from_email=From('noreply@owasp.org', 'OWASP'),
         to_email=To(user_email),
         subject=subject,
-        content=Content('text\plain', msg))
+        content=Content('text/plain', msg))
     
     try:
-        mail = Mail(from_email, to_email, subject, content)
-        sg = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.client.mail.send.post(request_body=mail.get())
+        sgClient = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sgClient.client.mail.send.post(request_body=message.get())
         logging.info(response)
         return True
     except Exception as ex:
