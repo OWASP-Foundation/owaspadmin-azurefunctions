@@ -140,10 +140,12 @@ def import_members(filestr, override_lifetime_add_tags=False):
             if memop != None:
                 persons = cop.FindPersonByEmail(member.email)
                 if persons:
-                    person = json.loads(persons)[0]
-                    cpstart = cop.GetCustomFieldHelper(cop.cp_person_membership_start, person['custom_fields'])
-                    current_start = datetime.fromtimestamp(cpstart)
-                    memberdata['membership_start'] = current_start.strftime('%m/%d/%Y')
+                    jperson = json.loads(persons)
+                    if jperson and len(jperson) > 0:
+                        person = jperson[0]
+                        cpstart = cop.GetCustomFieldHelper(cop.cp_person_membership_start, person['custom_fields'])
+                        current_start = datetime.fromtimestamp(cpstart)
+                        memberdata['membership_start'] = current_start.strftime('%m/%d/%Y')
 
             if membership_type and membership_type != 'lifetime': 
                 mendstr = metadata.get('membership_end', None) # current membership end say 8/1/2022
