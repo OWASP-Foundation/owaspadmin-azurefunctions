@@ -57,11 +57,10 @@ def mail_results(results):
     else:
         msg = 'There were no results. No memberships were added.'
 
-    message = Mail(
-        from_email=From('noreply@owasp.org', 'OWASP'),
-        to_email=To(user_email),
-        subject=subject,
-        content=Content('text/plain', msg))
+    from_email = From('noreply@owasp.org', 'OWASP')
+    to_email = To(user_email)
+    content = Content('text/plain', msg)
+    message = Mail(from_email, to_email, subject, content)
     
     try:
         sgClient = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
