@@ -13,7 +13,7 @@ from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.owaspmailchimp import OWASPMailchimp
 from ..SharedCode.copper import OWASPCopper
 from ..SharedCode.googleapi import OWASPGoogle
-
+from python_http_client.exceptions import BadRequestsError
 import sendgrid
 from sendgrid.helpers.mail import *
 from datetime import datetime, timedelta
@@ -47,6 +47,8 @@ def mail_results(results):
         response = sgClient.client.mail.send.post(request_body=message.get())
         logging.info(response)
         return True
+    except BadRequestsError as e:
+        logging.exception(e)
     except Exception as ex:
         template = "An exception of type {0} occurred while sending an email. Arguments:\n{1!r}"
         err = template.format(type(ex).__name__, ex.args)
