@@ -189,8 +189,11 @@ def import_members(filestr, override_lifetime_add_tags=False):
                     if tag == 'distinguished':
                         mailchimpdata['status'] = 'distinguished'
 
-                mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
-                add_to_results(results, member.email, 'Mailchimp information added or updated.')
+                try:
+                    mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
+                    add_to_results(results, member.email, 'Mailchimp information added or updated.')
+                except Exception as err:
+                    add_to_results(results, 'Error', f'Failed to update mailchimp. Mailchimp returned: {err}')            
             else:
                 add_to_results(results, member.email, 'No stripe id found. Failed to create Stripe Customer.')
     except Exception as err:
