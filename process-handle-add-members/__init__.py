@@ -26,7 +26,7 @@ def main(msg: func.QueueMessage) -> None:
     
 def mail_results(results):
     user_email = 'membership@owasp.com'
-    subject = 'Membership Import Results for {datetime.today()}'
+    subject = f'Membership Import Results for {datetime.today()}'
     msg = ''
     if len(results) > 0:
         for key, value in results.items():
