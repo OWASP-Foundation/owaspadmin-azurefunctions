@@ -63,7 +63,7 @@ def customer_with_tags_exists(cop, email, tags):
             curr_tags = cop.GetPersonTags(person['id'])
 
             for tag in tags:
-                exists = tag in curr_tags
+                exists = (tag.lower() in curr_tags)
                 if exists:
                     break
 
