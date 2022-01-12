@@ -146,7 +146,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
                         member.UpdateMetadata(customer_id,
                             memberdata
                         )
-                        add_to_results(results, member.email, f"membership_end updated to {memberdata['membership_end']}")
+                        add_to_results(results, member.email, f"Had membership. Metadata membership_end updated to {memberdata['membership_end']}")
                     else: #this customer has no membership end in Stripe?
                         add_to_results(results, member.email, 'This person has a membership but no membership_end in Stripe. This needs to be fixed.')
                 elif membership_type == 'lifetime' and metadata.get('membership_end', None): #lifetime with a membership end? fix that while we are here....
