@@ -25,15 +25,15 @@ def main(msg: func.QueueMessage) -> None:
     mail_results(results)
     
 def mail_results(results):
-    user_email = '[membership@owasp.com]'
+    user_email = 'membership@owasp.com'
     subject = 'Membership Import Results for {datetime.today()}'
     msg = ''
     if len(results) > 0:
-        for result in results:
+        for key, value in results.items():
             if msg:
-                msg = msg + '\n' + result
+                msg = msg + f"\n{key}: {value}"
             else:
-                msg = result                
+                msg = f"{key}: {value}"                
     else:
         msg = 'There were no results. No memberships were added.'
 
@@ -45,15 +45,13 @@ def mail_results(results):
     try:
         sgClient = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         response = sgClient.client.mail.send.post(request_body=message.get())
-        logging.info(response)
         return True
-    except BadRequestsError as e:
-        logging.exception(e)
     except Exception as ex:
         template = "An exception of type {0} occurred while sending an email. Arguments:\n{1!r}"
         err = template.format(type(ex).__name__, ex.args)
         logging.exception(err)
-        return False
+    
+    return False
 
 def customer_with_tags_exists(cop, email, tags):
     exists = False
