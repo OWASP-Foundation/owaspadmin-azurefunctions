@@ -202,4 +202,4 @@ def import_members(filestr, override_lifetime_add_tags=False):
 
             mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
 
-        return results
+    return results
