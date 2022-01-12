@@ -18,7 +18,7 @@ import sendgrid
 from sendgrid.helpers.mail import *
 from datetime import datetime, timedelta
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     filej = req.params.get('file')
@@ -32,7 +32,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     if filej:
         f64part = filej[filej.find('base64,') + 7:]
+        #need to put this on queue and let queue do the work...takes too long to respond to user
         fstr = base64.b64decode(f64part).decode(encoding='utf-8')
+        mqueue.set(fstr)
+
         results = import_members(fstr)
         mail_results(results)
 
