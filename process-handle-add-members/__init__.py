@@ -33,7 +33,7 @@ def mail_results(results):
             if msg:
                 msg = msg + f"\n{key}: {value}"
             else:
-                msg = f"{key}: {value}"                
+                msg = f"{key}: {value}"
     else:
         msg = 'There were no results. No memberships were added.'
 
@@ -70,9 +70,17 @@ def customer_with_tags_exists(cop, email, tags):
     return exists
 
 
+def add_to_results(results, email, msg):
+    if email in results:
+        results[email] = results[email] + "\n\t\t" + msg
+    else:
+        results[email] = msg
+
+    return results
+
 # override_lifetime_add_tags is for distinguished lifetime members
 def import_members(filestr, override_lifetime_add_tags=False):
-    results = []
+    results = {}
     file = StringIO(filestr)
     reader = csv.DictReader(file)
     stripe.api_key = os.environ['STRIPE_SECRET']
@@ -97,7 +105,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
         member.AddTags(tags)
         
         if customer_with_tags_exists(cop, member.email, tags):
-            results.append({ member.email : 'Person with these tags exists. Possibly duplicate. Verify and remove tags to continue.'})
+            add_to_results(results, member.email, 'Person with these tags exists. Possibly duplicate. Verify and remove tags to continue.')
             continue
 
         if len(customers.data) > 0: # exists
@@ -105,7 +113,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
             metadata = customers.data[0].get('metadata', {})
             stripe_member_type = metadata.get('membership_type')
             if stripe_member_type == 'lifetime' and not override_lifetime_add_tags: #do not update the membership on this person unless told to override
-                results.append({ member.email : 'Lifetime membership. This person will not be changed.'})
+                add_to_results(results, member.email, 'Lifetime membership. This person will not be changed.')
                 continue
 
             membership_type = member.type
@@ -137,25 +145,24 @@ def import_members(filestr, override_lifetime_add_tags=False):
                     member.UpdateMetadata(customer_id,
                         memberdata
                     )
-            else: #lifetime
+                    add_to_results(results, member.email, f"membership_end updated to {memberdata['membership_end']}")
+                else: #this customer has no membership end in Stripe?
+                    add_to_results(results, member.email, 'This person has a membership but no membership_end in Stripe. This needs to be fixed.')
+            elif membership_type == 'lifetime' and metadata.get('membership_end', None): #lifetime with a membership end? fix that while we are here....
                 memberdata['membership_end'] = ''
                 member.UpdateMetadata(customer_id,
                         memberdata
                     )
 
-            # also need to update Copper info here...including creating an opportunity for this (even if $0)
-            stripe_id = customer_id #cop.UpdateOWASPMembership(member.stripe_id, member.name, member.email, member.GetSubscriptionData())
-        else: # does not exist
+            stripe_id = customer_id
+        else: # does not exist            
             stripe_id = member.CreateCustomer()
+            add_to_results(results, member.email, 'Customer created in Stripe')
         
         if stripe_id != None:
             sub_data = member.GetSubscriptionData()
             if sub_data['membership_type'] != 'lifetime' and sub_data.get('membership_end', None) == None:
-                if member.email in results:
-                    results[member.email] = results[member.email] + '\nMembership found without an end date. Creating 2000-01-01 end date so it can be searched and fixed'
-                else:
-                    results.append({ member.email: 'Membership found without an end date. Creating 2000-01-01 end date so it can be searched and fixed' })
-
+                add_to_results(results, member.email, 'Membership found without an end date. Creating 2000-01-01 end date so it can be searched and fixed')                
                 sub_data['membership_end'] = '2000-01-01' # faking this data so we can look it up later and fix it
             monetary_value = 0
             if member.type == 'one':
@@ -164,6 +171,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
                 monetary_value = 95
 
             cop.CreateOWASPMembership(stripe_id, None, member.name, member.email, sub_data, monetary_value, tags)
+            add_to_results(results, member.email, 'Copper Opportunity created.')
             mailchimp = OWASPMailchimp()
             mailchimpdata = {
                 'name': member.name,
@@ -181,5 +189,8 @@ def import_members(filestr, override_lifetime_add_tags=False):
                     mailchimpdata['status'] = 'distinguished'
 
             mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
+            add_to_results(results, member.email, 'Mailchimp information added or updated.')
+        else:
+            add_to_results(results, member.email, 'No stripe id found. Failed to create Stripe Customer.')
 
     return results
