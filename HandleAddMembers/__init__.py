@@ -2,9 +2,29 @@ import logging
 
 import azure.functions as func
 import base64
+import requests
+import os
+import jwt
+import json
+
 
 def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
+
+    token = req.params.get('authtoken')
+    if not token:
+        try:
+            req_body = req.get_json()
+        except ValueError:
+            pass
+        else:
+            token = req_body.get('authtoken')
+
+    try:
+        data = get_token_data(token)
+    except Exception as err:
+        logging.error(f'Invalid token: {err}')
+        return func.HttpResponse("Not authorized.", status_code=403)
 
     filej = req.params.get('file')
     if not filej:
@@ -28,3 +48,24 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
              status_code=400
         )
 
+def get_public_keys():
+    r = requests.get(os.environ['CF_TEAMS_DOMAIN'])
+    public_keys = []
+    jwk_set = r.json()
+    for key_dict in jwk_set['keys']:
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key_dict))
+        public_keys.append(public_key)
+    return public_keys
+
+def get_token_data(token):
+    data = {}
+    keys = get_public_keys()
+    
+    for key in keys:
+        try:
+            data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
+            break
+        except Exception as err:
+            pass
+
+    return data
