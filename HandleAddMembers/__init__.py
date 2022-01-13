@@ -22,6 +22,7 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
 
     try:
         data = get_token_data(token)
+        logging.info('Token validated')
     except Exception as err:
         logging.error(f'Invalid token: {err}')
         return func.HttpResponse("Not authorized.", status_code=403)
@@ -37,7 +38,6 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
 
     if filej:
         f64part = filej[filej.find('base64,') + 7:]
-        #need to put this on queue and let queue do the work...takes too long to respond to user
         fstr = base64.b64decode(f64part).decode(encoding='utf-8')
         mqueue.set(fstr)
         return func.HttpResponse("File received.")
@@ -62,10 +62,7 @@ def get_token_data(token):
     keys = get_public_keys()
     
     for key in keys:
-        try:
-            data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
-            break
-        except Exception as err:
-            pass
+        data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
+        break
 
     return data
