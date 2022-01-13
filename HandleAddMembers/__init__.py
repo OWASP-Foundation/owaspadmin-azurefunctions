@@ -23,14 +23,15 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
     try:
         data = get_token_data(token)
         logging.info('Token validated')
+        if not data or len(data) == 0:
+            logging.error(f'Invalid token.')
+            return func.HttpResponse("Not authorized.", status_code=403)
+
     except Exception as err:
         logging.error(f'Invalid token: {err}')
         return func.HttpResponse("Not authorized.", status_code=403)
-    else:
-        if not data or len(data) == 0:
-            logging.error(f'Invalid token: {err}')
-            return func.HttpResponse("Not authorized.", status_code=403)
-            
+        
+
     filej = req.params.get('file')
     if not filej:
         try:
