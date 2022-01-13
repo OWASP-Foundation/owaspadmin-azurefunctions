@@ -22,7 +22,6 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
 
     try:
         data = get_token_data(token)
-        logging.info('Token validated')
         if not data or len(data) == 0:
             logging.error(f'Invalid token.')
             return func.HttpResponse("Not authorized.", status_code=403)
@@ -68,7 +67,7 @@ def get_token_data(token):
     
     for key in keys:
         try:
-            data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
+            data = jwt.decode(token, key=key, audience=os.environ['CF_ADMIN_POLICY_AUD'], algorithms=['RS256'], verify=True)
             break
         except Exception as err:
             pass
