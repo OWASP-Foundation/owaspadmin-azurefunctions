@@ -17,7 +17,8 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
         try:
             req_body = req.get_json()
             logging.info(req_body)
-            token = req_body.get('authtoken')
+            params = req_body.get('params')
+            token = params.get('authtoken')
             logging.info(f"req_body token is {token}")
         except ValueError:
             logging.error('Got ValueError')
