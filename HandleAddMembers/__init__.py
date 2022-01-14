@@ -15,16 +15,16 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
     if not token:
         try:
             req_body = req.get_json()
+            logging.info(req_body)
+            token = req_body.get('authtoken')
         except ValueError:
             pass
-        else:
-            token = req_body.get('authtoken')
 
     try:
         data = get_token_data(token)
         if not data or len(data) == 0:
             logging.error(f'Invalid token.')
-            logging.info(token)
+            logging.info(f'Token is {token}')
             return func.HttpResponse("Not authorized.", status_code=403)
     except Exception as err:
         logging.error(f'Invalid token: {err}')
