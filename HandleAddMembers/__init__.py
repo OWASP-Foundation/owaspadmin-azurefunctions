@@ -12,19 +12,22 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
     logging.info('Python HTTP trigger function processed a request.')
 
     token = req.params.get('authtoken')
+    logging.info(f"initial token is {token}")
     if not token:
         try:
             req_body = req.get_json()
             logging.info(req_body)
             token = req_body.get('authtoken')
+            logging.info(f"req_body token is {token}")
         except ValueError:
+            logging.error('Got ValueError')
             pass
 
     try:
+        logging.info(f'Token is {token}')
         data = get_token_data(token)
         if not data or len(data) == 0:
-            logging.error(f'Invalid token.')
-            logging.info(f'Token is {token}')
+            logging.error(f'Invalid token.')            
             return func.HttpResponse("Not authorized.", status_code=403)
     except Exception as err:
         logging.error(f'Invalid token: {err}')
