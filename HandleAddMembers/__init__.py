@@ -16,16 +16,12 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
     if not token:
         try:
             req_body = req.get_json()
-            logging.info(req_body)
             params = req_body.get('params')
-            token = params.get('authtoken')
-            logging.info(f"req_body token is {token}")
+            token = params.get('authtoken')            
         except ValueError:
-            logging.error('Got ValueError')
             pass
 
     try:
-        logging.info(f'Token is {token}')
         data = get_token_data(token)
         if not data or len(data) == 0:
             logging.error(f'Invalid token.')            
@@ -42,7 +38,8 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
         except ValueError:
             pass
         else:
-            filej = req_body.get('file')
+            params = req_body.get('params')
+            filej = params.get('file')
 
     if filej:
         f64part = filej[filej.find('base64,') + 7:]
