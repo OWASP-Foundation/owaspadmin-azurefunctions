@@ -171,7 +171,10 @@ def import_members(filestr, override_lifetime_add_tags=False):
                 elif member.type == 'two':
                     monetary_value = 95
 
-                cop.CreateOWASPMembership(stripe_id, None, member.name, member.email, sub_data, monetary_value, tags)
+                memopp = cop.CreateOWASPMembership(stripe_id, None, member.name, member.email, sub_data, monetary_value, tags)
+                if not 'Success' in memopp:
+                    add_to_results(results, member.email, f"Copper Failure: {memopp}. Fix this person by hand.")
+
                 add_to_results(results, member.email, 'Copper Opportunity created.')
                 mailchimp = OWASPMailchimp()
                 mailchimpdata = {

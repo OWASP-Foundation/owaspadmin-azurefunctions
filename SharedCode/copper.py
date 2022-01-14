@@ -824,6 +824,7 @@ class OWASPCopper:
         return None
 
     def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data, monetary_value, tags = None):
+        result = 'Success'
         # Multiple steps here
         # CreatePerson
         # CreateOpportunity
@@ -858,13 +859,12 @@ class OWASPCopper:
 
                 if mend == None or cp_mend == None or mend > current_end:
                     self.UpdatePerson(pid, subscription_data, stripe_id)
-        
-        self.AddTagsToPerson(pid, tags)
 
         if pid == None or pid <= 0:
             logging.error(f'Failed to create person for {email}')
-            return
+            return f"Failed to create or find person for {email}"
 
+        self.AddTagsToPerson(pid, tags)
         opp_name = subscription_data['membership_type'].capitalize()
     
         if opp_name == 'Honorary':
@@ -876,4 +876,7 @@ class OWASPCopper:
         
         time.sleep(7.0) # seems to take copper a little while after a person is created for the relation to be able to see it
 
-        self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data, monetary_value)
+        result = self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data, monetary_value)
+        if result == ''
+            result = f"Failed to create opportunity for {email}"
+        return result
