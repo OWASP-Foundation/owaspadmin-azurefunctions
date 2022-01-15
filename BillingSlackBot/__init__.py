@@ -103,7 +103,7 @@ def contact_lookup(text, response_url):
         
         for leader_info in member_info['leader_info']:
             fields.append({
-                "type":"mrkdwn"
+                "type":"mrkdwn",
                 "text":f"*{leader_info['group-type']} Leader*\n{leader_info['group']}"
             })
 
