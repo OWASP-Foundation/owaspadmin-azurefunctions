@@ -365,8 +365,14 @@ def get_member_info(member_data):
 
     if person:
         member_info['membership_type'] = member_data.type
-        member_info['membership_start'] = datetime.strftime(member_data.start, "%Y-%m-%d")
-        member_info['membership_end'] = datetime.strftime(member_data.end, "%Y-%m-%d")
+        memstart = None
+        if member_data.start != None:
+            memstart = datetime.strftime(member_data.start, "%Y-%m-%d")
+        member_info['membership_start'] = memstart
+        memend = None
+        if member_data.end != None:
+            memend = datetime.strftime(member_data.end, "%Y-%m-%d")
+        member_info['membership_end'] = memend
         member_info['membership_recurring'] = member_data.recurring
         member_info['name'] = member_data.name
         member_info['emails'] = person['emails']
