@@ -363,7 +363,8 @@ def get_member_info(member_data):
     person = None
     person = cp.FindPersonByEmailObj(emailaddress)
 
-    if person:
+    if person and len(person) > 0:
+        person = person[0]
         member_info['membership_type'] = member_data.type
         memstart = None
         if member_data.start != None:
