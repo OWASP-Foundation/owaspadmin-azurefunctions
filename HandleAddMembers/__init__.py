@@ -11,25 +11,10 @@ import json
 def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
-    token = req.params.get('authtoken')
-    logging.info(f"initial token is {token}")
-    if not token:
-        try:
-            req_body = req.get_json()
-            params = req_body.get('params')
-            token = params.get('authtoken')            
-        except ValueError:
-            pass
-
-    try:
-        data = get_token_data(token)
-        if not data or len(data) == 0:
-            logging.error(f'Invalid token.')            
-            return func.HttpResponse("Not authorized.", status_code=403)
-    except Exception as err:
-        logging.error(f'Invalid token: {err}')
-        return func.HttpResponse("Not authorized.", status_code=403)
-        
+    
+    if not validate_usage(req):
+        logging.error('Failed login attempt')
+        return func.HttpResponse("Not authorized.", status_code=403)    
 
     filej = req.params.get('file')
     if not filej:
@@ -52,6 +37,25 @@ def main(req: func.HttpRequest, mqueue: func.Out[func.QueueMessage]) -> func.Htt
              "Something is not right.",
              status_code=400
         )
+def validate_usage(req):
+    token = req.params.get('authtoken')
+    allow_login = True
+    if not token:
+        try:
+            req_body = req.get_json()
+            params = req_body.get('params')
+            token = params.get('authtoken')            
+        except ValueError:
+            pass
+
+    try:
+        data = get_token_data(token)
+        if not data or len(data) == 0:      
+            allow_login = False               
+    except Exception as err:
+        allow_login = False
+        
+    return allow_login
 
 def get_public_keys():
     r = requests.get(os.environ['CF_TEAMS_DOMAIN'])
