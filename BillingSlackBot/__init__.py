@@ -95,8 +95,18 @@ def contact_lookup(text, response_url):
             {
                 "type": "mrkdwn",
                 "text": "*Membership End*\n" + member_info.get('membership_end', None)
+            },
+            {
+                "type":"mrkdwn",
+                "text":"*Company*\n" + member_info.get("company", None)
             })
-            
+        
+        for leader_info in member_info['leader_info']:
+            fields.append({
+                "type":"mrkdwn"
+                "text":f"*{leader_info['group-type']} Leader*\n" + leader_info['group']
+            })
+
         response_text['blocks'].append({
         "type": "section",
         "fields": fields
@@ -376,6 +386,7 @@ def get_member_info(member_data):
         member_info['address'] = person['address']
         member_info['phone_numbers'] = person['phone_numbers']
         member_info['member_number'] = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_stripe_number)
+        member_info['company'] = person['company_name']
         member_info = fill_leader_details(member_info)
     else:
         logging.info(f"Failed to get person")

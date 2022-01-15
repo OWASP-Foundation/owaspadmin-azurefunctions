@@ -297,6 +297,78 @@ class OWASPCopper:
         
         return ''
 
+    def FindPersonByEmailObj(self, searchtext):
+        results = []
+
+        lstxt = searchtext.lower()
+        if len(lstxt) <= 0:
+            return results
+
+        # first use fetch_by_email
+        url = f'{self.cp_base_url}{self.cp_people_fragment}fetch_by_email'
+        data = { 'email': lstxt }
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        if r.ok and r.text != '[]':
+            results = [json.loads(r.text)]
+
+        if len(results) == 0:
+            data = {
+                'page_size': 5,
+                'sort_by': 'name',
+                'emails': [lstxt]
+            }
+
+            url = f'{self.cp_base_url}{self.cp_people_fragment}{self.cp_search_fragment}'        
+            r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+            if r.ok:
+                results = json.loads(r.text)
+        
+        return results
+
+    def FindPersonByNameObj(self, searchtext):
+        lstxt = searchtext.lower()
+        if len(lstxt) <= 0:
+            return ''
+            
+        data = {
+            'page_size': 5,
+            'sort_by': 'name',
+            'name': lstxt
+        }
+        results = []
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{self.cp_search_fragment}'
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        if r.ok:
+            res = json.loads(r.text)
+            results.extend(res)
+        
+        data = {
+            'page_size': 5,
+            'sort_by': 'name',
+            'last_name': lstxt
+        }
+
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{self.cp_search_fragment}'
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        if r.ok:
+            res = json.loads(r.text)
+            results.extend(res)
+
+        data = {
+            'page_size': 5,
+            'sort_by': 'name',
+            'first_name': lstxt
+        }
+
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{self.cp_search_fragment}'
+        r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
+        if r.ok:
+            res = json.loads(r.text)
+            results.extend(res)
+
+
+        return results
+
     def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
         logging.info('Copper CreatePerson')
 
