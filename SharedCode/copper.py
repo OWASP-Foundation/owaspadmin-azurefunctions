@@ -877,6 +877,6 @@ class OWASPCopper:
         time.sleep(7.0) # seems to take copper a little while after a person is created for the relation to be able to see it
 
         result = self.CreateMemberOpportunity(opp_name, pid, payment_id, subscription_data, monetary_value)
-        if result == ''
+        if result == '':
             result = f"Failed to create opportunity for {email}"
         return result
