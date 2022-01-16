@@ -74,9 +74,13 @@ def contact_lookup(text, response_url):
             "type":"mrkdwn",
             "text": "*Emails*\n" + email_list
         })
+        address = member_info.get('address')
+        if address:
+            addressstr = f"{address.get('street')}\n{address.get('city')}, {address.get('state')} {address.get('postal_code')}, {address.get('country')}"
+            
         fields.append({
             "type":"mrkdwn",
-            "text":"*Address*\n" + member_info.get("address")
+            "text":"*Address*\n" + addressstr
         })
         phone_list = ", ".join([str(x['number']) for x in member_info.get('phone_numbers')])
         fields.append({
