@@ -100,7 +100,7 @@ def contact_lookup(text, response_url):
         if not company:
             company = 'None'
         
-        fields.extend(
+        fields.extend([
             {
                 "type": "mrkdwn",
                 "text": "*Membership Type*\n" + memtype
@@ -116,7 +116,7 @@ def contact_lookup(text, response_url):
             {
                 "type":"mrkdwn",
                 "text":"*Company*\n" + company
-            })
+            }])
         
         for leader_info in member_info['leader_info']:
             fields.append({
