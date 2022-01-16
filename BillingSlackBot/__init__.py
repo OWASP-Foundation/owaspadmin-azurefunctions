@@ -77,7 +77,7 @@ def contact_lookup(text, response_url):
         address = member_info.get('address')
         if address:
             addressstr = f"{address.get('street')}\n{address.get('city')}, {address.get('state')} {address.get('postal_code')}, {address.get('country')}"
-            
+
         fields.append({
             "type":"mrkdwn",
             "text":"*Address*\n" + addressstr
@@ -90,19 +90,19 @@ def contact_lookup(text, response_url):
         fields.extend(
             {
                 "type": "mrkdwn",
-                "text": "*Membership Type*\n" + member_info.get('membership_type', None)
+                "text": "*Membership Type*\n" + member_info.get('membership_type', '')
             },
             {
                 "type": "mrkdwn",
-                "text": "*Membership Start*\n" + member_info.get('membership_start', None)
+                "text": "*Membership Start*\n" + member_info.get('membership_start', '')
             },
             {
                 "type": "mrkdwn",
-                "text": "*Membership End*\n" + member_info.get('membership_end', None)
+                "text": "*Membership End*\n" + member_info.get('membership_end', '')
             },
             {
                 "type":"mrkdwn",
-                "text":"*Company*\n" + member_info.get("company", None)
+                "text":"*Company*\n" + member_info.get("company", '')
             })
         
         for leader_info in member_info['leader_info']:
