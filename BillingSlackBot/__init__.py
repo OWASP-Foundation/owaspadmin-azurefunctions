@@ -49,13 +49,97 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         status_code=200
     )
 
+def contact_lookup_multiple(persons, response_url):
+
+    response_text = {
+        "blocks": []
+    }
+    for person in persons:
+        member_data = MemberData.LoadMemberDataByEmail(person['emails'][0]['email'])
+        if member_data:        
+            member_info = get_member_info(member_data)
+            
+            fields = []
+            fields.append({
+                    "type": "mrkdwn",
+                    "text": "*Name*\n" + member_info.get('name', 'Unknown')
+                })
+            email_list = ", ".join([str(x['email']) for x in member_info.get('emails')])
+            fields.append({
+                "type":"mrkdwn",
+                "text": "*Emails*\n" + email_list
+            })
+            address = member_info.get('address')
+            if address:
+                addressstr = f"{address.get('street')}\n{address.get('city')}, {address.get('state')} {address.get('postal_code')}, {address.get('country')}"
+
+            fields.append({
+                "type":"mrkdwn",
+                "text":"*Address*\n" + addressstr
+            })
+            phone_list = ", ".join([str(x['number']) for x in member_info.get('phone_numbers')])
+            fields.append({
+                "type":"mrkdwn",
+                "text": "*Phone Numbers*\n" + phone_list
+            })
+            memend = member_info.get('membership_end', None)
+            if not memend:
+                memend = 'None'
+            memtype = member_info.get('membership_type', None)
+            if not memtype:
+                memtype = 'None'
+            memstart = member_info.get('membership_start', None)
+            if not memstart:
+                memstart = 'None'
+            company = member_info.get('company', None)
+            if not company:
+                company = 'None'
+            
+            fields.extend([
+                {
+                    "type": "mrkdwn",
+                    "text": "*Membership Type*\n" + memtype
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Membership Start*\n" + memstart
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Membership End*\n" + memend
+                },
+                {
+                    "type":"mrkdwn",
+                    "text":"*Company*\n" + company
+                }])
+            
+            for leader_info in member_info['leader_info']:
+                fields.append({
+                    "type":"mrkdwn",
+                    "text":f"*{leader_info['group-type']} Leader*\n{leader_info['group']}"
+                })
+
+            response_text['blocks'].append({
+            "type": "section",
+            "fields": fields
+            })        
+
+
+    return send_response(response_text, response_url)
+
 def contact_lookup(text, response_url):
 
+    copper = OWASPCopper()
     member_data = None
     if '@' in text:
         member_data = MemberData.LoadMemberDataByEmail(text)
     else:
-        member_data = MemberData.LoadMemberDataByName(text)
+        persons = copper.FindPersonByNameObj(text)
+        if len(persons) == 1:
+            member_data = MemberData.LoadMemberDataByName(text)
+        else:
+            contact_lookup_multiple(persons, response_url)
+            return
 
     response_text = {
         "blocks": []
