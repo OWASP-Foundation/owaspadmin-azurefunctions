@@ -87,22 +87,35 @@ def contact_lookup(text, response_url):
             "type":"mrkdwn",
             "text": "*Phone Numbers*\n" + phone_list
         })
+        memend = member_info.get('membership_end', None)
+        if not memend:
+            memend = 'None'
+        memtype = member_info.get('membership_type', None)
+        if not memtype:
+            memtype = 'None'
+        memstart = member_info.get('membership_start', None)
+        if not memstart:
+            memstart = 'None'
+        company = member_info.get('company', None)
+        if not company:
+            company = 'None'
+        
         fields.extend(
             {
                 "type": "mrkdwn",
-                "text": "*Membership Type*\n" + member_info.get('membership_type', '')
+                "text": "*Membership Type*\n" + memtype
             },
             {
                 "type": "mrkdwn",
-                "text": "*Membership Start*\n" + member_info.get('membership_start', '')
+                "text": "*Membership Start*\n" + memstart
             },
             {
                 "type": "mrkdwn",
-                "text": "*Membership End*\n" + member_info.get('membership_end', '')
+                "text": "*Membership End*\n" + memend
             },
             {
                 "type":"mrkdwn",
-                "text":"*Company*\n" + member_info.get("company", '')
+                "text":"*Company*\n" + company
             })
         
         for leader_info in member_info['leader_info']:
