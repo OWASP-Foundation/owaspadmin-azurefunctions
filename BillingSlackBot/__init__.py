@@ -122,7 +122,7 @@ def contact_lookup_multiple(persons, response_url):
             response_text['blocks'].append({
             "type": "section",
             "fields": fields
-            })        
+            })
 
 
     return send_response(response_text, response_url)
