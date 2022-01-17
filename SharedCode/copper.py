@@ -647,22 +647,23 @@ class OWASPCopper:
         return rettags
 
     def AddTagsToPerson(self, pid, tags):
-        current_tags = self.GetPersonTags(pid)
+        if tags:
+            current_tags = self.GetPersonTags(pid)
 
-        for tag in current_tags:
-            if not tag in tags:
-                tags.append(tag)
+            for tag in current_tags:
+                if not tag in tags:
+                    tags.append(tag)
 
-        data = {
-            'tags': tags # should be an array of string
-        }
+            data = {
+                'tags': tags # should be an array of string
+            }
 
-        url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
-        r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
-        pid = None
-        if r.ok:
-            person = json.loads(r.text)
-            pid = person['id']
+            url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
+            r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
+            pid = None
+            if r.ok:
+                person = json.loads(r.text)
+                pid = person['id']
         
         return pid
 
@@ -936,7 +937,9 @@ class OWASPCopper:
             logging.error(f'Failed to create person for {email}')
             return f"Failed to create or find person for {email}"
 
-        self.AddTagsToPerson(pid, tags)
+        if tags:
+            self.AddTagsToPerson(pid, tags)
+
         opp_name = subscription_data['membership_type'].capitalize()
     
         if opp_name == 'Honorary':
