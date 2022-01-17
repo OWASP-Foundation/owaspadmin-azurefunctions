@@ -649,10 +649,10 @@ class OWASPCopper:
     def AddTagsToPerson(self, pid, tags):
         if tags:
             current_tags = self.GetPersonTags(pid)
-
-            for tag in current_tags:
-                if not tag in tags:
-                    tags.append(tag)
+            if current_tags:
+                for tag in current_tags:
+                    if not tag in tags:
+                        tags.append(tag)
 
             data = {
                 'tags': tags # should be an array of string
