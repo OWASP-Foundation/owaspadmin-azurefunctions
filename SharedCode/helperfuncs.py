@@ -115,7 +115,7 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                         {
                             "membership_start": member.start.strftime('%m/%d/%Y'),
                             "membership_end": member.end.strftime('%m/%d/%Y'),
-                            "membership_recurring":"no"
+                            "membership_recurring":"no",
                             "leader_agreement": datetime.today().strftime("%m/%d/%Y")
                         }
                     )
