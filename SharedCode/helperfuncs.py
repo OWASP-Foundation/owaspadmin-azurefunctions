@@ -103,7 +103,7 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                     if membership_type == 'two':
                         add_days = 729
                         member.end = mend_dt + timedelta(days=add_days)
-
+                    
                     if(is_leader):
                         member.UpdateMetadata(customer_id,
                             {
@@ -512,7 +512,9 @@ class MemberData:
         persons = copper.FindPersonByEmailObj(email)
         if len(persons) > 0: 
             person = persons[0]
-            start = datetime.fromtimestamp(copper.GetCustomFieldHelper(copper.cp_person_membership_start, person['custom_fields']))
+            stts = copper.GetCustomFieldHelper(copper.cp_person_membership_start, person['custom_fields'])
+            if stts:
+                start = datetime.fromtimestamp(stts)
 
         if not start: # if copper did not have it, pull it from Stripe
             customers = stripe.Customer.list(email=email)
