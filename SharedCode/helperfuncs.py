@@ -102,9 +102,9 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                 mend_dt = cop.GetDatetimeHelper(mendstr)
                 #possible case: has membership already...update end date to be +time
                 if member.end > mend_dt:
-                    add_days = 364
+                    add_days = 365
                     if membership_type == 'two':
-                        add_days = 729
+                        add_days = 730
                     
                     member.end = mend_dt + timedelta(days=add_days)
                 elif member.end == None: # was not a member, make them one
@@ -113,7 +113,9 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                 if(is_leader):
                     member.UpdateMetadata(customer_id,
                         {
+                            "membership_start": member.start.strftime('%m/%d/%Y'),
                             "membership_end": member.end.strftime('%m/%d/%Y'),
+                            "membership_recurring":"no"
                             "leader_agreement": datetime.today().strftime("%m/%d/%Y")
                         }
                     )
@@ -159,7 +161,10 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
             'mailing_list': mailing_list
         }
 
-        mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
+        try:
+            mailchimp.AddToMailingList(member.email, mailchimpdata , member.GetSubscriptionData(), stripe_id)
+        except Exception as err:
+            logging.error(f"Failed to add to Mailchimp: {err}")
 
             
 # simple true/false function as opposed to the IsLeaderByEmail Azure Function that returns more details
