@@ -73,6 +73,15 @@ def unsuspend_google_user(owasp_email):
                 if not og.UnsuspendUser(email['address']):
                     logging.warn(f"Failed to unsuspend {email['address']}")
 
+def suspend_google_user(owasp_email):
+    og = OWASPGoogle()
+    user = og.GetUser(owasp_email)
+    if user and not user['suspended']:
+        for email in user['emails']:
+            if '@owasp.org' in email['address']:
+                if not og.SuspendUser(email['address']):
+                    logging.warn(f"Failed to Suspend {email['address']}")
+
 # for leaders, the check should exist in the azure function to not allow 
 # complimentary membership if already a member unless within some number 
 # of days prior to expiry

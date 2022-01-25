@@ -222,18 +222,18 @@ class OWASPGoogle:
         return None
 
     def SuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
-        user = self.GetUser(email)
-        if user:
-            user[0]['suspended'] = True
+            user = self.GetUser(email)
+            if user:
+                user[0]['suspended'] = True
 
-        results = self.admin.users().update(userKey=email, body=user[0]).execute()
+            results = self.admin.users().update(userKey=email, body=user[0]).execute()
 
-        return ('primaryEmail' in results)
+            return ('primaryEmail' in results)
 
     def UnsuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
         user = self.GetUser(email)
         if user:
-             user[0]['suspended'] = True
+            user[0]['suspended'] = False
 
         results = self.admin.users().update(userKey=email, body= user[0]).execute()
 
