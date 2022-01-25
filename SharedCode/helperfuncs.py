@@ -99,7 +99,7 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                 mendstr = enddate
                 
             if mendstr != None:
-                mend_dt = datetime.strptime(mendstr, '%m/%d/%Y')
+                mend_dt = cop.GetDatetimeHelper(mendstr)
                 #possible case: has membership already...update end date to be +time
                 if member.end > mend_dt:
                     add_days = 364
