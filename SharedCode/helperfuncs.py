@@ -95,6 +95,9 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
         if stripe_member_type != 'lifetime': #do not update the membership on lifetime members
             membership_type = member.type
             mendstr = metadata.get('membership_end', None)
+            if mendstr == None:
+                mendstr = enddate
+                
             if mendstr != None:
                 mend_dt = datetime.strptime(mendstr, '%m/%d/%Y')
                 #possible case: has membership already...update end date to be +time
@@ -117,25 +120,27 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                                 "membership_end": member.end.strftime('%m/%d/%Y'),
                             }
                         )
-
-            else: # lifetime-but should never happen here in comp membership
-                if(is_leader):
-                    member.UpdateMetadata(customer_id,
-                            {
-                                "membership_end": "",
-                                "membership_type": "lifetime",
-                                "leader_agreement": datetime.today().strftime("%m/%d/%Y")
-                            }
-                        )
-                else:
-                    member.UpdateMetadata(customer_id,
-                            {
-                                "membership_end": "",
-                                "membership_type": "lifetime"
-                            }
-                        )
+            
+        else: # lifetime-but should never happen here in comp membership
+            if(is_leader):
+                member.UpdateMetadata(customer_id,
+                        {
+                            "membership_end": "",
+                            "membership_type": "lifetime",
+                            "leader_agreement": datetime.today().strftime("%m/%d/%Y")
+                        }
+                    )
+            else:
+                member.UpdateMetadata(customer_id,
+                        {
+                            "membership_end": "",
+                            "membership_type": "lifetime"
+                        }
+                    )
                 # also need to update Copper info here...including creating an opportunity for this (even if $0)
             stripe_id = customer_id #cop.UpdateOWASPMembership(member.stripe_id, member.name, member.email, member.GetSubscriptionData())
+        
+
     else: # does not exist
         stripe_id = member.CreateCustomer()
             
@@ -501,7 +506,7 @@ class MemberData:
 
         if end:
             self.end = copper.GetDatetimeHelper(end)
-        else:
+        else: 
             self.end = None
 
         self.start = None
