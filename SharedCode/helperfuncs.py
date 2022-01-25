@@ -105,21 +105,24 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                     add_days = 364
                     if membership_type == 'two':
                         add_days = 729
-                        member.end = mend_dt + timedelta(days=add_days)
                     
-                    if(is_leader):
-                        member.UpdateMetadata(customer_id,
-                            {
-                                "membership_end": member.end.strftime('%m/%d/%Y'),
-                                "leader_agreement": datetime.today().strftime("%m/%d/%Y")
-                            }
-                        )
-                    else:
-                        member.UpdateMetadata(customer_id,
-                            {
-                                "membership_end": member.end.strftime('%m/%d/%Y'),
-                            }
-                        )
+                    member.end = mend_dt + timedelta(days=add_days)
+                elif member.end == None: # was not a member, make them one
+                    member.end = mend_dt
+
+                if(is_leader):
+                    member.UpdateMetadata(customer_id,
+                        {
+                            "membership_end": member.end.strftime('%m/%d/%Y'),
+                            "leader_agreement": datetime.today().strftime("%m/%d/%Y")
+                        }
+                    )
+                else:
+                    member.UpdateMetadata(customer_id,
+                        {
+                            "membership_end": member.end.strftime('%m/%d/%Y'),
+                        }
+                    )
             
         else: # lifetime-but should never happen here in comp membership
             if(is_leader):
@@ -137,10 +140,9 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
                             "membership_type": "lifetime"
                         }
                     )
-                # also need to update Copper info here...including creating an opportunity for this (even if $0)
-            stripe_id = customer_id #cop.UpdateOWASPMembership(member.stripe_id, member.name, member.email, member.GetSubscriptionData())
+        # also need to update Copper info here...including creating an opportunity for this (even if $0)
+        stripe_id = customer_id #cop.UpdateOWASPMembership(member.stripe_id, member.name, member.email, member.GetSubscriptionData())
         
-
     else: # does not exist
         stripe_id = member.CreateCustomer()
             
