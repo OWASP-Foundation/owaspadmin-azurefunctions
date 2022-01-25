@@ -513,17 +513,17 @@ class MemberData:
 
         self.start = None
         self.tags = []
-        start = None
-
+        
+        start_set = None
         #Should pull start date from copper if it exists
         persons = copper.FindPersonByEmailObj(email)
         if len(persons) > 0: 
             person = persons[0]
             stts = copper.GetCustomFieldHelper(copper.cp_person_membership_start, person['custom_fields'])
             if stts:
-                start = datetime.fromtimestamp(stts)
+                start_set = datetime.fromtimestamp(stts)
 
-        if not start: # if copper did not have it, pull it from Stripe
+        if not start_set: # if copper did not have it, pull it from Stripe
             customers = stripe.Customer.list(email=email)
             if len(customers.data) > 0:
                 customer = customers.data[0]
@@ -533,9 +533,12 @@ class MemberData:
                     if memstart:
                         startstr = memstart # don't change a start date
                         if startstr:
-                            start = copper.GetDatetimeHelper(startstr)
+                            start_set = copper.GetDatetimeHelper(startstr)
         
-        self.start = start    
+        if not start_set: # still no start...
+            start_set = copper.GetDatetimeHelper(start)
+
+        self.start = start_set  
         self.type = type
         self.recurring = recurring
         self.stripe_id = None
