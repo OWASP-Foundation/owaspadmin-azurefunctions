@@ -574,10 +574,10 @@ class MemberData:
             first_email = use_person['emails'][0]['email']
             company = use_person['company_name']
             country = None
-            if 'address' in use_person and 'country' in use_person['address']:
+            if 'address' in use_person and use_person['address'] and 'country' in use_person['address']:
                 country = use_person['address']['country']
             postal_code = None
-            if 'address' in use_person and 'postal_code' in use_person['address']:
+            if 'address' in use_person and use_person['addresss'] and 'postal_code' in use_person['address']:
                 country = use_person['address']['postal_code']
             member_data = MemberData(use_person['first_name'] + ' ' + use_person['last_name'], first_email.lower(), company, country, postal_code, None, None, None, None)
             member_data.AddEmails(use_person['emails'])
