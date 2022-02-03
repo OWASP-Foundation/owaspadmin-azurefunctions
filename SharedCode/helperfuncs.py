@@ -622,7 +622,7 @@ class MemberData:
                                 else:
                                     memend = copper.GetDatetimeHelper(metadata.get('membership_end', None))
                                     currend = copper.GetDatetimeHelper(use_metadata.get('membership_end', None))
-                                    if memend > currend:
+                                    if memend and currend and memend > currend:
                                         use_metadata = metadata
                                         use_customer = customer
                 else:

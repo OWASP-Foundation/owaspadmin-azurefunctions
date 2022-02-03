@@ -246,7 +246,7 @@ def contact_lookup_multiple(persons, response_url):
             for leader_info in member_info['leader_info']:
                 leader_fields.append({
                     "type":"mrkdwn",
-                    "text":f"*{leader_info['group-type']} Leader*\n{leader_info['group']}"
+                    "text":f"*{leader_info['group-type'].capitalize()} Leader*\n{leader_info['group']}"
                 })
 
             if len(leader_fields) > 0:
