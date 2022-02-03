@@ -87,7 +87,17 @@ def contact_lookup(text, response_url):
         if not company:
             company = 'None'
         
-        fields.extend([
+        response_text['blocks'].append({
+            "type": "section",
+            "text": {
+                "text":"** Contact Information",
+                "type":"mrkdwn"
+                },
+            "fields": fields
+            }) 
+
+        member_fields = []        
+        member_fields.extend([
             {
                 "type": "mrkdwn",
                 "text": "*Membership Type*\n" + memtype
@@ -108,11 +118,11 @@ def contact_lookup(text, response_url):
         response_text['blocks'].append({
         "type": "section",
         "text": {
-            "text":"*Contact Information*",
+            "text":"** Member Information",
             "type":"mrkdwn"
             },
-        "fields": fields
-        }) 
+        "fields": member_fields
+        })
 
         leader_fields = []
         for leader_info in member_info['leader_info']:
@@ -125,7 +135,7 @@ def contact_lookup(text, response_url):
             response_text['blocks'].append({
                 "type":"section",
                 "text": {
-                    "text":"*Leadership Information*",
+                    "text":"** Leadership Information",
                     "type":"mrkdwn"
                 },
                 "fields": leader_fields
