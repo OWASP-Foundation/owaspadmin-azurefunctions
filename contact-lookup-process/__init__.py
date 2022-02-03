@@ -90,11 +90,11 @@ def contact_lookup(text, response_url):
         response_text['blocks'].append({
             "type": "section",
             "text": {
-                "text":"## Contact Information",
+                "text":"*CONTACT INFORMATION*",
                 "type":"mrkdwn"
                 },
             "fields": fields
-            }) 
+            })
 
         member_fields = []        
         member_fields.extend([
@@ -118,7 +118,7 @@ def contact_lookup(text, response_url):
         response_text['blocks'].append({
         "type": "section",
         "text": {
-            "text":"## Member Information",
+            "text":"*MEMBER INFORMATION*",
             "type":"mrkdwn"
             },
         "fields": member_fields
@@ -135,7 +135,7 @@ def contact_lookup(text, response_url):
             response_text['blocks'].append({
                 "type":"section",
                 "text": {
-                    "text":"## Leadership Information",
+                    "text":"*LEADERSHIP INFORMATION*",
                     "type":"mrkdwn"
                 },
                 "fields": leader_fields
@@ -190,6 +190,16 @@ def contact_lookup_multiple(persons, response_url):
                 "type":"mrkdwn",
                 "text": "*Phone Numbers*\n" + phone_list
             })
+
+            response_text['blocks'].append({
+            "type": "section",
+            "text": {
+                "text":"*CONTACT INFORMATION*",
+                "type":"mrkdwn"
+                },
+            "fields": fields
+            })
+
             memend = member_info.get('membership_end', None)
             if not memend:
                 memend = 'None'
@@ -203,7 +213,8 @@ def contact_lookup_multiple(persons, response_url):
             if not company:
                 company = 'None'
             
-            fields.extend([
+            member_fields = []
+            member_fields.extend([
                 {
                     "type": "mrkdwn",
                     "text": "*Membership Type*\n" + memtype
@@ -221,16 +232,32 @@ def contact_lookup_multiple(persons, response_url):
                     "text":"*Company*\n" + company
                 }])
             
+            response_text['blocks'].append({
+                "type": "section",
+                "text": {
+                    "text":"*MEMBER INFORMATION*",
+                    "type":"mrkdwn"
+                    },
+                "fields": member_fields
+                })
+
+            leader_fields = []
+        
             for leader_info in member_info['leader_info']:
-                fields.append({
+                leader_fields.append({
                     "type":"mrkdwn",
                     "text":f"*{leader_info['group-type']} Leader*\n{leader_info['group']}"
                 })
 
-            response_text['blocks'].append({
-            "type": "section",
-            "fields": fields
-            })
+            if len(leader_fields) > 0:
+                response_text['blocks'].append({
+                    "type":"section",
+                    "text": {
+                        "text":"*LEADERSHIP INFORMATION*",
+                        "type":"mrkdwn"
+                    },
+                    "fields": leader_fields
+                })
 
     if len(response_text['blocks']) == 0:
         response_text['blocks'].append({
