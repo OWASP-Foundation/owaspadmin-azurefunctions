@@ -25,6 +25,8 @@ def main(msg: func.QueueMessage) -> None:
 
     if command == '/contact-lookup':
         contact_lookup(text, response_url)
+    else:
+        logging.error("Unknown command. Received: %s", command)
 
 
 def contact_lookup(text, response_url):
