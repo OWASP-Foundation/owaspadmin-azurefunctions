@@ -311,7 +311,7 @@ def get_member_info(member_data):
         member_info['name'] = member_data.name
         member_info['emails'] = person['emails']
         if 'address' not in person or not person['address']:
-            person['address'] = "{'street':'','city':'','state':'','postal_code':'','country':''}"
+            person['address'] = {'street':'','city':'','state':'','postal_code':'','country':''}
         else:
             if not person['address']['street']:
                 person['address']['street'] = ''
