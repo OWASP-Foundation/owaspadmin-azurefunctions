@@ -105,16 +105,32 @@ def contact_lookup(text, response_url):
                 "text":"*Company*\n" + company
             }])
         
+        response_text['blocks'].append({
+        "type": "section",
+        "text": {
+            "text":"*Contact Information*",
+            "type":"mrkdwn"
+            },
+        "fields": fields
+        }) 
+
+        leader_fields = []
         for leader_info in member_info['leader_info']:
-            fields.append({
+            leader_fields.append({
                 "type":"mrkdwn",
                 "text":f"*{leader_info['group-type'].capitalize()} Leader*\n{leader_info['group']}"
             })
 
-        response_text['blocks'].append({
-        "type": "section",
-        "fields": fields
-        })     
+        if len(leader_fields) > 0:
+            response_text['blocks'].append({
+                "type":"section",
+                "text": {
+                    "text":"*Leadership Information*",
+                    "type":"mrkdwn"
+                },
+                "fields": leader_fields
+            })
+            
     else:
         response_text['blocks'].append({
             "type": "section",
