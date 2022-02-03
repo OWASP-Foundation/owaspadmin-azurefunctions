@@ -19,7 +19,7 @@ from mailchimp3 import MailChimp
 from mailchimp3.mailchimpclient import MailChimpError
 mailchimp = MailChimp(mc_api=os.environ["MAILCHIMP_API_KEY"])
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest, clqueue: func.Out[func.QueueMessage]) -> func.HttpResponse:
     post_data = req.get_body().decode("utf-8")
     post_dict = urllib.parse.parse_qs(post_data)
 
@@ -36,7 +36,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     response_url = post_dict.get('response_url')[0]
 
     if command == '/contact-lookup':
-        contact_lookup(text, response_url)
+        msg = { "text": text,
+                "command": command,
+                "response_url": response_url
+            }
+        clqueue.set(json.dumps(msg))
 
     if command == '/contact-details':
         contact_details(text, response_url)
@@ -45,7 +49,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         stripe_details(text, response_url)
 
     return func.HttpResponse(
-        body='',
+        body='Your request is queued and a response will be provided shortly.',
         status_code=200
     )
 

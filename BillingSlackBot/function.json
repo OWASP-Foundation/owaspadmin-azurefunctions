@@ -15,6 +15,13 @@
       "type": "http",
       "direction": "out",
       "name": "$return"
+    },
+    {
+      "name": "clqueue",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "contact-lookup-queue",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }

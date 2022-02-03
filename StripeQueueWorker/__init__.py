@@ -36,6 +36,8 @@ def main(msg: func.QueueMessage) -> None:
     elif job_type == 'charge.refunded':
         logging.info('Charge Refunded')
         handle_order_refunded(job_payload.get('id'), job_payload.get('amount_refunded'))
+        
+    # NOW Subscriptions are not being processed at all...
     # elif job_type == 'invoice.paid' and job_payload['total'] != 0: # and invoice without payment should not result in a subscription - these seem to be handled via checkout session completed...we should remove these?
     #     logging.info('Invoice Paid')
     #     logging.info(f"Invoice Total: {job_payload['total']}")
