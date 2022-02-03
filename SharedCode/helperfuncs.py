@@ -579,7 +579,7 @@ class MemberData:
             postal_code = None
             if 'address' in use_person and use_person['address'] and 'postal_code' in use_person['address']:
                 country = use_person['address']['postal_code']
-            member_data = MemberData(use_person['first_name'] + ' ' + use_person['last_name'], first_email.lower(), company, country, postal_code, None, None, None, None)
+            member_data = MemberData(use_person['first_name'] + ' ' + use_person['last_name'], first_email.lower(), company, country, postal_code, None, None, None, None, None)
             member_data.AddEmails(use_person['emails'])
         return member_data
 
@@ -592,7 +592,7 @@ class MemberData:
 
         if use_person and use_customer and use_metadata:
             first_email = use_customer.get('email')
-            member_data = MemberData(use_person['first_name'] + ' ' + use_person['last_name'], first_email.lower(), use_customer.get('company', None), use_customer.get('country', None), use_customer.get('postal_code', None), use_metadata.get('membership_start', None), use_metadata.get('membership_end', None), use_metadata.get('membership_type', None), use_metadata.get('membership_recurring'), None)
+            member_data = MemberData(use_person['first_name'] + ' ' + use_person['last_name'], first_email.lower(), use_customer.get('company', None), use_customer.get('country', None), use_customer.get('postal_code', None), use_metadata.get('membership_start', None), use_metadata.get('membership_end', None), use_metadata.get('membership_type', None), use_metadata.get('membership_recurring', None), None)
             member_data.AddEmails(use_person['emails'])
 
         return member_data
