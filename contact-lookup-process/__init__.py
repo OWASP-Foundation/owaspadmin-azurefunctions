@@ -90,7 +90,7 @@ def contact_lookup(text, response_url):
         response_text['blocks'].append({
             "type": "section",
             "text": {
-                "text":"** Contact Information",
+                "text":"## Contact Information",
                 "type":"mrkdwn"
                 },
             "fields": fields
@@ -118,7 +118,7 @@ def contact_lookup(text, response_url):
         response_text['blocks'].append({
         "type": "section",
         "text": {
-            "text":"** Member Information",
+            "text":"## Member Information",
             "type":"mrkdwn"
             },
         "fields": member_fields
@@ -135,7 +135,7 @@ def contact_lookup(text, response_url):
             response_text['blocks'].append({
                 "type":"section",
                 "text": {
-                    "text":"** Leadership Information",
+                    "text":"## Leadership Information",
                     "type":"mrkdwn"
                 },
                 "fields": leader_fields
