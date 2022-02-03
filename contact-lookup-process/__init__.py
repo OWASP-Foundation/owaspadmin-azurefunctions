@@ -100,7 +100,7 @@ def contact_lookup(text, response_url):
         member_fields.extend([
             {
                 "type": "mrkdwn",
-                "text": "*Membership Type*\n" + memtype
+                "text": "*Membership Type*\n" + memtype.capitalize()
             },
             {
                 "type": "mrkdwn",
@@ -217,7 +217,7 @@ def contact_lookup_multiple(persons, response_url):
             member_fields.extend([
                 {
                     "type": "mrkdwn",
-                    "text": "*Membership Type*\n" + memtype
+                    "text": "*Membership Type*\n" + memtype.capitalize()
                 },
                 {
                     "type": "mrkdwn",
