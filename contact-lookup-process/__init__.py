@@ -39,9 +39,10 @@ def contact_lookup(text, response_url):
         persons = copper.FindPersonByNameObj(text)
         if len(persons) == 1:
             member_data = MemberData.LoadMemberDataByName(text)
-        else:
+        elif len(persons) > 1:
             contact_lookup_multiple(persons, response_url)
             return
+            
 
     response_text = {
         "blocks": []
@@ -107,13 +108,13 @@ def contact_lookup(text, response_url):
         for leader_info in member_info['leader_info']:
             fields.append({
                 "type":"mrkdwn",
-                "text":f"*{leader_info['group-type']} Leader*\n{leader_info['group']}"
+                "text":f"*{leader_info['group-type'].capitalize()} Leader*\n{leader_info['group']}"
             })
 
         response_text['blocks'].append({
         "type": "section",
         "fields": fields
-        })        
+        })     
     else:
         response_text['blocks'].append({
             "type": "section",
@@ -134,6 +135,7 @@ def contact_lookup_multiple(persons, response_url):
     response_text = {
         "blocks": []
     }
+
     for person in persons:
         member_data = MemberData.LoadMemberDataByEmail(person['emails'][0]['email'])
         if member_data:        
@@ -204,6 +206,16 @@ def contact_lookup_multiple(persons, response_url):
             "fields": fields
             })
 
+    if len(response_text['blocks']) == 0:
+        response_text['blocks'].append({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "No customer records found."
+                }
+            ]
+        })
 
     return send_response(response_text, response_url)
 
@@ -270,4 +282,6 @@ def get_member_info(member_data):
 
 def send_response(response_text, response_url):
     logging.info("Sending response %s", response_text)
-    requests.post(response_url, json=response_text)
+    response = requests.post(response_url, json=response_text)
+    if not response.ok:
+        logging.error(response)
