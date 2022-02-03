@@ -28,7 +28,7 @@ def main(msg: func.QueueMessage) -> None:
 
 
 def contact_lookup(text, response_url):
-
+    logging.info("Looking up %s", text)
     copper = OWASPCopper()
     member_data = None
     if '@' in text:
@@ -267,4 +267,5 @@ def get_member_info(member_data):
     return member_info
 
 def send_response(response_text, response_url):
+    logging.info("Sending response %s", response_text)
     requests.post(response_url, json=response_text)
