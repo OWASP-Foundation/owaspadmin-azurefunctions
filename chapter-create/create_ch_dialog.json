@@ -139,6 +139,14 @@
                     {
                         "text": {
                             "type": "plain_text",
+                            "text": "Caribbean",
+                            "emoji": true
+                        },
+                        "value": "Caribbean"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
                             "text": "Central America",
                             "emoji": true
                         },
@@ -147,26 +155,10 @@
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Eastern Europe",
+                            "text": "Europe",
                             "emoji": true
                         },
-                        "value": "Eastern Europe"
-                    },
-                    {
-                        "text": {
-                            "type": "plain_text",
-                            "text": "European Union",
-                            "emoji": true
-                        },
-                        "value": "European Union"
-                    },
-                    {
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Middle East",
-                            "emoji": true
-                        },
-                        "value": "Middle East"
+                        "value": "Europe"
                     },
                     {
                         "text": {
@@ -191,14 +183,6 @@
                             "emoji": true
                         },
                         "value": "South America"
-                    },
-                    {
-                        "text": {
-                            "type": "plain_text",
-                            "text": "The Caribbean",
-                            "emoji": true
-                        },
-                        "value": "The Caribbean"
                     },
                     {
                         "text": {
