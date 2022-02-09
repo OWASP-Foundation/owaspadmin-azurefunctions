@@ -142,6 +142,21 @@ def fill_leader_details(memberinfo):
 
     return memberinfo
 
+def get_membership_email(person):
+    membership_email = None
+    for email in person['emails']:
+        customers = stripe.Customer.list(email=email['email'], api_key=os.environ['STRIPE_SECRET'])
+        for customer in customers.auto_paging_iter():
+            metadata = customer.get('metadata', None)
+            if metadata and 'membership_type' in metadata:
+                if metadata['membership_type'] == 'lifetime':
+                    membership_email = email['email']
+                    break
+                elif 'membership_end' in metadata and helperfuncs.get_datetime_helper(metadata['membership_end']) > datetime.today():
+                    membership_email = email['email']
+                    break
+    
+    return membership_email
 
 def get_member_info(data):
     logging.info(data)
@@ -165,6 +180,7 @@ def get_member_info(data):
         member_info['membership_start'] = get_membership_start(opp)
         member_info['membership_end'] = get_membership_end(cp, opp)
         member_info['membership_recurring'] = get_membership_recurring(cp, opp)
+        member_info['membership_email'] = get_membership_email(person)
         member_info['name'] = person['name']
         member_info['emails'] = person['emails']
         if 'address' not in person or not person['address']:
