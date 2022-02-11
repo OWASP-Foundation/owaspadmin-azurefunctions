@@ -46,11 +46,17 @@ def main(msg: func.QueueMessage) -> None:
                 api_key=os.environ["STRIPE_SECRET"]
             )
             if subscription and subscription.get('status', None) != 'canceled':
+                lines = payload.get('lines', None)
                 submeta = subscription.get('metadata', None)
-                if submeta:
-                    if submeta.get('purchase_type', None) == 'membership':
-                        handle_checkout_session_completed(job_payload)
+                if not submeta and lines:
+                    for line in lines:
+                        submeta = line.get('metadata', None) # for some of these, this is on the 'lines' portion...not the subscription
+                        if submeta:
+                            break
 
+                if submeta and submeta.get('purchase_type', None) == 'membership':
+                    handle_checkout_session_completed(job_payload)
+                                
 
 def update_product_inventory(order):
     for item in order.get('items', []):
