@@ -94,7 +94,11 @@ def create_zoom_account(chapter_url):
 
     #  4.) sending onetimesecret link with password to person who requested access
     chapter_name = chapter_url.replace('www-projectchapter-','').replace('www-chapter-', '').replace('www-project-', '').replace('www-committee-','').replace('www-revent', '').replace(' ', '-')
-    leadersemail = f"{chapter_name}-leaders@owasp.org"
+    leadersemail = f"{chapter_name}-"
+    if 'www-committee-' in chapter_url:
+        leadersemail += "committee-"
+    leadersemail += "leaders@owasp.org"
+    
     zoom_accounts = json.loads(os.environ['SHARED_ZOOM_ACCOUNTS'])
     if IsAlreadyProvisioned(leadersemail, zoom_accounts):
         logging.info(f"Account {leadersemail} already provisioned for {chapter_url}")
