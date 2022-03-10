@@ -81,7 +81,7 @@ def IsAlreadyProvisioned(groupemail, zoomaccounts):
     for account in zoomaccounts:
         members = og.GetGroupMembers(account)
         for member in members['members']:
-            if groupemail in member['email']:
+            if groupemail.lower() == member['email'].lower():
                 return True
     
     return False
