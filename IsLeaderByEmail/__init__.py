@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 import re
 import azure.functions as func
 from ..SharedCode.github import OWASPGitHub
@@ -25,6 +26,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             doc = json.loads(r.text)
             content = base64.b64decode(doc['content']).decode(encoding='utf-8')
             leaders = json.loads(content)
+            AddAdditionalLeaders(leaders)
             is_leader = False
             groups = []
             for leader in leaders:
@@ -55,3 +57,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              body=json.dumps(error),
              status_code=404
         )
+
+def AddAdditionalLeaders(leaders):
+    addLeaders = os.environ.get('OWASP.Additional.Leaders', None).replace(' ', '').split(',')
+    leaders.extend(addLeaders)
