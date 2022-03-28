@@ -59,5 +59,5 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
 def AddAdditionalLeaders(leaders):
-    addLeaders = os.environ.get('OWASP.Additional.Leaders', None).replace(' ', '').split(',')
+    addLeaders = json.loads(os.environ.get('OWASP.Additional.Leaders', '{ }'))
     leaders.extend(addLeaders)
