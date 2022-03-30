@@ -128,9 +128,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 helperfuncs.create_complimentary_member(fname, lname, email, company, country, postal_code, datetime.today().strftime("%Y-%m-%d"), (datetime.today() + timedelta(364)).strftime("%Y-%m-%d"), membership_type, mailing_list, True)
                 try:
                     cop = OWASPCopper()
-                    member = cop.FindPersonByEmail(email)
+                    member = cop.FindPersonByEmailObj(email)
                     if member:
-                        owasp_email = helperfuncs.get_owasp_email(member, cop)
+                        owasp_email = helperfuncs.get_owasp_email(member[0], cop)
                         helperfuncs.unsuspend_google_user(owasp_email)
                     else:
                         logging.warn("No member found in copper")        
