@@ -269,9 +269,9 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
             logging.error(f'Failed to create Copper data: {err}')
 
         try:
-            member = cop.FindPersonByEmail(customer_email)
+            member = cop.FindPersonByEmailObj(customer_email)
             if member:
-                owasp_email = helperfuncs.get_owasp_email(member, cop)
+                owasp_email = helperfuncs.get_owasp_email(member[0], cop)
                 helperfuncs.unsuspend_google_user(owasp_email)
             else:
                 logging.warn("No member found in copper")        
