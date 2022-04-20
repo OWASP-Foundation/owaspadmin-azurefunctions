@@ -189,7 +189,7 @@ def is_leader_by_email(email):
             leaders = json.loads(content)
             is_leader = False
             gleader = {'group_url':'', 'group':''}
-            leaders.extend(os.environ['OWASP.Additional.Leaders'])
+            leaders.extend(json.loads(os.environ['OWASP.Additional.Leaders']))
             for leader in leaders:
                 if email == leader['email']:
                     gleader = leader
