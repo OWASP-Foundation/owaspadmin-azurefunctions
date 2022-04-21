@@ -81,16 +81,26 @@ def check_values(membership_data):
             if len(street) > 72 or len(city) > 72 or len(postal_code) > 72 or len(country) > 72:
                 ret = False    
     if ret:
-        for email in address.get('emails', None):
-            if len(email) <= 0 or len(email) > 72:
-                ret = False
-                break
+        emails = membership_data.get('emails', [])
+        if len(emails) <= 0:
+            ret = False
+        else:
+            for email in emails:
+                addr = email.get('email', None)
+                if not addr or len(addr) > 72:
+                    ret = False
+                    break
     
     if ret:
-        for phone in address.get('phone_numbers', None):
-            if len(phone) <= 0 or len(phone) > 72:
-                ret = False
-                break
+        phone_numbers = membership_data.get('phone_numbers', [])
+        if len(phone_numbers)<= 0:
+            ret = False
+        else:
+            for phone in phone_numbers:
+                num = phone.get('number', None)
+                if not num or len(num) > 72:
+                    ret = False
+                    break
 
     return ret
 
