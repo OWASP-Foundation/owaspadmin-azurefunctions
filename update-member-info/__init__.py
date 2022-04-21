@@ -20,24 +20,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     #LogIpFromRequestHeaders(req)
     
     token = req.params.get('authtoken')
+    membership_data = None
     if not token:
         try:
             req_body = req.get_json()
         except ValueError:
             pass
         else:
-            token = req_body.get('authtoken')
-    membership_datastr = req.params.get('membership_data')
-    membership_data = None
-    if not membership_datastr:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            membership_data = req_body
-    else:
-        membership_data = json.loads(membership_datastr)
+            params = req_body.get('params')
+            token = params.get('authtoken')
+            membership_data = params.get('membership_data')
+    
+    if not membership_data:
+        membership_data = json.loads(req.params.get('membership_data'))
 
     if token and membership_data:
         # do stuff here to decode the token and verify
@@ -49,13 +44,55 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         acl = json.loads(os.environ['MP_ACL'])
         if data and len(data) > 0 and ('owasp.org' in data['email'] or 'owasp.com' in data['email'] or data['email'] in acl['acl']): #only work with these email addresses
             #logging.info(f'Member data: {membership_data}')
+            if not check_values(membership_data):
+                return func.HttpResponse("invalid data", status_code=400)
+
             update_member_info(data['email'], membership_data)
             return func.HttpResponse(status_code=200)
 
     return func.HttpResponse(
-            "malformed request",
-            status_code=404
+            "bad request",
+            status_code=400
     )
+
+def check_values(membership_data):
+    ret = True
+    # data = {
+    #         'name': person_data['name'],
+    #         'address': person_data['address'],
+    #         'phone_numbers': person_data['phone_numbers'],
+    #         'emails': person_data['emails']            
+    #     }
+    name = membership_data.get('name',None)
+    if not name or len(name) > 128:
+        ret = False
+    
+    address = membership_data.get('address', None)
+    if ret and not address:
+        ret = False
+    elif ret:
+        street = address.get('street', None)
+        city = address.get('city',None)
+        postal_code = address.get('postal_code', None)
+        country = address.get('country', None)
+        if not street or not city or not postal_code or not country:
+            ret = False
+        else:
+            if len(street) > 72 or len(city) > 72 or len(postal_code) > 72 or len(country) > 72:
+                ret = False    
+    if ret:
+        for email in address.get('emails', None):
+            if len(email) <= 0 or len(email) > 72:
+                ret = False
+                break
+    
+    if ret:
+        for phone in address.get('phone_numbers', None):
+            if len(phone) <= 0 or len(phone) > 72:
+                ret = False
+                break
+
+    return ret
 
 def get_public_keys():
     r = requests.get(os.environ['CF_TEAMS_DOMAIN'])
