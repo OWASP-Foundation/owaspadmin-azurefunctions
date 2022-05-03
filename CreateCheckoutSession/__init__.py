@@ -146,6 +146,11 @@ def start_membership_session(request: Dict) -> Dict:
 
 def start_manage_membership_session(request: Dict) -> Dict:
     member_email = request.get('email')
+    testmode = (member_email == "thewarfarin@hotmail.com")
+    if testmode:
+        customer_token = recurringtoken.make_token("twhm_39282991")
+        send_subscription_management_email(member_email, customer_token)
+        return
 
     customers = stripe.Customer.list(email=member_email)
     if len(customers) > 0:
