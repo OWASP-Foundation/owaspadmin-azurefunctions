@@ -26,6 +26,7 @@ def main(msg: func.QueueMessage) -> None:
 
     job_type = payload.get('job_type', None)
     job_payload =  payload.get('payload', {})
+    logging.info(job_payload)
 
     if job_type == 'order.created':
         logging.info('Order Created')
