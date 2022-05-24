@@ -55,17 +55,15 @@ def mail_results(results):
 
 def customer_with_tags_exists(cop, email, tags):
     exists = False
-    persons = cop.FindPersonByEmail(email)
-    if persons:
-        jperson = json.loads(persons)
-        if len(jperson) > 0:
-            person = jperson[0]
-            curr_tags = cop.GetPersonTags(person['id'])
+    persons = cop.FindPersonByEmailObj(email)
+    if persons and len(persons) > 0:
+        person = persons[0]
+        curr_tags = cop.GetPersonTags(person['id'])
 
-            for tag in tags:
-                exists = (tag.lower() in curr_tags)
-                if exists:
-                    break
+        for tag in tags:
+            exists = (tag.lower() in curr_tags)
+            if exists:
+                break
 
     return exists
 
@@ -172,7 +170,7 @@ def import_members(filestr, override_lifetime_add_tags=False):
                     monetary_value = 95
 
                 memopp = cop.CreateOWASPMembership(stripe_id, None, member.name, member.email, sub_data, monetary_value, tags)
-                if not 'Success' in memopp:
+                if not 'id' in memopp:
                     add_to_results(results, member.email, f"Copper Failure: {memopp}. Fix this person by hand.")
 
                 add_to_results(results, member.email, 'Copper Opportunity created.')
