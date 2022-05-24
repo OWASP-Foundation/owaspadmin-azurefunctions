@@ -36,7 +36,7 @@ def main(msg: func.QueueMessage) -> None:
     elif job_type == 'charge.refunded':
         logging.info('Charge Refunded')
         handle_order_refunded(job_payload.get('id'), job_payload.get('amount_refunded'))    
-    elif job_type == 'invoice.payment_succeeded' and job_payload.get('subscription', None) and job_payload.get('amount_paid', 0) > 0 and job_payload.get('billing_reason', None) == 'subscription_cycle':
+    elif (job_type == 'invoice.paid' or job_type == 'invoice.payment_succeeded') and job_payload.get('subscription', None) and job_payload.get('amount_paid', 0) > 0 and job_payload.get('billing_reason', None) == 'subscription_cycle':
         logging.info('Invoice Paid')
         logging.info(f"Invoice Total: {job_payload['total']}")
         subscription_id = job_payload.get('subscription', None)
