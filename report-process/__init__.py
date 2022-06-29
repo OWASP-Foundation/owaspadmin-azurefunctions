@@ -92,7 +92,7 @@ def get_spreadsheet_name(base_name):
 
     return report_name + ' ' + report_date.strftime('%Y-%m-%d-%H-%M-%S')
 
-def add_member_row(rows, headers, name, email, memtype, memstart, memend, memrecurr):
+def add_member_row(rows, headers, name, email, memtype, memstart, memend):
     row_data = headers.copy()
     for i in range(len(row_data)):
         row_data[i] = ''
@@ -102,7 +102,6 @@ def add_member_row(rows, headers, name, email, memtype, memstart, memend, memrec
     row_data[2] = memtype
     row_data[3] = memstart
     row_data[4] = memend
-    row_data[5] = memrecurr
     
     rows.append(row_data)
 
@@ -234,14 +233,6 @@ def process_chapter_report(datastr):
 def process_member_report(datastr):
     cp = OWASPCopper()
     data = urllib.parse.parse_qs(datastr)
-    #sheet_name = get_spreadsheet_name('member-report')
-    #row_headers = ['Name', 'Email', 'Member Type', 'Membership Start', 'Membership End', 'Membership Recurring']
-
-    #ret = create_spreadsheet(sheet_name, row_headers)
-    #sheet = ret[0]
-    #file_id = ret[1]
-    #headers = sheet.row_values(1) # pull them again anyway
-    #rows = []
     member_data = {
         'month':0,
         'one':0,
@@ -256,7 +247,15 @@ def process_member_report(datastr):
     page = 1
     today = datetime.today()
     #count = 0
+
+    sheet_name = get_spreadsheet_name('member-report')
+    headers = ['Name', 'Email', 'Type', 'Start', 'End']
+    ret = create_spreadsheet(sheet_name, headers)
+    sheet = ret[0]
+    file_id = ret[1]
+
     while(not done):
+        rows = []
         retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.cp_opportunity_pipeline_id_membership]) # all Won Opportunities for Individual Membership
         if retopp != '':
             opportunities = json.loads(retopp)
@@ -298,34 +297,33 @@ def process_member_report(datastr):
                     memtype = 'lifetime'
                     member_data['lifetime'] = member_data['lifetime'] + 1
                 
-                #memrecurr = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_autorenew_checkbox)
-                #primary_contact_id = opp['primary_contact_id']
-                #person_json = cp.GetPerson(primary_contact_id)
-            
-                #customer_email = 'none'
-                #customer_name = 'none'
-                #if person_json != '':
-                #    person = json.loads(person_json)
-                #    if 'emails' in person:
-                #        customer_email = person['emails']
-                #    customer_name = person['name']
+                person = cp.GetPersonForOpportunity(opp['id'])
+                start_val = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_membership_start)
+                start_date = None
+                if start_val != None:
+                    start_date = datetime.fromtimestamp(start_val)                    
 
-                #end_date_str = 'none'
-                #if end_date != None:
-                #    end_date_str = end_date.strftime("%m/%d/%Y")
-                #add_member_row(rows, headers, customer_name, customer_email, 
-                #        memtype, close_date.strftime("%m/%d/%Y"), end_date_str, memrecurr)
-                #count = count + 1
-                #if count >= 200:
-                #    sheet.append_rows(rows)
-                #    rows = []
-                #    count = 0
+                email = None
+                for em in person['emails']:
+                    if 'owasp.org' in em.lower():
+                        email = em
+                        break
+                
+                if email is None and len(person['emails'] > 0):
+                    email = person['emails'][0]
+                
+                memend = close_date
+                if memend is None:
+                    memend = ""
+                else:
+                    memend = close_date.strftime("%m/%d/%Y")
+
+                add_member_row(rows, headers, person['name'], email, memtype, start_date.strftime('%m/%d/%Y'), memend)
             page = page + 1
     
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
-    #if count > 0:
-    #    sheet.append_rows(rows)
-    #msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+    sheet.append_rows(rows)
+    msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
     msgtext = f"\ttotal members: {total_members}\tthis month:{member_data['month']}\n"
     msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
     msgtext += f"\t\tlifetime: {member_data['lifetime']}\tstudent:{member_data['student']}\n"

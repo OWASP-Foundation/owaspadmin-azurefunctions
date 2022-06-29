@@ -188,7 +188,20 @@ class OWASPCopper:
             return r.text
         
         return ''
-    
+
+    def GetPersonForOpportunity(self, opp_id):
+        #https://api.copper.com/developer_api/v1/people/{{person_id}}/related/opportunities
+        pers = None
+        url = f"{self.cp_base_url}{self.cp_related_fragment}"
+        url = url.replace(':entity_id', str(opp_id)).replace(':entity', 'opportunities')
+        url = url + '/people'
+        r = requests.get(url, headers=self.GetHeaders())
+        if r.ok and r.text:
+            for item in json.loads(r.text):
+                pers = self.GetPersonObj(item['id'])
+
+        return pers
+
     def FindMemberOpportunity(self, email, subscription_data=None ):
         opp = None
         contact_json = self.FindPersonByEmail(email)
@@ -252,6 +265,14 @@ class OWASPCopper:
                 return r.text
         
         return ''
+
+    def GetPersonObj(self, pid):
+        results = None
+        pers_text = self.GetPerson(pid)
+        if pers_text:
+            results = json.loads(pers_text)
+        
+        return results
 
     def FindPersonByEmail(self, searchtext):
         lstxt = searchtext.lower()
