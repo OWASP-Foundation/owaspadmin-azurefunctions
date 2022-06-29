@@ -262,18 +262,19 @@ def process_member_report(datastr):
             if len(opportunities) < 100:
                 logging.debug('listing opportunities done')
                 done = True
-            for opp in opportunities:
+            for opp in opportunities:                
+                end_val = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date)
+                if end_val != None:
+                    end_date = datetime.fromtimestamp(end_val)
+                    if end_date and end_date < today:
+                        continue
+                if end_val == None and 'lifetime' not in opp['name'].lower():
+                    continue
+                
                 person = cp.GetPersonForOpportunity(opp['id'])
                 if person is None:
                     logging.error(f"Person is None for opportunity {opp['id']}")
                 else:
-                    end_val = cp.GetCustomFieldValue(opp['custom_fields'], cp.cp_opportunity_end_date)
-                    if end_val != None:
-                        end_date = datetime.fromtimestamp(end_val)
-                        if end_date and end_date < today:
-                            continue
-                    if end_val == None and 'lifetime' not in opp['name'].lower():
-                        continue
                     close_date = helperfuncs.get_datetime_helper(opp['close_date'])
                     if close_date == None:
                         close_date = datetime.fromtimestamp(opp['date_created'])
