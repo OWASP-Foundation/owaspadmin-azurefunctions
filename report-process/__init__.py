@@ -305,8 +305,8 @@ def process_member_report(datastr):
 
                 email = None
                 for em in person['emails']:
-                    if 'owasp.org' in em.lower():
-                        email = em
+                    if 'owasp.org' in em['email'].lower():
+                        email = em['email']
                         break
                 
                 if email is None and len(person['emails'] > 0):

@@ -199,7 +199,8 @@ class OWASPCopper:
         if r.ok and r.text:
             for item in json.loads(r.text):
                 pers = self.GetPersonObj(item['id'])
-
+        else:
+            logging.error(r.text)
         return pers
 
     def FindMemberOpportunity(self, email, subscription_data=None ):
@@ -263,6 +264,8 @@ class OWASPCopper:
             r = requests.get(url, headers = self.default_headers)
             if r.ok:
                 return r.text
+            else:
+                logging.error(r.text)
         
         return ''
 
@@ -271,6 +274,7 @@ class OWASPCopper:
         pers_text = self.GetPerson(pid)
         if pers_text:
             results = json.loads(pers_text)
+       
         
         return results
 
