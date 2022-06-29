@@ -313,7 +313,7 @@ def process_member_report(datastr):
                             email = em['email']
                             break
                     
-                    if email is None and len(person['emails'] > 0):
+                    if email is None and len(person['emails']) > 0:
                         email = person['emails'][0]
                     
                     memend = close_date
