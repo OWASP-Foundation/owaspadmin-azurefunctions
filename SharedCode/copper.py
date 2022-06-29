@@ -189,20 +189,6 @@ class OWASPCopper:
         
         return ''
 
-    def GetPersonForOpportunity(self, opp_id):
-        #https://api.copper.com/developer_api/v1/people/{{person_id}}/related/opportunities
-        pers = None
-        url = f"{self.cp_base_url}{self.cp_related_fragment}"
-        url = url.replace(':entity_id', str(opp_id)).replace(':entity', 'opportunities')
-        url = url + '/people'
-        r = requests.get(url, headers=self.GetHeaders())
-        if r.ok and r.text:
-            for item in json.loads(r.text):
-                pers = self.GetPersonObj(item['id'])
-        else:
-            logging.error(r.text)
-        return pers
-
     def FindMemberOpportunity(self, email, subscription_data=None ):
         opp = None
         contact_json = self.FindPersonByEmail(email)
@@ -257,6 +243,25 @@ class OWASPCopper:
             opp = 'Error: failed to get person'
 
         return opp
+    
+    def GetPersonForOpportunity(self, opp_id):
+        #https://api.copper.com/developer_api/v1/people/{{person_id}}/related/opportunities
+        pers = None
+        url = f"{self.cp_base_url}{self.cp_related_fragment}"
+        url = url.replace(':entity_id', str(opp_id)).replace(':entity', 'opportunities')
+        url = url + '/people'
+        r = requests.get(url, headers=self.GetHeaders())
+        if r.ok and r.text:
+            persons = json.loads(r.text)
+            if persons and len(persons) > 1:
+                logging.warn(f"More than one person associated with opportunity {opp_id}")
+
+            for item in persons:
+                pers = self.GetPersonObj(item['id'])
+        else:
+            logging.error(r.text)
+            
+        return pers
 
     def GetPerson(self, pid):
         if pid:
@@ -274,7 +279,6 @@ class OWASPCopper:
         pers_text = self.GetPerson(pid)
         if pers_text:
             results = json.loads(pers_text)
-       
         
         return results
 
