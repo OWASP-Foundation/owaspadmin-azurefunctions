@@ -303,10 +303,10 @@ def process_member_report(datastr):
                         member_data['lifetime'] = member_data['lifetime'] + 1
                     
                 
-                    start_val = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_membership_start)
-                    start_date = None
-                    if start_val is not None:
-                        start_date = datetime.fromtimestamp(start_val)
+                    #start_val = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_membership_start)
+                    #start_date = None
+                    #if start_val is not None:
+                    #    start_date = datetime.fromtimestamp(start_val)
 
                     email = None
                     for em in person['emails']:
@@ -322,12 +322,12 @@ def process_member_report(datastr):
                         memend = ""
                     else:
                         memend = close_date.strftime("%m/%d/%Y")
-                    memstart = start_date
-                    if memstart is None:
-                        memstart = ""
-                    else:
-                        memstart = start_date.strftime("%m/%d/%Y")
-                    add_member_row(rows, headers, person['name'], email, memtype, memstart, memend)
+                    #memstart = start_date
+                    #if memstart is None:
+                    #    memstart = ""
+                    #else:
+                    #    memstart = start_date.strftime("%m/%d/%Y")
+                    add_member_row(rows, headers, person['name'], email, memtype, "TBD", memend)
 
             page = page + 1
     
