@@ -270,7 +270,7 @@ def process_member_report(datastr):
                         continue
                 if end_val == None and 'lifetime' not in opp['name'].lower():
                     continue
-                
+
                 person = cp.GetPersonForOpportunity(opp['id'])
                 if person is None:
                     logging.error(f"Person is None for opportunity {opp['id']}")
@@ -322,8 +322,12 @@ def process_member_report(datastr):
                         memend = ""
                     else:
                         memend = close_date.strftime("%m/%d/%Y")
-
-                    add_member_row(rows, headers, person['name'], email, memtype, start_date.strftime('%m/%d/%Y'), memend)
+                    memstart = start_date
+                    if memstart is None:
+                        memstart = ""
+                    else:
+                        memstart = start_date.strftime("%m/%d/%Y")
+                    add_member_row(rows, headers, person['name'], email, memtype, memstart, memend)
 
             page = page + 1
     
