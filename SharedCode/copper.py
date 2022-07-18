@@ -256,8 +256,8 @@ class OWASPCopper:
             if persons and len(persons) > 1:
                 logging.warn(f"More than one person associated with opportunity {opp_id}")
 
-            for item in persons:
-                pers = self.GetPersonObj(item['id'])
+            item = persons[0]
+            pers = self.GetPersonObj(item['id'])
         else:
             logging.error(r.text)
             
