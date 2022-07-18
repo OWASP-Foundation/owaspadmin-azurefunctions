@@ -254,10 +254,13 @@ class OWASPCopper:
         if r.ok and r.text:
             persons = json.loads(r.text)
             if persons and len(persons) > 1:
-                logging.warn(f"More than one person associated with opportunity {opp_id}")
-
-            item = persons[0]
-            pers = self.GetPersonObj(item['id'])
+                logging.warn("More than one person associated with opportunity %s", {opp_id})
+            
+            if persons:
+                item = persons[0]
+                pers = self.GetPersonObj(item['id'])
+            else:
+                logging.warn("No person associated with opportunity %s", {opp_id})
         else:
             logging.error(r.text)
             
