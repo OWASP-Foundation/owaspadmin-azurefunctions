@@ -271,36 +271,37 @@ def process_member_report(datastr):
                 if end_val is None and 'lifetime' not in opp['name'].lower():
                     continue
 
-                person = cp.GetPersonForOpportunity(opp['id'])
-                if person is None:
-                    logging.error(f"Person is None for opportunity {opp['id']}")
-                else:
-                    close_date = helperfuncs.get_datetime_helper(opp['close_date'])
-                    if close_date is None:
-                        close_date = datetime.fromtimestamp(opp['date_created'])
-                    if close_date.month == today.month:
-                        member_data['month'] = member_data['month'] + 1
+                # person = cp.GetPersonForOpportunity(opp['id'])
+                # if person is None:
+                #     logging.error(f"Person is None for opportunity {opp['id']}")
+                # else:
 
-                    # check this doesn't count multiple yearly memberships for one person....
-                    memtype = 'unknown'
-                    if 'student' in opp['name'].lower():
-                        memtype = 'student'
-                        member_data['student'] = member_data['student'] + 1
-                    elif 'complimentary' in opp['name'].lower():
-                        memtype = 'complimentary'
-                        member_data['complimentary'] = member_data['complimentary'] + 1
-                    elif 'honorary' in opp['name'].lower():
-                        memtype = 'honorary'
-                        member_data['honorary'] = member_data['honorary'] + 1
-                    elif 'one' in opp['name'].lower(): 
-                        memtype = 'one'
-                        member_data['one'] = member_data['one'] + 1
-                    elif 'two' in opp['name'].lower():
-                        memtype = 'two'
-                        member_data['two'] = member_data['two'] + 1
-                    elif 'lifetime' in opp['name'].lower():
-                        memtype = 'lifetime'
-                        member_data['lifetime'] = member_data['lifetime'] + 1
+                close_date = helperfuncs.get_datetime_helper(opp['close_date'])
+                if close_date is None:
+                    close_date = datetime.fromtimestamp(opp['date_created'])
+                if close_date.month == today.month:
+                    member_data['month'] = member_data['month'] + 1
+
+                # check this doesn't count multiple yearly memberships for one person....
+                memtype = 'unknown'
+                if 'student' in opp['name'].lower():
+                    memtype = 'student'
+                    member_data['student'] = member_data['student'] + 1
+                elif 'complimentary' in opp['name'].lower():
+                    memtype = 'complimentary'
+                    member_data['complimentary'] = member_data['complimentary'] + 1
+                elif 'honorary' in opp['name'].lower():
+                    memtype = 'honorary'
+                    member_data['honorary'] = member_data['honorary'] + 1
+                elif 'one' in opp['name'].lower(): 
+                    memtype = 'one'
+                    member_data['one'] = member_data['one'] + 1
+                elif 'two' in opp['name'].lower():
+                    memtype = 'two'
+                    member_data['two'] = member_data['two'] + 1
+                elif 'lifetime' in opp['name'].lower():
+                    memtype = 'lifetime'
+                    member_data['lifetime'] = member_data['lifetime'] + 1
                     
                 
                     #start_val = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_membership_start)
@@ -308,26 +309,26 @@ def process_member_report(datastr):
                     #if start_val is not None:
                     #    start_date = datetime.fromtimestamp(start_val)
 
-                    email = None
-                    for em in person['emails']:
-                        if 'owasp.org' in em['email'].lower():
-                            email = em['email']
-                            break
-                    
-                    if email is None and len(person['emails']) > 0:
-                        email = person['emails'][0]
-                    
-                    memend = close_date
-                    if memend is None:
-                        memend = ""
-                    else:
-                        memend = close_date.strftime("%m/%d/%Y")
-                    #memstart = start_date
-                    #if memstart is None:
-                    #    memstart = ""
-                    #else:
-                    #    memstart = start_date.strftime("%m/%d/%Y")
-                    add_member_row(rows, headers, person['name'], email, memtype, "TBD", memend)
+                # email = None
+                # for em in person['emails']:
+                #     if 'owasp.org' in em['email'].lower():
+                #         email = em['email']
+                #         break
+                
+                # if email is None and len(person['emails']) > 0:
+                #     email = person['emails'][0]
+                
+                # memend = close_date
+                # if memend is None:
+                #     memend = ""
+                # else:
+                #     memend = close_date.strftime("%m/%d/%Y")
+                #memstart = start_date
+                #if memstart is None:
+                #    memstart = ""
+                #else:
+                #    memstart = start_date.strftime("%m/%d/%Y")
+                #add_member_row(rows, headers, person['name'], email, memtype, "TBD", memend)
 
             page = page + 1
     
