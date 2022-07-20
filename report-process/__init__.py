@@ -273,7 +273,6 @@ def process_member_report(datastr):
 
                 person = cp.GetPersonForOpportunity(opp['id'])
                 if person is None:
-                    logging.error(f"Person is None for opportunity {opp['id']}")
                     continue
                 # else:
 
