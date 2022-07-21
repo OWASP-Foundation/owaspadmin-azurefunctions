@@ -22,6 +22,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Currently has
 #   chapter-report
 #   leader-report
+#   member-report
 
 def main(msg: func.QueueMessage) -> None:
     datastr = msg.get_body().decode('utf-8')
@@ -117,7 +118,7 @@ def add_leader_row(rows, headers, name, email, group, url):
     
     rows.append(row_data)
 
-def add_chapter_row(rows, headers, chname, chupdated, chrepo, chregion, chleaders):
+def add_chapter_row(rows, headers, chname, chupdated, chrepo, chregion, chleaders, chemails):
     row_data = headers.copy()
     for i in range(len(row_data)):
         row_data[i] = ''
@@ -127,6 +128,7 @@ def add_chapter_row(rows, headers, chname, chupdated, chrepo, chregion, chleader
     row_data[2] = chrepo
     row_data[3] = chregion
     row_data[4] = chleaders
+    row_data[5] = chemails
 
     rows.append(row_data)
 
@@ -194,7 +196,7 @@ def process_chapter_report(datastr):
         content = base64.b64decode(doc['content']).decode(encoding='utf-8')
         ch_json = json.loads(content)
         sheet_name = get_spreadsheet_name('chapter-report')
-        row_headers = ['Chapter Name', 'Last Update', 'Repo', 'Region', 'Leaders']
+        row_headers = ['Chapter Name', 'Last Update', 'Repo', 'Region', 'Leaders', 'Emails']
         ret = create_spreadsheet(sheet_name, row_headers)
         sheet = ret[0]
         file_id = ret[1]
@@ -208,17 +210,25 @@ def process_chapter_report(datastr):
                 lcontent = base64.b64decode(ldoc['content']).decode(encoding='utf-8')
                 # need to grab the leaders....
                 leaders = []
+                leader_emails = []
                 add_to_leaders(ch, lcontent, leaders, 'chapter')
                 leaderstr = ''
+                emailstr = ''
                 i = 0
                 count = len(leaders)
                 for leader in leaders:
                     i+=1
                     leaderstr += leader['name']
+                    if leader['email'] is not None and '@' in leader['email']:
+                        emailstr += leader['email']
+                    else:
+                        emailstr += 'Unknown'
+                        
                     if i < count:
                         leaderstr += ', '
+                        emailstr += '\n'
 
-                add_chapter_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr)
+                add_chapter_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr, emailstr)
 
         sheet.append_rows(rows)
         msgtext = 'Your chapter report is ready at https://docs.google.com/spreadsheets/d/' + file_id
