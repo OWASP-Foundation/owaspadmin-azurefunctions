@@ -220,10 +220,10 @@ def process_chapter_report(datastr):
                     i+=1
                     leaderstr += leader['name']
                     if leader['email'] is not None and '@' in leader['email']:
-                        emailstr += leader['email']
+                        emailstr += leader['email'].replace('mailto://','').replace('mailto:', '')
                     else:
                         emailstr += 'Unknown'
-                        
+
                     if i < count:
                         leaderstr += ', '
                         emailstr += '\n'
