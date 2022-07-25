@@ -281,9 +281,9 @@ def process_member_report(datastr):
                 if end_val is None and 'lifetime' not in opp['name'].lower():
                     continue
 
-                person = cp.GetPersonForOpportunity(opp['id'])
-                if person is None:
-                    continue
+                #person = cp.GetPersonForOpportunity(opp['id'])
+                #if person is None:
+                #    continue
                 # else:
 
                 close_date = helperfuncs.get_datetime_helper(opp['close_date'])
