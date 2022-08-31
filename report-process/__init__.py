@@ -258,11 +258,11 @@ def process_member_report(datastr):
     today = datetime.today()
     #count = 0
 
-    sheet_name = get_spreadsheet_name('member-report')
-    headers = ['Name', 'Email', 'Type', 'Start', 'End']
-    ret = create_spreadsheet(sheet_name, headers)
-    sheet = ret[0]
-    file_id = ret[1]
+    #sheet_name = get_spreadsheet_name('member-report')
+    #headers = ['Name', 'Email', 'Type', 'Start', 'End']
+    #ret = create_spreadsheet(sheet_name, headers)
+    #sheet = ret[0]
+    #file_id = ret[1]
 
     while(not done):
         rows = []
@@ -343,8 +343,8 @@ def process_member_report(datastr):
             page = page + 1
     
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
-    sheet.append_rows(rows)
-    msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+    #sheet.append_rows(rows)
+    #msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
     msgtext = f"\ttotal members: {total_members}\tthis month:{member_data['month']}\n"
     msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
     msgtext += f"\t\tlifetime: {member_data['lifetime']}\tstudent:{member_data['student']}\n"
