@@ -10,8 +10,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not email:
         request = req.get_json()
         email = request.get('email', None)
-
-    invurl = "https://owasp.slack.com/api/users.admin.invite"
+    
+    invurl = req.params.get('invurl')
+    if not invurl:
+        invurl = "https://owasp.slack.com/api/users.admin.invite"
+    
+    token = req.params.get('sltoken')
+    if not token:
+        token = os.environ['SL_UINV_TOKEN']
+        
     data = {
         'email':email,
         'token': os.environ['SL_UINV_TOKEN'],
