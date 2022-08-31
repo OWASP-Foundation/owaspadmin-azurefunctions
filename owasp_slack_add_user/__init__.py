@@ -21,7 +21,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
     data = {
         'email':email,
-        'token': os.environ['SL_UINV_TOKEN'],
+        'token': token,
         'set_active': True
     }
     #headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN"]}' }
