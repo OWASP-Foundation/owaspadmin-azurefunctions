@@ -7,6 +7,7 @@ from urllib.parse import unquote_plus
 from ..SharedCode import salesforce 
 from ..SharedCode import github
 from ..SharedCode import copper
+from ..SharedCode import owaspym
 
 def main(msg: func.QueueMessage, context: func.Context) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
@@ -32,14 +33,14 @@ def process_form(values, view_id, function_directory):
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]
-    valid_regions = ['Unknown', 'Africa', 'Asia', 'Central America', 'Eastern Europe', 'European Union', 'North America', 'Oceania', 'South America', 'The Caribbean']
+    valid_regions = ['Unknown', 'Africa', 'Asia', 'Central America', 'Europe', 'North America', 'Oceania', 'South America', 'The Caribbean']
     if region not in valid_regions:
         if region == 'North Americ':
             region = 'North America'
         elif region == 'South Americ':
             region = 'South America'
-        elif region == 'European Unio':
-            region = 'European Union'
+        elif region == 'Europ':
+            region = 'Europe'
         elif region == 'Asi':
             region = 'Asia'
         elif region == 'Afric':
@@ -48,13 +49,13 @@ def process_form(values, view_id, function_directory):
             region = 'Oceania'
         elif region == 'Central Americ':
             region = 'Central America'
-        elif region == 'Eastern Europ':
-            region = 'Eastern Europe'
-        elif region == 'The Caribbea':
-            region = 'The Caribbean'
+        elif region == 'Caribbea':
+            region = 'Caribbean'
         else:
             region = 'Unknown'
-            
+    
+    CreateYourMembershipGroup(chapter_name, region)
+
     leaders = leader_names.splitlines()
     emails = leader_emails.splitlines()
     gitusers = git_users.splitlines()
@@ -172,3 +173,32 @@ def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers):
             logging.warn(f'Warning: Could not add team to repo: {r.text}')
 
     return resString
+
+def GetYMRegionType(region):
+    region_type = owaspym.OWASPYM.GROUP_TYPE_UNCLASSIFIED
+    if region == 'Africa':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_AFRICA_CHAPTERS
+    elif region == 'Asia':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_ASIA_CHAPTERS
+    elif 'Caribbean' in region:
+        region_type = owaspym.OWASPYM.GROUP_TYPE_CARIBBEAN_CHAPTERS
+    elif region == 'Central America':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_CENTRAL_AMERICA_CHAPTERS
+    elif 'Europe' in region:
+        region_type = owaspym.OWASPYM.GROUP_TYPE_EUROPE_CHAPTERS
+    elif region == 'North America':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_NORTH_AMERICA_CHAPTERS
+    elif region == 'Oceania':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_OCEANIA_CHAPTERS
+    elif region == 'South America':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_SOUTH_AMERICA_CHAPTERS
+    
+    return region_type
+
+def CreateYourMembershipGroup(chapter_name, region):
+    region_type = GetYMRegionType(region)
+    ym = owaspym.OWASPYM()
+    if ym.Login():
+        shortDesc = "OWASP® Local Chapters build community for application security professionals around the world. Our Local Chapter Meetings are free and open to anyone to attend so both members and non-members are always welcomed."
+        welcomeContent = "<h2>Welcome</h2><p>Include some information here about your chapter</p><br><p>For OWASP policies and how they affect your chapter, please see <a href='https://owasp.org/www-policy/operational/'>OWASP Policies</a><br>For help or guidance with your chapter see the <a href='https://owasp.org/www-committee-chapter/'>Chapter Committee</a></p>"
+        ym.CreateGroup(region_type, chapter_name, shortDesc, welcomeContent)
