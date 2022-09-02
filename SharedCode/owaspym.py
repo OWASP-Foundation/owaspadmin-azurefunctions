@@ -93,13 +93,15 @@ class OWASPYM():
     def CreateGroup(self, typeID, name, shortDesc, welcomeContent):
         content = []
         url = self.base_url + self.group_url.replace(':ClientID', os.environ['YM_CLIENTID'])
+        is_active = (typeID == self.GROUP_TYPE_UNCLASSIFIED)
+
         data = {
             'TypeID': typeID,
             'Name': name,
             'ShortDescription': shortDesc,
             'WelcomeContent': welcomeContent,
             'GroupCode': name.replace(' ','_').lower(),
-            'Active': True,
+            'Active': is_active,
             'Hidden': False,
             'Accessibility': self.GROUP_ACCESSIBILITY_PUBLIC,    
             'Membership': self.GROUP_MEMBERSHIP_ALLOW_ANY,
