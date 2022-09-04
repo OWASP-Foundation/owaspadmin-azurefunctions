@@ -7,7 +7,7 @@ from urllib.parse import unquote_plus
 from ..SharedCode import salesforce 
 from ..SharedCode import github
 from ..SharedCode import copper
-
+from ..SharedCode import owaspym
 
 def main(msg: func.QueueMessage, context: func.Context) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
@@ -25,6 +25,8 @@ def process_form(values, view_id, function_directory):
     leader_emails = values["emails-id"]["emails-value"]["value"]
     leader_githubs = values["github-id"]["github-value"]["value"]
     
+    CreateYourMembershipGroup(group_name)
+
     leaders = leader_names.splitlines()
     emails = leader_emails.splitlines()
     emaillinks = []
@@ -119,3 +121,32 @@ def CreateGithubStructure(project_name, func_dir, emaillinks, githubs):
             logging.warn(resString + " : " + rtext)
 
     return resString
+
+
+def GetYMRegionType(region):
+    region_type = owaspym.OWASPYM.GROUP_TYPE_UNCLASSIFIED
+    if region == 'Africa':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_AFRICA_CHAPTERS
+    elif region == 'Asia':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_ASIA_CHAPTERS
+    elif 'Caribbean' in region:
+        region_type = owaspym.OWASPYM.GROUP_TYPE_CARIBBEAN_CHAPTERS
+    elif region == 'Central America':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_CENTRAL_AMERICA_CHAPTERS
+    elif 'Europe' in region:
+        region_type = owaspym.OWASPYM.GROUP_TYPE_EUROPE_CHAPTERS
+    elif region == 'North America':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_NORTH_AMERICA_CHAPTERS
+    elif region == 'Oceania':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_OCEANIA_CHAPTERS
+    elif region == 'South America':
+        region_type = owaspym.OWASPYM.GROUP_TYPE_SOUTH_AMERICA_CHAPTERS
+    
+    return region_type
+
+def CreateYourMembershipGroup(group_name):
+    ym = owaspym.OWASPYM()
+    if ym.Login():
+        shortDesc = "OWASP® Committees help the staff and board to create initiatives and manage the domain for which they are formed."
+        welcomeContent = "<h2>Welcome</h2><p>Include some information here about your committee</p><br><p>For OWASP policies and how they affect your committee, please see <a href='https://owasp.org/www-policy/operational/'>OWASP Policies</a></p>"
+        ym.CreateGroup(ym.GROUP_TYPE_COMMITTEE, group_name, shortDesc, welcomeContent)
