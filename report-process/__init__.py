@@ -289,7 +289,7 @@ def process_member_report(datastr):
                 close_date = helperfuncs.get_datetime_helper(opp['close_date'])
                 if close_date is None:
                     close_date = datetime.fromtimestamp(opp['date_created'])
-                if close_date.month == today.month:
+                if close_date.month == today.month and close_date.year == today.year:
                     member_data['month'] = member_data['month'] + 1
 
                 # check this doesn't count multiple yearly memberships for one person....
