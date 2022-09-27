@@ -29,7 +29,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         om = meetup.OWASPMeetup()
         if om.Login():
             result = om.GetGroupEvents(name, earliest, status)
-            return func.HttpResponse(result)
+            return func.HttpResponse(result, status_code=200)
         else:
             return func.HttpResponse('Group not found.', status_code = 400)
     else:
@@ -37,16 +37,3 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              "No group name provided",
              status_code=404
         )
-
-
-
-    # mu = OWASPMeetup()
-    # if mu.Login():
-    #     res = mu.GetGroupEvents('South-Florida-OWASP-Chapter',status='PAST',earliest='2021-10-01')
-    #     event_json = json.loads(res)
-    #     events = event_json['data']['proNetworkByUrlname']['eventsSearch']['edges']
-    #     for event in events:            
-    #         dt = datetime.strptime(event['node']['dateTime'][:10], '%Y-%m-%d')
-    #         print(dt)
-    # else:
-    #     print("Could not log in.")

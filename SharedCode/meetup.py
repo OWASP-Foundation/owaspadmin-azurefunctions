@@ -45,9 +45,11 @@ class OWASPMeetup:
                        "alg":"RS256",
                        "typ":"JWT"}
 
-        keystr = os.environ["MU_RSA_KEY"]
-        encoded_key = serialization.load_pem_private_key(keystr.encode(), password=None)#keystr.encode()
-        encoded = jwt.encode(payload=payload_dict, key=encoded_key, algorithm='RS256', headers=jwtheaders)       
+        keystr = json.loads(os.environ["MU_RSA_KEY"])
+        encoded_key = serialization.load_pem_private_key(keystr["key"].encode(), password=None)#keystr.encode()
+        #pem = encoded_key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
+        encoded = jwt.encode(payload=payload_dict, key=encoded_key, algorithm='RS256', headers=jwtheaders)
+        
         try:
             login_url = f"https://secure.meetup.com/oauth2/access"
             urldata = {
