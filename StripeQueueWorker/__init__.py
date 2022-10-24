@@ -109,7 +109,7 @@ def handle_checkout_session_completed(event: Dict):
     metadata = {}
     customer = None
     custmetadata = None
-    if customer_id != None:
+    if customer_id is not None:
         customer = stripe.Customer.retrieve(customer_id, api_key=os.environ['STRIPE_SECRET'])
         if customer:
             custmetadata = customer.get('metadata', None)
@@ -213,7 +213,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
 
         membership_end = customer_metadata.get('membership_end', None)
         membership_start = customer_metadata.get('membership_start', None)
-        if membership_start == None or membership_start == '':
+        if membership_start is None or membership_start == '':
             membership_start = helperfuncs.get_datetime_helper(subscription_data['membership_start'])
         else:
             membership_start = helperfuncs.get_datetime_helper(membership_start)
@@ -222,7 +222,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
         # if already a membership, we must add the days to the end
         if membership_end is not None and subscription_data['membership_type'] != 'lifetime':
             end_object = datetime.strptime(membership_end, '%m/%d/%Y')
-            if end_object > datetime.now() and subscription_data['days_added'] != None:
+            if end_object > datetime.now() and subscription_data['days_added'] is not None:
                 new_end_date = end_object + timedelta(days=subscription_data['days_added'])
                 subscription_data['membership_end'] = new_end_date.strftime('%m/%d/%Y')
 
@@ -301,8 +301,15 @@ def get_subscription_data_from_event(event, custmetadata = None):
     meta_start = None
     if custmetadata:
         meta_start = custmetadata.get('membership_start', None)
+        previous_end = custmetadata.get('membership_end', None)
         if meta_start:
-            period_start = helperfuncs.get_datetime_helper(meta_start)
+            meta_start_date = helperfuncs.get_datetime_helper(meta_start)
+        if previous_end:
+            previous_end_date = helperfuncs.get_datetime_helper(previous_end)
+
+        if previous_end_date and meta_start_date: # only update period_start to old date if the new membership is less than 7 days later than the old end date
+            if meta_start_date <= previous_end_date + timedelta(days=7):
+                period_start = meta_start_date
             
     return {
         "membership_start": period_start.strftime('%m/%d/%Y'),
