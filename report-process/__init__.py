@@ -241,6 +241,61 @@ def process_chapter_report(datastr):
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
 
 def process_member_report(datastr):
+    data = urllib.parse.parse_qs(datastr)
+    stripe.api_key = os.environ['STRIPE_SECRET']
+    stripe.api_version = "2020-08-27"
+
+    search = "-metadata['membership_type']:null"
+
+    member_data = {
+        'one':0,
+        'two':0,
+        'lifetime':0,
+        'complimentary':0
+    }
+
+    customers = stripe.Customer.search(query=search, limit=100)    
+    
+    for customer in customers.auto_paging_iter():
+        mdata = customer.get('metadata', None)
+        if mdata:
+            member_type = mdata.get('membership_type', None)
+            
+            if member_type:
+                member_type = member_type.lower().strip()
+
+            if member_type and member_type == 'lifetime':
+                member_data['lifetime']+=1     
+                
+            elif member_type and member_type in ['one', 'two', 'complimentary']: # this is a non lifetime member
+                member_end = mdata.get('membership_end', None)
+                
+                if not member_end:
+                    print(f"ERROR: No membership end for member {customer['id']} and type {member_type}")
+                else:
+                    member_end_date = helperfuncs.get_datetime_helper(member_end)                    
+                    if not member_end_date:
+                        print(f"ERROR: Could not convert member end date for member {customer['id']} and type {member_type}")
+                    elif member_end_date >= datetime.today():                                                
+                        member_data[member_type]+=1
+                       
+
+    total_members = member_data['complimentary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
+    msgtext = ""
+
+    msgtext += f"\ttotal members: {total_members}\n"
+    msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
+    msgtext += f"\t\tlifetime: {member_data['lifetime']}\tcomplimentary:{member_data['complimentary']}\n"
+
+    response_url = data['response_url'][0]
+    headers = { 'Content-type':'application/json'}
+    msgdata = {
+        'text':msgtext,
+        'response_type':'ephemeral'
+    }
+    requests.post(response_url, data=json.dumps(msgdata), headers = headers)
+
+def process_member_report_old(datastr):
     cp = OWASPCopper()
     data = urllib.parse.parse_qs(datastr)
     member_data = {
@@ -256,16 +311,8 @@ def process_member_report(datastr):
     done = False
     page = 1
     today = datetime.today()
-    #count = 0
-
-    #sheet_name = get_spreadsheet_name('member-report')
-    #headers = ['Name', 'Email', 'Type', 'Start', 'End']
-    #ret = create_spreadsheet(sheet_name, headers)
-    #sheet = ret[0]
-    #file_id = ret[1]
 
     while(not done):
-        rows = []
         retopp = cp.ListOpportunities(page_number=page, status_ids=[1], pipeline_ids=[cp.cp_opportunity_pipeline_id_membership]) # all Won Opportunities for Individual Membership
         if retopp != '':
             opportunities = json.loads(retopp)
@@ -279,12 +326,7 @@ def process_member_report(datastr):
                     if end_date and end_date < today:
                         continue
                 if end_val is None and 'lifetime' not in opp['name'].lower():
-                    continue
-
-                #person = cp.GetPersonForOpportunity(opp['id'])
-                #if person is None:
-                #    continue
-                # else:
+                    continue               
 
                 close_date = helperfuncs.get_datetime_helper(opp['close_date'])
                 if close_date is None:
@@ -312,39 +354,11 @@ def process_member_report(datastr):
                 elif 'lifetime' in opp['name'].lower():
                     memtype = 'lifetime'
                     member_data['lifetime'] = member_data['lifetime'] + 1
-                    
-                
-                    #start_val = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_membership_start)
-                    #start_date = None
-                    #if start_val is not None:
-                    #    start_date = datetime.fromtimestamp(start_val)
-
-                # email = None
-                # for em in person['emails']:
-                #     if 'owasp.org' in em['email'].lower():
-                #         email = em['email']
-                #         break
-                
-                # if email is None and len(person['emails']) > 0:
-                #     email = person['emails'][0]
-                
-                # memend = close_date
-                # if memend is None:
-                #     memend = ""
-                # else:
-                #     memend = close_date.strftime("%m/%d/%Y")
-                #memstart = start_date
-                #if memstart is None:
-                #    memstart = ""
-                #else:
-                #    memstart = start_date.strftime("%m/%d/%Y")
-                #add_member_row(rows, headers, person['name'], email, memtype, "TBD", memend)
+ 
 
             page = page + 1
     
     total_members = member_data['student'] + member_data['complimentary'] + member_data['honorary'] + member_data['one'] + member_data['two'] + member_data['lifetime']
-    #sheet.append_rows(rows)
-    #msgtext = 'Your member report is ready at https://docs.google.com/spreadsheets/d/' + file_id
     msgtext = f"\ttotal members: {total_members}\tthis month:{member_data['month']}\n"
     msgtext += f"\t\tone: {member_data['one']}\ttwo:{member_data['two']}\n"
     msgtext += f"\t\tlifetime: {member_data['lifetime']}\tstudent:{member_data['student']}\n"
