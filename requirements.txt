@@ -49,7 +49,7 @@ sendgrid==6.9.7
 six==1.15.0
 soupsieve==2.2.1
 starkbank-ecdsa==2.0.3
-stripe==2.58.0
+stripe==4.2.0
 toml==0.10.2
 uritemplate==3.0.1
 urllib3==1.26.5
