@@ -302,6 +302,8 @@ def get_subscription_data_from_event(event, custmetadata = None):
     if custmetadata:
         meta_start = custmetadata.get('membership_start', None)
         previous_end = custmetadata.get('membership_end', None)
+        previous_end_date = None
+        meta_start_date = None
         if meta_start:
             meta_start_date = helperfuncs.get_datetime_helper(meta_start)
         if previous_end:
