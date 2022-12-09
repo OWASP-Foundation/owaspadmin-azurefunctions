@@ -7,7 +7,7 @@ azure-functions
 azure-functions-durable
 beautifulsoup4==4.9.3
 cachetools==4.2.2
-certifi==2021.5.30
+certifi==2022.12.7
 cffi==1.15.1
 chardet==4.0.0
 cryptography==38.0.1
