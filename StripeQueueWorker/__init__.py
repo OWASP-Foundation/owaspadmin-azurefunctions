@@ -310,10 +310,11 @@ def get_subscription_data_from_event(event, custmetadata = None):
             previous_end_date = helperfuncs.get_datetime_helper(previous_end)
 
         if previous_end_date and meta_start_date: # only update period_start to old date if the new membership is less than 7 days later than the old end date
-            if meta_start_date <= previous_end_date + timedelta(days=7):
+            if period_start <= previous_end_date + timedelta(days=7):
                 period_start = meta_start_date
             
     return {
+        
         "membership_start": period_start.strftime('%m/%d/%Y'),
         "membership_end": period_end,
         "membership_type": membership_type,
