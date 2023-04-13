@@ -147,14 +147,6 @@
                     {
                         "text": {
                             "type": "plain_text",
-                            "text": "Tool",
-                            "emoji": true
-                        },
-                        "value": "Tool Project"
-                    },
-                    {
-                        "text": {
-                            "type": "plain_text",
                             "text": "Code",
                             "emoji": true
                         },
@@ -211,6 +203,14 @@
                             "emoji": true
                         },
                         "value": "BSD 2-Clause"
+                    },
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "CC BY-SA 4.0",
+                            "emoji": true
+                        },
+                        "value": "CC BY-SA 4.0"
                     },
                     {
                         "text": {
