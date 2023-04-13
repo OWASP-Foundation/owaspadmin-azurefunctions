@@ -1,6 +1,15 @@
 {
     "files" : [
         {
+            "path" : "docs/LICENSE.md"
+        },
+        {
+            "path" : "docs/CONTRIBUTING.md"
+        },
+        {
+            "path" : "docs/SECURITY.md"
+        },
+        {
             "path" : "docs/tab_example.md"
         },
         {
