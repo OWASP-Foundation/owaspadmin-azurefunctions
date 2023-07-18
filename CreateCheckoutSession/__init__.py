@@ -339,10 +339,10 @@ def make_subscription_api_request(request: Dict) -> Dict:
             amount = 5000
             description = 'OWASP One Year Membership'
         elif discount and membership_type == 'Two Year':
-            amount = 3000 #3500 '15%' off
+            amount = 3500 
             description = 'OWASP Discounted Two Year Membership'
         elif membership_type == 'Two Year':
-            amount = 8000 #9500 '15%' off
+            amount = 9500 
             description = 'OWASP Two Year Membership'
         elif discount and membership_type == 'Lifetime':
             amount = 20000

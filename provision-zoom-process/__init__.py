@@ -82,9 +82,9 @@ def IsAlreadyProvisioned(groupemail, zoomaccounts):
         members = og.GetGroupMembers(account)
         for member in members['members']:
             if groupemail.lower() == member['email'].lower():
-                return True
+                return account
     
-    return False
+    return None
 
 def create_zoom_account(chapter_url):
     #creating a zoom account requires
@@ -100,9 +100,10 @@ def create_zoom_account(chapter_url):
     leadersemail += "leaders@owasp.org"
     
     zoom_accounts = json.loads(os.environ['SHARED_ZOOM_ACCOUNTS'])
-    if IsAlreadyProvisioned(leadersemail, zoom_accounts):
-        logging.info(f"Account {leadersemail} already provisioned for {chapter_url}")
-        return "Account Already Provisioned"
+    provision_account = IsAlreadyProvisioned(leadersemail, zoom_accounts)
+    if provision_account:
+        logging.info(f"Account {provision_account} already provisioned for {chapter_url}")
+        return f"Account {provision_account} Already Provisioned"
 
     logging.info(f"Provisioning Zoom for {chapter_url}")
     leaders = []

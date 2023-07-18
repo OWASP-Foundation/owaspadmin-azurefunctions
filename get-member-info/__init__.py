@@ -10,8 +10,11 @@ from ..SharedCode import helperfuncs
 from ..SharedCode.googleapi import OWASPGoogle
 from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.copper import OWASPCopper
+from ..SharedCode import recurringtoken
 import stripe
 from datetime import datetime
+import re
+import unicodedata
 
 stripe.api_key = os.environ['STRIPE_SECRET']
 
@@ -37,13 +40,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             data = get_token_data(token)
         except Exception as err:
             logging.error(f'Invalid token: {err}')
+        
+        if not data:
+            try:
+                data = get_token_data_otp(token)
+            except Exception as err:
+                logging.error(f"Invalid token otp: {err}")
+                
     acl = json.loads(os.environ['MP_ACL'])
     
     if data and len(data) >0: 
-        if 'MEMBER_PORTAL_TEST' in os.environ and os.environ['MEMBER_PORTAL_TEST'] and ('owasp.com' in data['email'] or data['email'] in acl['acl']):
-            member_info = get_member_info(data)
-        else:
-            member_info = get_member_info(data)
+        member_info = get_member_info(data)
 
         return func.HttpResponse(json.dumps(member_info))
     else:
@@ -67,11 +74,22 @@ def get_token_data(token):
     
     for key in keys:
         try:
-            data = jwt.decode(token, key=key, audience=os.environ['CF_POLICY_AUD'], algorithms=['RS256'], verify=True)
+            data = jwt.decode(token, key=key, algorithms=['RS256'], verify=True, options={"verify_aud": False})
             break
         except Exception as err:
             logging.info(f"Exception decoding token: {err}")
             pass
+
+    return data
+
+def get_token_data_otp(token):
+    data = {}
+    pub_key = jwt.algorithms.RSAAlgorithm.from_jwk(os.environ["CF_MEMBERSHIP_KEY_PUBLIC"])
+    try:
+        data = jwt.decode(token, pub_key, ['RS256'], options={"verify_aud": False, "verify": False})
+    except Exception as err:
+        logging.info(f"Exception decoding token OTP: {err}")
+        pass
 
     return data
 
@@ -142,22 +160,6 @@ def fill_leader_details(memberinfo):
 
     return memberinfo
 
-def get_membership_email(person):
-    membership_email = None
-    for email in person['emails']:
-        customers = stripe.Customer.list(email=email['email'], api_key=os.environ['STRIPE_SECRET'])
-        for customer in customers.auto_paging_iter():
-            metadata = customer.get('metadata', None)
-            if metadata and 'membership_type' in metadata:
-                if metadata['membership_type'] == 'lifetime':
-                    membership_email = email['email']
-                    break
-                elif 'membership_end' in metadata and helperfuncs.get_datetime_helper(metadata['membership_end']) > datetime.today():
-                    membership_email = email['email']
-                    break
-    
-    return membership_email
-
 def get_member_info(data):
     logging.info(data)
     emailaddress = data['email']
@@ -179,8 +181,7 @@ def get_member_info(data):
         member_info['membership_type'] = get_membership_type(opp)
         member_info['membership_start'] = get_membership_start(opp)
         member_info['membership_end'] = get_membership_end(cp, opp)
-        member_info['membership_recurring'] = get_membership_recurring(cp, opp)
-        member_info['membership_email'] = get_membership_email(person)
+        member_info['membership_recurring'] = get_membership_recurring(cp, opp)        
         member_info['name'] = person['name']
         member_info['emails'] = person['emails']
         if 'address' not in person or not person['address']:
@@ -200,10 +201,118 @@ def get_member_info(data):
         member_info['phone_numbers'] = person['phone_numbers']
         member_info['member_number'] = cp.GetCustomFieldValue(person['custom_fields'], cp.cp_person_stripe_number)
         member_info = fill_leader_details(member_info)
+        member_info = update_with_stripe_info(member_info, person)
+
     elif not opp:
         logging.info(f"Failed to get opportunity")
     else:
         logging.info(f"Failed to get person")
         
     logging.info(f"Member information: {member_info}")
+    return member_info
+
+def update_with_stripe_info(member_info, person):
+    membership_email = None
+    customer_id = None
+    for email in person['emails']:
+        customers = stripe.Customer.list(email=email['email'], api_key=os.environ['STRIPE_SECRET'])
+        for customer in customers.auto_paging_iter():
+            metadata = customer.get('metadata', None)
+            if membership_email is None: # have not set email yet, get customer id
+                customer_id = customer.get('id')
+
+            if metadata and 'membership_type' in metadata:
+                if metadata['membership_type'] == 'lifetime':
+                    membership_email = email['email']
+                    break
+                elif 'membership_end' in metadata and helperfuncs.get_datetime_helper(metadata['membership_end']) > datetime.today():
+                    membership_email = email['email']
+                    break
+                
+    member_info['membership_email'] = membership_email
+    if customer_id:
+        member_info = get_stripe_billing_info(customer_id, member_info)
+
+    return member_info
+
+###################
+### BELOW HERE IS BILLING MANAGEMENT STYLE - NEED TO UPDATE ABOVE WITH EXTRA INFO
+###################
+
+def get_stripe_billing_info(customer_id, member_info):
+    customer = stripe.Customer.retrieve(
+        customer_id,
+        expand=['subscriptions', 'subscriptions.data.default_payment_method']
+    )
+    metadata = customer.get('metadata', {})
+    subscription_list = []
+    subscriptions = customer.get('subscriptions')
+    for subscription in subscriptions:
+        if subscription['status'] == 'active' and subscription['cancel_at_period_end'] is False:
+            card_data = subscription['default_payment_method'].get('card', {})
+            card_brand = card_data.get('brand', '').capitalize()
+            card_exp_month = card_data.get('exp_month', '')
+            card_exp_year = card_data.get('exp_year', '')
+            card_last_4 = card_data.get('last4', '')
+
+            if subscription['plan']['nickname'] is not None and  "Membership" in subscription['plan']['nickname']:
+                subscription_type = "membership"
+            else:
+                subscription_type = "donation"
+
+            next_billing_date = datetime.fromtimestamp(subscription['current_period_end']).strftime('%m/%d/%Y')
+            subscription_name = subscription['plan']['nickname']
+
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                mode='setup',
+                customer_email=customer.email,
+                setup_intent_data={
+                    'metadata': {
+                        'customer_id': customer.id,
+                        'subscription_id': subscription.id
+                    }
+                },
+                success_url='https://owasp.org/membership-update-success',
+		        cancel_url='https://owasp.org/membership-update-cancel',
+            )
+
+            subscription_list.append({
+                "id": subscription.id,
+                "checkout_session": session.id,
+                "type": subscription_type,
+                "next_billing_date": next_billing_date,
+                "subscription_name": subscription_name,
+                "card": {
+                    "brand": card_brand,
+                    "exp": str(card_exp_month) + '/' + str(card_exp_year),
+                    "last_4": card_last_4
+                }
+            })
+    email_list = []
+    email = customer.get('email')
+    if email != None and 'owasp.org' not in email.lower() and metadata.get('owasp_email', None) == None: 
+        og = OWASPGoogle()
+        customer_name = customer.get('name')
+        if customer_name != None:
+            first_name = customer_name.lower().strip().split(' ')[0]
+            last_name = ''.join((customer_name.lower() + '').split(' ')[1:]).strip()
+            nfn = unicodedata.normalize('NFD', first_name)
+            nln = unicodedata.normalize('NFD', last_name)
+            nfn = ''.join([c for c in nfn if not unicodedata.combining(c)])
+            nln = ''.join([c for c in nln if not unicodedata.combining(c)])
+            r2 = re.compile(r'[^a-zA-Z0-9]')
+            first_name = r2.sub('',nfn)
+            last_name = r2.sub('', nln)
+            if first_name is not None:
+                preferred_email = first_name 
+                if last_name is not None and last_name != '':
+                    preferred_email = preferred_email + '.' + last_name
+                
+                preferred_email = preferred_email + "@owasp.org"
+                email_list = og.GetPossibleEmailAddresses(preferred_email)
+
+    member_info['subscriptions'] = subscription_list
+    member_info['emaillist'] = email_list
+    member_info['customer_token'] = recurringtoken.make_token(customer.id).decode()
     return member_info
