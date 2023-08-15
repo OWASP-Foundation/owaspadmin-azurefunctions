@@ -270,6 +270,11 @@ def make_subscription_api_request(request: Dict) -> Dict:
     mailing_list = request.get('mailing_list')
     source = request.get('source')
 
+    address = request.get('address')
+    address2 = request.get('address2')
+    city = request.get('city')
+    state = request.get('state')
+
     discount = request.get('discount')
     recurring = request.get('recurring')
     membership_type = request.get('membership_type')
@@ -286,6 +291,14 @@ def make_subscription_api_request(request: Dict) -> Dict:
         student = False
     if discount is None:
         discount = False
+    if address is None:
+        address = ''
+    if address2 is None:
+        address2 = ''
+    if city is None:
+        city = ''
+    if state is None:
+        state = ''
 
     metadata = {
         "recurring": recurring,
@@ -296,6 +309,10 @@ def make_subscription_api_request(request: Dict) -> Dict:
         "university": university,
         "student": student,
         "country": country,
+        "address": address,
+        "address2": address2,
+        "city": city,
+        "state": state,
         "postal_code": postal_code,
         "purchase_type": "membership"
     }
@@ -306,7 +323,7 @@ def make_subscription_api_request(request: Dict) -> Dict:
         "payment_method_types": ["card"],
     }
 
-    stripe_customer_id = get_stripe_customer_id(email, name)
+    stripe_customer_id = get_stripe_customer_id(email, name, address, address2, city, state, postal_code, country)
     if (stripe_customer_id is not None):
         api_request['customer'] = stripe_customer_id
     else:
@@ -411,17 +428,23 @@ def return_response(response, success):
     )
 
 
-def get_stripe_customer_id(email, name=''):
+def get_stripe_customer_id(email, name='', address='', address2='', city='', state='', postal_code='', country=''):
     customers = stripe.Customer.list(email=email)
     if len(customers) > 0:
         for customer in customers:
             if customer.email == email:
+                stripe.Customer.modify(
+                                    customer.id,
+                                    address={"line1":address, "line2":address2, "city":city, "state":state, "postal_code":postal_code, "country":country},
+                                    )
                 return customer.id
     else: # create the customer first
-        customer_request = stripe.Customer.create(email=email.lower(), 
+        customer_request = stripe.Customer.create(email=email.lower(),
                                                   name=name,
-                                                  api_key=os.environ["STRIPE_SECRET"]
+                                                  api_key=os.environ["STRIPE_SECRET"],
+                                                  address = {"line1":address, "line2":address2, "city":city, "state":state, "postal_code":postal_code, "country":country}
                                                 )
+        
         return customer_request['id']
 
     return None

@@ -264,8 +264,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
         try:
             if monetary_value > 500: # most likely in 5000 = 50.00 format as there is no membership for individuals > 500.00
                 monetary_value = monetary_value * .01
-            cop.CreateOWASPMembership(customer_id, payment_id, customer_name, customer_email, subscription_data, monetary_value)
-            
+            cop.CreateOWASPMembership(customer_id, payment_id, customer_name, customer_email, subscription_data, monetary_value, None, customer.get("address", None))
         except Exception as err:
             logging.error(f'Failed to create Copper data: {err}')
 
@@ -273,7 +272,7 @@ def update_customer_record(customer_id, metadata, subscription_data, payment_id,
             member = cop.FindPersonByEmailObj(customer_email)
             if member:
                 owasp_email = helperfuncs.get_owasp_email(member[0], cop)
-                helperfuncs.unsuspend_google_user(owasp_email)
+                helperfuncs.unsuspend_google_user(owasp_email)                
             else:
                 logging.warn("No member found in copper")        
         except Exception as err:

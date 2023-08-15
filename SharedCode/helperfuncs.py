@@ -67,7 +67,7 @@ def get_owasp_email(member, cp):
 def unsuspend_google_user(owasp_email):
     og = OWASPGoogle()
     user = og.GetUser(owasp_email)
-    if user and user['suspended']:
+    if user and user[0]['suspended']:
         for email in user['emails']:
             if '@owasp.org' in email['address']:
                 if not og.UnsuspendUser(email['address']):

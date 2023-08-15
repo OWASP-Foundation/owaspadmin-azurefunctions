@@ -132,6 +132,20 @@ class OWASPCopper:
             
         return startdate
 
+    def CallTimeoutCopperRequest(self, url):
+        r = None
+        while True:
+            r = requests.get(url, headers=self.GetHeaders())
+            if not r.ok:
+                if 'Gateway' in r.text or 'Time-out' in r.text:
+                    time.sleep(random.random() * 2.0 + 2.0)
+                else:
+                    break
+            else: 
+                break
+        
+        return r
+
     def ListProjects(self):
         data = {
             'page_size': 200,
@@ -202,13 +216,13 @@ class OWASPCopper:
             url = f"{self.cp_base_url}{self.cp_related_fragment}"
             url = url.replace(':entity_id', str(pid)).replace(':entity', 'people')
             url = url + '/opportunities'
-            r = requests.get(url, headers=self.GetHeaders())
+            r = self.CallTimeoutCopperRequest(url)
             if r.ok and r.text:
                 today = datetime.today()
                 tdstamp = int(today.timestamp())
                 for item in json.loads(r.text):
                     url = url = f"{self.cp_base_url}{self.cp_opp_fragment}{item['id']}"
-                    r = requests.get(url, headers=self.GetHeaders())
+                    r = self.CallTimeoutCopperRequest(url)
                     if r.ok:
                         opportunity = json.loads(r.text)
                         if 'Lifetime' in opportunity['name'] or ('Membership' in opportunity['name'] and opportunity['monetary_value'] == 500):
@@ -520,6 +534,20 @@ class OWASPCopper:
             time.sleep(7.0)
         else:
             logging.error(f'Copper Failed CreatePerson: {r.text}')
+
+        return pid
+
+    def UpdatePersonAddress(self, pid, address_data):
+        logging.info("Copper Update Address")
+        data = { 'address': address_data }
+        url = f'{self.cp_base_url}{self.cp_people_fragment}{pid}'
+        r = requests.put(url, headers=self.GetHeaders(), data=json.dumps(data))
+        pid = None
+        if r.ok:
+            person = json.loads(r.text)
+            pid = person['id']
+        else:
+            logging.error(f'Copper Failed UpdatePersonAddress: {r.text}')
 
         return pid
 
@@ -928,7 +956,7 @@ class OWASPCopper:
         
         return None
 
-    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data, monetary_value, tags = None):
+    def CreateOWASPMembership(self, stripe_id, payment_id, name, email, subscription_data, monetary_value, tags = None, address=None):
         result = 'Success'
         # Multiple steps here
         # CreatePerson
@@ -971,7 +999,17 @@ class OWASPCopper:
 
         if tags:
             self.AddTagsToPerson(pid, tags)
-
+        if address:
+            #stripe address is dictionary of line1, line2, city, state, country, postal_code
+            # copper is dictionary of street, city, state, country, postal_code
+            cp_address = {
+                "street": address["line1"] + " " + address["line2"],
+                "city": address["city"],
+                "state": address["state"],
+                "postal_code": address["postal_code"]
+            }
+            self.UpdatePersonAddress(pid, cp_address)
+            
         opp_name = subscription_data['membership_type'].capitalize()
     
         if opp_name == 'Honorary':
