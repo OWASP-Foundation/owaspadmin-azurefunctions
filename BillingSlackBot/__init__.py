@@ -47,10 +47,11 @@ def main(req: func.HttpRequest, clqueue: func.Out[func.QueueMessage]) -> func.Ht
 
     if command == '/stripe-details':
         stripe_details(text, response_url)
-
+    headers = {"Content-Type":"application/json;charset=utf-8"}
     return func.HttpResponse(
         body='Your request is queued and a response will be provided shortly.',
-        status_code=200
+        status_code=200,
+        headers=headers
     )
 
 def contact_lookup_multiple(persons, response_url):
