@@ -176,6 +176,26 @@ def create_complimentary_member(firstname, lastname, email, company, country, zi
             logging.error(f"Failed to add to Mailchimp: {err}")
 
             
+def is_force_majeure_country(country):
+    is_fm = False
+    if country:
+        gh = OWASPGitHub()
+        r = gh.GetFile('owasp.github.io', '_data/countries.json')
+        if r.ok:
+            doc = json.loads(r.text)
+            content = base64.b64decode(doc['content']).decode(encoding='utf-8')
+            countries = json.loads(content)
+            logging.info("Count of countries: " + str(len(countries)))
+            for cntry in countries:
+                if cntry['name'] == country and cntry['force_majeure'] == True:
+                    logging.info("This is a Force Majeure country")
+                    is_fm = True
+                    break
+        else:
+            logging.info(r.text)
+
+    return is_fm
+
 # simple true/false function as opposed to the IsLeaderByEmail Azure Function that returns more details
 def is_leader_by_email(email):
     is_leader = False

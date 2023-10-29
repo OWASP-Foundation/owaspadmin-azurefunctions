@@ -32,6 +32,7 @@ class OWASPMeetup:
         return headers
 
     def Login(self):
+        random.seed()
         now = datetime.utcnow()
 
         payload_dict = {

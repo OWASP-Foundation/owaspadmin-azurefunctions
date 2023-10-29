@@ -23,6 +23,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 #   chapter-report
 #   leader-report
 #   member-report
+#   project-report
+
+REPORT_TYPE_CHAPTER = 0
+REPORT_TYPE_MEMBER = 1 # not used as member does not produce a spreadsheet - but will leave it
+REPORT_TYPE_LEADER = 2
+REPORT_TYPE_PROJECT = 3
 
 def main(msg: func.QueueMessage) -> None:
     datastr = msg.get_body().decode('utf-8')
@@ -36,6 +42,8 @@ def main(msg: func.QueueMessage) -> None:
         process_leader_report(datastr)
     elif 'member-report' in datastr:
         process_member_report(datastr)
+    elif 'project-report' in datastr:
+        process_project_report(datastr)
     else:
         logging.warn('No report to process in item')
 
@@ -47,16 +55,24 @@ def get_repo_name(urlstr):
 
     return urlstr[sndx:endx]
 
-def create_spreadsheet(spreadsheet_name, row_headers):
+def create_spreadsheet(spreadsheet_name, row_headers, report_type):
     scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
     client_secret = json.loads(os.environ['GOOGLE_CREDENTIALS'], strict=False)
     creds = ServiceAccountCredentials.from_json_keyfile_dict(client_secret, scope)
     drive = build('drive', 'v3', credentials=creds, cache_discovery=False)
     
+    parents = [os.environ['CHAPTER_REPORT_FOLDER']]
+    if report_type == REPORT_TYPE_MEMBER:# not used as member does not produce a spreadsheet - but will leave it
+        parents = [os.environ['MEMBER_REPORT_FOLDER']]
+    elif report_type == REPORT_TYPE_LEADER:
+        parents = [os.enivon['LEADER_REPORT_FOLDER']]
+    elif report_type == REPORT_TYPE_PROJECT:
+        parents = [os.environ['PROJECT_REPORT_FOLDER']]
+
 
     file_metadata = {
         'name': spreadsheet_name,
-        'parents': [os.environ['CHAPTER_REPORT_FOLDER']],
+        'parents': parents,
         'mimeType': 'application/vnd.google-apps.spreadsheet',
     }
 
@@ -118,7 +134,7 @@ def add_leader_row(rows, headers, name, email, group, url):
     
     rows.append(row_data)
 
-def add_chapter_row(rows, headers, chname, chupdated, chrepo, chregion, chleaders, chemails):
+def add_group_row(rows, headers, chname, chupdated, chrepo, chregion, chleaders, chemails):
     row_data = headers.copy()
     for i in range(len(row_data)):
         row_data[i] = ''
@@ -168,7 +184,7 @@ def process_leader_report(datastr):
         ldr_json = json.loads(content)
         sheet_name = get_spreadsheet_name('leader-report')
         row_headers = ['Name', 'Email', 'Group', 'Group URL']
-        ret = create_spreadsheet(sheet_name, row_headers)
+        ret = create_spreadsheet(sheet_name, row_headers, REPORT_TYPE_LEADER)
         sheet = ret[0]
         file_id = ret[1]
         headers = sheet.row_values(1) # pull them again anyway
@@ -197,7 +213,7 @@ def process_chapter_report(datastr):
         ch_json = json.loads(content)
         sheet_name = get_spreadsheet_name('chapter-report')
         row_headers = ['Chapter Name', 'Last Update', 'Repo', 'Region', 'Leaders', 'Emails']
-        ret = create_spreadsheet(sheet_name, row_headers)
+        ret = create_spreadsheet(sheet_name, row_headers, REPORT_TYPE_CHAPTER)
         sheet = ret[0]
         file_id = ret[1]
         headers = sheet.row_values(1) # pull them again anyway
@@ -228,7 +244,7 @@ def process_chapter_report(datastr):
                         leaderstr += ', '
                         emailstr += '\n'
 
-                add_chapter_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr, emailstr)
+                add_group_row(rows, headers, ch['name'], ch['updated'], repo, ch['region'], leaderstr, emailstr)
 
         sheet.append_rows(rows)
         msgtext = 'Your chapter report is ready at https://docs.google.com/spreadsheets/d/' + file_id
@@ -372,3 +388,57 @@ def process_member_report_old(datastr):
         'response_type':'ephemeral'
     }
     requests.post(response_url, data=json.dumps(msgdata), headers = headers)
+
+def process_project_report(datastr):
+    data = urllib.parse.parse_qs(datastr)
+    gh = OWASPGitHub()
+    gr = gh.GetFile('owasp.github.io', '_data/projects.json')
+    if gr.ok:
+        doc = json.loads(gr.text)
+        sha = doc['sha']
+        content = base64.b64decode(doc['content']).decode(encoding='utf-8')
+        ch_json = json.loads(content)
+        sheet_name = get_spreadsheet_name('project-report')
+        row_headers = ['Project Name', 'Last Update', 'Repo', 'Level', 'Leaders', 'Emails']
+        ret = create_spreadsheet(sheet_name, row_headers, REPORT_TYPE_PROJECT)
+        sheet = ret[0]
+        file_id = ret[1]
+        headers = sheet.row_values(1) # pull them again anyway
+        rows = []
+        for ch in ch_json:
+            repo = get_repo_name(ch['url'])
+            lr = gh.GetFile(repo, 'leaders.md')
+            if lr.ok:
+                ldoc = json.loads(lr.text)
+                lcontent = base64.b64decode(ldoc['content']).decode(encoding='utf-8')
+                # need to grab the leaders....
+                leaders = []
+                
+                add_to_leaders(ch, lcontent, leaders, 'project')
+                leaderstr = ''
+                emailstr = ''
+                i = 0
+                count = len(leaders)
+                for leader in leaders:
+                    i+=1
+                    leaderstr += leader['name']
+                    if leader['email'] is not None and '@' in leader['email']:
+                        emailstr += leader['email'].replace('mailto://','').replace('mailto:', '')
+                    else:
+                        emailstr += 'Unknown'
+
+                    if i < count:
+                        leaderstr += ', '
+                        emailstr += '\n'
+
+                add_group_row(rows, headers, ch['name'], ch['updated'], repo, ch['level'], leaderstr, emailstr)
+
+        sheet.append_rows(rows)
+        msgtext = 'Your project report is ready at https://docs.google.com/spreadsheets/d/' + file_id
+        response_url = data['response_url'][0]
+        headers = { 'Content-type':'application/json'}
+        msgdata = {
+            'text':msgtext,
+            'response_type':'ephemeral'
+        }
+        requests.post(response_url, data=json.dumps(msgdata), headers = headers)
