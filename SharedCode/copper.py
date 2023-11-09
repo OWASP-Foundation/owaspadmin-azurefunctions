@@ -54,6 +54,17 @@ class OWASPCopper:
     cp_project_chapter_region_option_the_caribbean = 1607252
     cp_project_chapter_country = 399738
     cp_project_chapter_postal_code = 399737
+    # project specific 
+    cp_project_project_level = 602485
+    cp_project_project_level_option_incubator = 1838797
+    cp_project_project_level_option_lab = 1838796
+    cp_project_project_level_option_production = 1838795
+    cp_project_project_flagship_checkbox = 602486
+    cp_project_project_license = 602487
+    cp_project_project_type = 623472
+    cp_project_project_type_option_documentation = 1888133
+    cp_project_project_type_option_code = 1888134
+    cp_project_project_type_option_other = 1888135
     #person specific
     #inactive cp_person_group_url = 394184
     #inactive cp_person_group_type = 394186
@@ -865,7 +876,7 @@ class OWASPCopper:
         
         return projects
 
-    def CreateProject(self, proj_name, leaders, emails, project_type, status, region = None, country = None, postal_code = None, repo = None):
+    def CreateProject(self, proj_name, leaders, emails, project_type, status, region = None, country = None, postal_code = None, repo = None, project_options = None):
         data = {
                 'name':proj_name
         }
@@ -900,7 +911,27 @@ class OWASPCopper:
                     'custom_field_definition_id': self.cp_project_github_repo,
                     'value': repo
                 })
-                
+        if project_options:
+            license = project_options.get("license", None)
+            if license:
+                fields.append({
+                    'custom_field_definition_id': self.cp_project_project_license,
+                    'value': license
+                })
+            type = project_options.get("type", None)
+            if type:
+                fields.append({
+                    'custom_field_definition_id': self.cp_project_project_type,
+                    'value': type
+                })
+
+            level = project_options.get("level", None)
+            if level:
+                fields.append({
+                    'custom_field_definition_id': self.cp_project_project_level,
+                    'value': level
+                })
+
         custom_fields = fields
 
         data['custom_fields'] = custom_fields
@@ -1025,3 +1056,14 @@ class OWASPCopper:
         if result == '':
             result = f"Failed to create opportunity for {email}"
         return result
+
+    def GetOWASPEmailForPerson(self, person):
+        ret_email = ""
+        if person and 'emails' in person:
+            for email in person['emails']:
+                if 'owasp.org' in email['email'].lower():
+                    ret_email = email['email']
+                    break
+        
+        return ret_email
+

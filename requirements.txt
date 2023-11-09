@@ -24,6 +24,7 @@ gspread==3.7.0
 httplib2==0.19.1
 idna==2.10
 isort==5.8.0
+jira==3.5.2
 lazy-object-proxy==1.4.1
 mailchimp3==3.0.14
 Markdown==3.4.1
