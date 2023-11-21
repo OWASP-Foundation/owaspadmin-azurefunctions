@@ -104,10 +104,10 @@ def project_create(jira_id, function_directory, response_url):
         resString = "Failed due to missing leader information."
 
     if not 'Failed' in resString:
-        project_deliverable = getattr(issue.fields, nameMap['Generic Text Area 1'], None)
-        project_description = getattr(issue.fields, nameMap['Generic Text Area 2'], None)
-        project_roadmap = getattr(issue.fields, nameMap['Generic Text Area 3'], None)
-        project_comments = getattr(issue.fields, nameMap['Generic Text Area 4'], None)    
+        project_deliverable = getattr(issue.fields, nameMap['Generic Text Area 1'], None) # summary
+        project_description = getattr(issue.fields, nameMap['Generic Text Area 2'], None) # description
+        project_roadmap = getattr(issue.fields, nameMap['Generic Text Area 3'], None) # roadmap
+        project_comments = getattr(issue.fields, nameMap['Generic Text Area 4'], None) # usually a license not mentioned
             
         leaders = leader_names.splitlines()
         emails = leader_emails.splitlines()
@@ -125,7 +125,7 @@ def project_create(jira_id, function_directory, response_url):
                 
             logging.info("Creating github repository")
             proj_type = get_project_type(project_type)
-            resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers)
+            resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers, project_description, project_roadmap)
             # do copper integration here
             if not 'Failed' in resString:
                 resString = CreateCopperObjects(project_name, leaders, emails, proj_type, license)
@@ -231,7 +231,7 @@ def CreateCopperObjects(project_name, leaders, emails, type, license):
 
     return resString
 
-def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gitusers):
+def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gitusers, description, roadmap):
     gh = OWASPGitHub()
     r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
     resString = "Project created."
@@ -241,7 +241,7 @@ def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gituser
     
 
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir, proj_type=proj_type)
+        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir, proj_type=proj_type, description=description, roadmap=roadmap)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)

@@ -83,7 +83,7 @@ class OWASPGitHub:
 
         return r
 
-    def InitializeRepositoryPages(self, repoName, rtype, basedir = "", region="", proj_type = "", group_site = ""):
+    def InitializeRepositoryPages(self, repoName, rtype, basedir = "", region="", proj_type = "", group_site = "", description="", roadmap=""):
         if basedir and not basedir.endswith('/'):
             basedir = basedir + '/'
 
@@ -97,7 +97,7 @@ class OWASPGitHub:
         for f in filestosend["files"]:
             fpath = basedir + f['path']
             
-            r = self.SendFile( url, fpath, ["[GROUPNAME]", "[:REGION]", "[:PROJTYPE]", "[:GROUPSITE_URL]"], [groupName, region, proj_type, group_site])
+            r = self.SendFile( url, fpath, ["[GROUPNAME]", "[:REGION]", "[:PROJTYPE]", "[:GROUPSITE_URL]", "[:DESCRIPTION]", "[:ROADMAP]"], [groupName, region, proj_type, group_site, description, roadmap])
             if not self.TestResultCode(r.status_code):
                 break
 
