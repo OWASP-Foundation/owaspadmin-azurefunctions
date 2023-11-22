@@ -24,9 +24,9 @@
     },
     {
       "type": "func",
-      "command": "pack --build-native-deps",
+      "command": "pack --build-native-deps --python",
       "problemMatcher": [],
-      "label": "func: pack --build-native-deps",
+      "label": "func: pack --build-native-deps --python",
       "group": {
         "kind": "build",
         "isDefault": true
