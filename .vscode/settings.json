@@ -6,8 +6,6 @@
   "debug.internalConsoleOptions": "neverOpen",
   "azureFunctions.preDeployTask": "func: pack --build-native-deps --python",
   "python.pythonPath": "/usr/bin/python3",
-  "python.linting.pylintEnabled": true,
-  "python.linting.enabled": true,
   "azureAutomation.directory.basePath": "Users/hblankenship/Development/OWASP/Automations/"
 }
     
