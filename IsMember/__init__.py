@@ -38,10 +38,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
 def validate_apikey(user, apikey):
     result = False
-    valid_keys = os.environ.get('MEMBER_API_KEYS', None)
+    valid_keys_text = os.environ.get('MEMBER_API_KEYS', None)
+    valid_keys = json.loads(valid_keys_text)
     if valid_keys:
         for key in valid_keys:
-             if key.get('user', None):
+             if key.get('user', None) == user:
                   if key.get('apikey', None) == apikey:
                        msg = f"User {user} accessed the api."
                        logging.info(msg)
@@ -51,6 +52,8 @@ def validate_apikey(user, apikey):
     return result
 
 def validate_member(member_email):
+    logtxt = f"Checking membership for {member_email}"
+    logging.info(logtxt)
     msg = "User not found"
     code = 404
 
@@ -60,4 +63,4 @@ def validate_member(member_email):
         msg = "User found"
         code = 200
 
-    return func.HttpResponse(msg, code)
+    return func.HttpResponse(msg, status_code=code)

@@ -149,7 +149,7 @@ def get_member_info(customer_id):
             })
     email_list = []
     email = customer.get('email')
-    if email != None and 'owasp.org' not in email.lower() and metadata.get('owasp_email', None) == None and not IsExpired(metadata): 
+    if email != None and not email.lower().endswith("owasp.org") and metadata.get('owasp_email', None) == None and not IsExpired(metadata): 
         og = OWASPGoogle()
         customer_name = customer.get('name')
         if customer_name != None:
