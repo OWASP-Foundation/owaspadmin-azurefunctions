@@ -187,7 +187,7 @@ def is_force_majeure_country(country):
             countries = json.loads(content)
             logging.info("Count of countries: " + str(len(countries)))
             for cntry in countries:
-                if cntry['name'] == country and cntry['force_majeure'] == True:
+                if cntry['name'] == country and 'force_majeure' in cntry and cntry['force_majeure'] == True:
                     logging.info("This is a Force Majeure country")
                     is_fm = True
                     break
