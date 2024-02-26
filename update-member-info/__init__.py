@@ -42,7 +42,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f'Invalid token: {err}')
 
         acl = json.loads(os.environ['MP_ACL'])
-        if data and len(data) > 0 and ('owasp.org' in data['email'] or 'owasp.com' in data['email'] or data['email'] in acl['acl']): #only work with these email addresses
+        if data and len(data) > 0: # WE USED TO ONLY ALLOW CERTAIN EMAILS BUT NOW ANY MEMBER EMAIL IS VALID...and ('owasp.org' in data['email'] or 'owasp.com' in data['email'] or data['email'] in acl['acl']): #only work with these email addresses
             #logging.info(f'Member data: {membership_data}')
             if not check_values(membership_data):
                 return func.HttpResponse("invalid data", status_code=400)
