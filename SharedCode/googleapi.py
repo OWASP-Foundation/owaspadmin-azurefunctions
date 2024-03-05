@@ -214,17 +214,30 @@ class OWASPGoogle:
         return results
 
     def GetUser(self, cid, showDeleted=False):
-        results = self.admin.users().list(domain='owasp.org', query=f"email:{cid}", showDeleted=showDeleted).execute()
-        if 'users' in results and len(results['users']) > 0:
-            return results['users']
-        
+        done = False
+        while not done:
+            try:
+                results = self.admin.users().list(domain="owasp.org", query=f"email:{cid}", showDeleted=showDeleted).execute()
+                if 'users' in results and len(results['users']) > 0:
+                    return results['users'][0]
+                else:
+                    done = True
+            except HttpError as e:
+                print('error waiting 8 to 10 seconds....')
+                done = (e.status_code != 503)
+                if not done:
+                    dropoff = 4 + random.randint(1, 4)
+                    time.sleep(dropoff * 1.25)
+                pass
+            except Exception as err:
+                done = True
 
-        return None
+        return None 
 
     def SuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
             user = self.GetUser(email)
             if user:
-                user[0]['suspended'] = True
+                user['suspended'] = True
 
             results = self.admin.users().update(userKey=email, body=user[0]).execute()
 
@@ -233,7 +246,7 @@ class OWASPGoogle:
     def UnsuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
         user = self.GetUser(email)
         if user:
-            user[0]['suspended'] = False
+            user['suspended'] = False
 
         results = self.admin.users().update(userKey=email, body= user[0]).execute()
 
