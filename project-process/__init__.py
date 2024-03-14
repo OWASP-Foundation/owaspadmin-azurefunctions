@@ -50,7 +50,7 @@ def process_form(values, view_id, function_directory):
             emaillinks.append(f'[{leader}](mailto:{email})')
             
         logging.info("Creating github repository")
-        resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers)
+        resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers, description)
         # do copper integration here
         if not 'Failed' in resString:
             resString = CreateCopperObjects(project_name, leaders, emails, gitusers)
@@ -80,7 +80,7 @@ def CreateCopperObjects(project_name, leaders, emails, gitusers):
 
     return resString
 
-def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gitusers):
+def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gitusers, description):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
     resString = "Project created."
@@ -90,7 +90,7 @@ def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gituser
     
 
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir)
+        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir, proj_type=proj_type, description=description)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)

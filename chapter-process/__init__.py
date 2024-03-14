@@ -70,7 +70,7 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding chapter leader...")
             emaillinks.append(f'[{leader}](mailto:{email})')
         logging.info("Creating github repository")
-        resString = CreateGithubStructure(chapter_name,function_directory, region, emaillinks, gitusers)
+        resString = CreateGithubStructure(chapter_name,function_directory, region, emaillinks, gitusers, country)
         # do copper integration here
         if not 'Failed' in resString:
             resString = CreateCopperObjects(chapter_name, leaders, emails, gitusers, region, country)
@@ -129,7 +129,7 @@ def CreateCopperObjects(chapter_name, leaders, emails, gitusers, region, country
 
     return resString
 
-def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers):
+def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers, country):
     gh = github.OWASPGitHub()
     r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
     resString = "Chapter created."
@@ -138,7 +138,7 @@ def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers):
         logging.error(resString + " : " + r.text)
     
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(chapter_name, gh.GH_REPOTYPE_CHAPTER, basedir = func_dir, region=region)
+        r = gh.InitializeRepositoryPages(chapter_name, gh.GH_REPOTYPE_CHAPTER, basedir = func_dir, region=region, country=country)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {chapter_name}."
             logging.error(resString + " : " + r.text)

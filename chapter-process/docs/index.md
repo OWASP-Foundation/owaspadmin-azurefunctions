@@ -4,6 +4,7 @@ layout: col-sidebar
 title: OWASP [GROUPNAME]
 tags: example-tag
 region: [:REGION]
+country: [:COUNTRY]
 meetup-group:
 
 ---
