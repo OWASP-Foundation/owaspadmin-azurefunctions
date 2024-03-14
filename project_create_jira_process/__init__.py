@@ -128,7 +128,7 @@ def project_create(jira_id, function_directory, response_url):
             resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers, project_description, project_roadmap)
             # do copper integration here
             if not 'Failed' in resString:
-                resString = CreateCopperObjects(project_name, leaders, emails, proj_type, license)
+                resString = CreateCopperObjects(project_name, leaders, emails, gitusers, proj_type, license)
             
         else:
             resString = "Failed due to non matching leader names with emails"
@@ -208,7 +208,7 @@ def CreateOWASPEmails(leaders :[str], emails :[str]):
 
     return use_emails
 
-def CreateCopperObjects(project_name, leaders, emails, type, license):
+def CreateCopperObjects(project_name, leaders, emails, gitusers, type, license):
     resString = 'Project created.'
     cp = OWASPCopper()
     gh = OWASPGitHub()
@@ -226,7 +226,7 @@ def CreateCopperObjects(project_name, leaders, emails, type, license):
         "license": license
     }
 
-    if cp.CreateProject(project_name, leaders, emails, OWASPCopper.cp_project_type_option_project, OWASPCopper.cp_project_chapter_status_option_active, repo = repo, project_options=project_options) == '':
+    if cp.CreateProject(project_name, leaders, emails, gitusers, OWASPCopper.cp_project_type_option_project, OWASPCopper.cp_project_chapter_status_option_active, repo = repo, project_options=project_options) == '':
         resString = "Failed to create Copper objects"
 
     return resString

@@ -43,7 +43,7 @@ def process_form(values, view_id, function_directory):
         resString = CreateGithubStructure(group_name, function_directory, emaillinks, githubs, group_site)
         # do copper integration here
         if not 'Failed' in resString:
-            resString = CreateCopperObjects(group_name, leaders, emails)
+            resString = CreateCopperObjects(group_name, leaders, emails, githubs)
     else:
         resString = "Failed due to non matching leader names with emails"
     
@@ -59,14 +59,14 @@ def process_form(values, view_id, function_directory):
     r = requests.post(urldialog,headers=headers, data=resp)
     logging.info(r.text)
 
-def CreateCopperObjects(event_name, leaders, emails):
+def CreateCopperObjects(event_name, leaders, emails, gitusers):
     resString = 'Event created.'
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
     repo = gh.FormatRepoName(event_name, gh.GH_REPOTYPE_EVENT)
     event_name = "Event - OWASP " + event_name
     
-    if cp.CreateProject(event_name, leaders, emails, copper.OWASPCopper.cp_project_type_option_regional_event, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo) == '':
+    if cp.CreateProject(event_name, leaders, emails, gitusers, copper.OWASPCopper.cp_project_type_option_regional_event, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo) == '':
         resString = "Failed to create Copper objects"
 
     return resString

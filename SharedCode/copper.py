@@ -426,7 +426,7 @@ class OWASPCopper:
 
         return results
 
-    def CreatePerson(self, name, email, subscription_data = None, stripe_id = None):
+    def CreatePerson(self, name, email, gituser = None, subscription_data = None, stripe_id = None):
         logging.info('Copper CreatePerson')
 
         # Needs Name
@@ -440,6 +440,8 @@ class OWASPCopper:
             ]
         }
         
+        fields = []
+
         if subscription_data != None:
             membership_end = None
             membership_start = None
@@ -462,7 +464,7 @@ class OWASPCopper:
                     logging.error(f'Membership start is {membership_start}')
                     pass
                 pass
-            fields = []
+            
             if subscription_data['membership_type'] == 'lifetime':
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership, 
@@ -523,17 +525,24 @@ class OWASPCopper:
                         'custom_field_definition_id' : self.cp_person_signed_leaderagreement, 
                         'value': subscription_data['leader_agreement']
                     })
-
+            if membership_start:
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_start, 
+                        'value': membership_start.strftime("%m/%d/%Y")
+                    }) 
+                
+        if stripe_id:
             fields.append({
                         'custom_field_definition_id' : self.cp_person_stripe_number, 
                         'value': f"https://dashboard.stripe.com/customers/{stripe_id}"
                     })
 
+        if gituser:
             fields.append({
-                        'custom_field_definition_id' : self.cp_person_membership_start, 
-                        'value': membership_start.strftime("%m/%d/%Y")
-                    })        
-            data['custom_fields'] = fields
+                'custom_field_definition_id' : self.cp_person_github_username,
+                'value' : gituser
+            })
+        data['custom_fields'] = fields
 
         url = f'{self.cp_base_url}{self.cp_people_fragment}'
         r = requests.post(url, headers=self.GetHeaders(), data=json.dumps(data))
@@ -582,12 +591,13 @@ class OWASPCopper:
         return pid
 
 
-    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None, other_email = None):
+    def UpdatePerson(self, pid, subscription_data = None, stripe_id = None, other_email = None, github_user=None):
         logging.info('Copper UpdatePerson')
             
         data = {
         }
 
+        fields = []
         if subscription_data != None:
             membership_end = None
             membership_start = None
@@ -610,7 +620,7 @@ class OWASPCopper:
                     logging.error(f'Membership start is {membership_start}')
                     pass
                 pass
-            fields = []
+            
             if subscription_data['membership_type'] == 'lifetime':
                 fields.append({
                         'custom_field_definition_id' : self.cp_person_membership, 
@@ -671,18 +681,27 @@ class OWASPCopper:
                         'custom_field_definition_id' : self.cp_person_signed_leaderagreement, 
                         'value': subscription_data['leader_agreement']
                     })
-
+            if membership_start:
+                fields.append({
+                        'custom_field_definition_id' : self.cp_person_membership_start, 
+                        'value': membership_start.strftime("%m/%d/%Y")
+                    }) 
+                
+        if stripe_id:
             fields.append({
                         'custom_field_definition_id' : self.cp_person_stripe_number, 
                         'value': f"https://dashboard.stripe.com/customers/{stripe_id}"
-                    })
-
+                    })               
+        
+        if github_user:
             fields.append({
-                        'custom_field_definition_id' : self.cp_person_membership_start, 
-                        'value': membership_start.strftime("%m/%d/%Y")
-                    })        
-            data['custom_fields'] = fields
-
+                        'custom_field_definition_id' : self.cp_person_github_username, 
+                        'value': github_user
+                    })
+            
+        data['custom_fields'] = fields
+        
+    
         if other_email != None:
             contact_json = self.GetPerson(pid)
             if contact_json != '':
@@ -876,7 +895,7 @@ class OWASPCopper:
         
         return projects
 
-    def CreateProject(self, proj_name, leaders, emails, project_type, status, region = None, country = None, postal_code = None, repo = None, project_options = None):
+    def CreateProject(self, proj_name, leaders, emails, gitusers, project_type, status, region = None, country = None, postal_code = None, repo = None, project_options = None):
         data = {
                 'name':proj_name
         }
@@ -946,10 +965,17 @@ class OWASPCopper:
             for email in emails:
                 sr = self.FindPersonByEmail(email)
                 people = json.loads(sr)
-                if len(people) > 0:
+                if gitusers and len(gitusers) < endx:
+                    gituser = gitusers[endx]
+                else:
+                    gituser = None
+
+                if len(people) > 0: # consider adding UpdatePerson with provided github user id
                     person_id = people[0]['id']
+                    if gituser:
+                        self.UpdatePerson(person_id, github_user=gituser)
                 else: 
-                    person_id = self.CreatePerson(leaders[endx], email)    
+                    person_id = self.CreatePerson(leaders[endx], email, gituser)    
                 endx = endx + 1
                 if person_id:
                     self.RelateRecord('projects', pid, person_id)
@@ -1004,12 +1030,12 @@ class OWASPCopper:
         mend=None
 
         if pid == None or pid <= 0:
-            pid = self.CreatePerson(name, email, subscription_data, stripe_id)
+            pid = self.CreatePerson(name, email, None, subscription_data, stripe_id)
             mend = self.GetDatetimeHelper(subscription_data['membership_end'])
         else: #should only update if sub data membership end is later or nonexistent (and not a lifetime member)
             memtype = self.GetCustomFieldHelper(self.cp_person_membership, person['custom_fields'])
             if memtype == None:
-                self.UpdatePerson(pid, subscription_data, stripe_id)
+                self.UpdatePerson(pid, subscription_data=subscription_data, stripe_id=stripe_id)
                 mend = self.GetDatetimeHelper(subscription_data['membership_end'])
             elif memtype != self.cp_person_membership_option_lifetime:
                 mend = self.GetDatetimeHelper(subscription_data['membership_end'])
@@ -1022,7 +1048,7 @@ class OWASPCopper:
                     subscription_data['membership_start'] = current_start.strftime('%Y-%m-%d')
 
                 if mend == None or cp_mend == None or mend > current_end:
-                    self.UpdatePerson(pid, subscription_data, stripe_id)
+                    self.UpdatePerson(pid, subscription_data=subscription_data, stripe_id=stripe_id)
 
         if pid == None or pid <= 0:
             logging.error(f'Failed to create person for {email}')

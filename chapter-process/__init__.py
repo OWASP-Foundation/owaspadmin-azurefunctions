@@ -73,7 +73,7 @@ def process_form(values, view_id, function_directory):
         resString = CreateGithubStructure(chapter_name,function_directory, region, emaillinks, gitusers)
         # do copper integration here
         if not 'Failed' in resString:
-            resString = CreateCopperObjects(chapter_name, leaders, emails, region, country)
+            resString = CreateCopperObjects(chapter_name, leaders, emails, gitusers, region, country)
 
     else:
         resString = "Failed due to non matching leader names with emails"
@@ -116,7 +116,7 @@ def GetCopperRegion(region):
 
     return cp_region
 
-def CreateCopperObjects(chapter_name, leaders, emails, region, country):
+def CreateCopperObjects(chapter_name, leaders, emails, gitusers, region, country):
     resString = 'Chapter created.'
     cp = copper.OWASPCopper()
     cp_region = GetCopperRegion(region)
@@ -124,7 +124,7 @@ def CreateCopperObjects(chapter_name, leaders, emails, region, country):
     repo = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
     chapter_name = "Chapter - OWASP " + chapter_name
 
-    if cp.CreateProject(chapter_name, leaders, emails, copper.OWASPCopper.cp_project_type_option_chapter, copper.OWASPCopper.cp_project_chapter_status_option_active, cp_region, country=country, repo = repo) == '':
+    if cp.CreateProject(chapter_name, leaders, emails, gitusers, copper.OWASPCopper.cp_project_type_option_chapter, copper.OWASPCopper.cp_project_chapter_status_option_active, cp_region, country=country, repo = repo) == '':
         resString = "Failed to create Copper objects"
 
     return resString
