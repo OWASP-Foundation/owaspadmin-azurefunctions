@@ -4,7 +4,7 @@ import azure.functions as func
 import json
 import requests
 from urllib.parse import unquote_plus
-from ..SharedCode import salesforce 
+from ..SharedCode import salesforce
 from ..SharedCode import github
 from ..SharedCode import copper
 
@@ -26,15 +26,15 @@ def process_form(values, view_id, function_directory):
     git_users = ''
     if 'github-id' in values and 'github-value' in values['github-id'] and 'value' in values['github-id']['github-value']:
         git_users = values["github-id"]["github-value"]["value"]
-    
+
     if git_users == None:
         git_users = ''
-    
+
     summary = values["summary-id"]["summary-value"]["value"]
     description = values["desc-id"]["desc-value"]["value"]
     roadmap = values["roadmap-id"]["roadmap-value"]["value"]
     license = values["license-id"]["license-value"]["selected_option"]["value"]
-    proj_type = values["project-type-id"]["project-type-value"]["selected_option"]["value"]   
+    proj_type = values["project-type-id"]["project-type-value"]["selected_option"]["value"]
 
     leaders = leader_names.splitlines()
     emails = leader_emails.splitlines()
@@ -48,7 +48,7 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding project leader...")
 
             emaillinks.append(f'[{leader}](mailto:{email})')
-            
+
         logging.info("Creating github repository")
         resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers, description)
         # do copper integration here
@@ -59,10 +59,10 @@ def process_form(values, view_id, function_directory):
 
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     resp += project_name
-    resp += ' ' 
+    resp += ' '
     resp += resString
-    resp += '"} }]} }' 
-    
+    resp += '"} }]} }'
+
     logging.info(resp)
     urldialog = "https://slack.com/api/views.update"
     headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
@@ -73,7 +73,7 @@ def CreateCopperObjects(project_name, leaders, emails, gitusers):
     resString = 'Project created.'
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
-    repo = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
+    repo = gh.FormatRepoName(project_name, gh.RepoType.PROJECT)
     project_name = "Project - OWASP " + project_name
     if cp.CreateProject(project_name, leaders, emails, gitusers, copper.OWASPCopper.cp_project_type_option_project, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo) == '':
         resString = "Failed to create Copper objects"
@@ -82,20 +82,20 @@ def CreateCopperObjects(project_name, leaders, emails, gitusers):
 
 def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gitusers, description):
     gh = github.OWASPGitHub()
-    r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
+    r = gh.CreateRepository(project_name, gh.RepoType.PROJECT)
     resString = "Project created."
     if not gh.TestResultCode(r.status_code):
         resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
-    
+
 
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir, proj_type=proj_type, description=description)
+        r = gh.InitializeRepositoryPages(project_name, gh.RepoType.PROJECT, basedir = func_dir, proj_type=proj_type, description=description)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
-    repoName = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
+    repoName = gh.FormatRepoName(project_name, gh.RepoType.PROJECT)
 
     if resString.find("Failed") < 0 and len(gitusers) > 0:
         for user in gitusers:
@@ -114,7 +114,7 @@ def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gituser
                 resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
-        r = gh.EnablePages(project_name, gh.GH_REPOTYPE_PROJECT)
+        r = gh.EnablePages(project_name, gh.RepoType.PROJECT)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to enable pages for {project_name}."
             logging.error(resString + " : " + r.text)

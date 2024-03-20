@@ -1,3 +1,4 @@
+from enum import Enum
 import requests
 import json
 import base64
@@ -33,16 +34,18 @@ class OWASPGitHub:
     user_fragment = "users/:username"
     collaborator_fragment = "repos/OWASP/:repo/collaborators/:username"
 
-    PERM_TYPE_PULL = "pull"
-    PERM_TYPE_PUSH = "push"
-    PERM_TYPE_ADMIN = "admin"
-    PERM_TYPE_MAINTAIN = "maintain"
-    PERM_TYPE_TRIAGE = "triage"
+    class PermType(str, Enum):
+        PULL = "pull"
+        PUSH = "push"
+        ADMIN = "admin"
+        MAINTAIN = "maintain"
+        TRIAGE = "triage"
 
-    GH_REPOTYPE_PROJECT = 0
-    GH_REPOTYPE_CHAPTER = 1
-    GH_REPOTYPE_COMMITTEE = 2
-    GH_REPOTYPE_EVENT = 3
+    class RepoType(Enum):
+        PROJECT = 0
+        CHAPTER = 1
+        COMMITTEE = 2
+        EVENT = 3
 
     def HandleRateLimit(self, r, count =0):
         if r.ok:
@@ -70,8 +73,8 @@ class OWASPGitHub:
 
         return headers
 
-    def CreateRepository(self, repoName, rtype, repoDescription = "OWASP Foundation web repository"):
-        repoName = self.FormatRepoName(repoName, rtype)
+    def CreateRepository(self, repoName, repoType, repoDescription = "OWASP Foundation web repository"):
+        repoName = self.FormatRepoName(repoName, repoType)
         data = {
             "name": repoName,
             "description": repoDescription
@@ -82,12 +85,12 @@ class OWASPGitHub:
 
         return r
 
-    def InitializeRepositoryPages(self, repoName, rtype, basedir = "", region="", country="", proj_type = "", group_site = "", description="", roadmap=""):
+    def InitializeRepositoryPages(self, repoName, repoType, basedir = "", region="", country="", proj_type = "", group_site = "", description="", roadmap=""):
         if basedir and not basedir.endswith('/'):
             basedir = basedir + '/'
 
         groupName = repoName
-        repoName = self.FormatRepoName(repoName, rtype)
+        repoName = self.FormatRepoName(repoName, repoType)
         url = self.gh_endpoint + self.content_fragment
         url = url.replace(":repo", repoName)
         # change to use files.json....
@@ -169,11 +172,11 @@ class OWASPGitHub:
 
         return r
 
-    def EnablePages(self, repoName, rtype):
+    def EnablePages(self, repoName, repoType):
         headers = {"Authorization": "token " + self.apitoken,
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json"
         }
-        repoName = self.FormatRepoName(repoName, rtype)
+        repoName = self.FormatRepoName(repoName, repoType)
         url = self.gh_endpoint + self.pages_fragment
         url = url.replace(":repo", repoName)
 
@@ -188,14 +191,14 @@ class OWASPGitHub:
 
         return False
 
-    def FormatRepoName(self, repoName, rtype):
+    def FormatRepoName(self, repoName, repoType):
 
         resName = ""
-        if rtype == self.GH_REPOTYPE_PROJECT:
+        if repoType == self.RepoType.PROJECT:
             resName = "www-project-"
-        elif rtype == self.GH_REPOTYPE_CHAPTER:
+        elif repoType == self.RepoType.CHAPTER:
             resName = "www-chapter-"
-        elif rtype == self.GH_REPOTYPE_EVENT:
+        elif repoType == self.RepoType.EVENT:
             resName = "www-revent-"
         else:
             resName = "www-committee-"
@@ -497,7 +500,7 @@ class OWASPGitHub:
 
         url = self.gh_endpoint + repofrag
 
-        data = { "permission" : self.PERM_TYPE_ADMIN}
+        data = { "permission" : self.PermType.ADMIN}
         jsonData = json.dumps(data)
         r = requests.put(url = url, headers=headers, data=jsonData)
         count = 0
@@ -520,7 +523,7 @@ class OWASPGitHub:
         # first do a get to see if they are already a user
         r = requests.get(url = url, headers=headers)
         if not r.ok:
-            data = { "permission" : self.PERM_TYPE_ADMIN}
+            data = { "permission" : self.PermType.ADMIN}
             jsonData = json.dumps(data)
             r = requests.put(url = url, headers=headers, data=jsonData)
 
