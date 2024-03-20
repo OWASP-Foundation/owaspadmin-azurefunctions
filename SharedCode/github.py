@@ -29,7 +29,7 @@ class OWASPGitHub:
     of_pages_fragment = "repos/OWASP-Foundation/:repo/pages"
     of_team_addrepo_fragment = "teams/:team_id/repos/OWASP-Foundation/:repo"
     of_team_getbyname_fragment = "orgs/OWASP-Foundation/teams/:team_slug"
-    
+
     user_fragment = "users/:username"
     collaborator_fragment = "repos/OWASP/:repo/collaborators/:username"
 
@@ -43,7 +43,7 @@ class OWASPGitHub:
     GH_REPOTYPE_CHAPTER = 1
     GH_REPOTYPE_COMMITTEE = 2
     GH_REPOTYPE_EVENT = 3
-    
+
     def HandleRateLimit(self, r, count =0):
         if r.ok:
             return False, 0
@@ -70,12 +70,11 @@ class OWASPGitHub:
 
         return headers
 
-    def CreateRepository(self, repoName, rtype):
+    def CreateRepository(self, repoName, rtype, repoDescription = "OWASP Foundation web repository"):
         repoName = self.FormatRepoName(repoName, rtype)
-        description = "OWASP Foundation Web Respository"
-        data = { 
-            "name": repoName, 
-            "description": description
+        data = {
+            "name": repoName,
+            "description": repoDescription
         }
 
         headers = {"Authorization": "token " + self.apitoken}
@@ -96,15 +95,15 @@ class OWASPGitHub:
         filestosend = json.load(sfile)
         for f in filestosend["files"]:
             fpath = basedir + f['path']
-            
+
             r = self.SendFile( url, fpath, ["[GROUPNAME]", "[:REGION]", "[:COUNTRY]", "[:PROJTYPE]", "[:GROUPSITE_URL]", "[:DESCRIPTION]", "[:ROADMAP]"], [groupName, region, country, proj_type, group_site, description, roadmap])
             if not self.TestResultCode(r.status_code):
                 break
 
         return r
 
-    def GetFile(self, repo, filepath, of_content_fragment = None):        
-        url = self.gh_endpoint 
+    def GetFile(self, repo, filepath, of_content_fragment = None):
+        url = self.gh_endpoint
         if not of_content_fragment:
             url = url + self.content_fragment
         else:
@@ -112,8 +111,8 @@ class OWASPGitHub:
 
         url = url.replace(":repo", repo)
         url = url.replace(":path", filepath)
-        
-        #bytestosend = base64.b64encode(filecstr.encode())   
+
+        #bytestosend = base64.b64encode(filecstr.encode())
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.get(url = url, headers=headers)
         count = 0
@@ -121,7 +120,7 @@ class OWASPGitHub:
         while(retry):
             r = requests.get(url = url, headers=headers)
             retry, count = self.HandleRateLimit(r, count)
-    
+
         return r
 
     def GetOFFile(self, repo, filepath):
@@ -140,17 +139,17 @@ class OWASPGitHub:
         pathname = filename[filename.find("docs/") + 5:]
         if pathname == "gitignore":
             pathname = "." + pathname
-            
+
         url = url.replace(":path", pathname)
         sfile = open(filename)
         filecstr = sfile.read()
-    
+
         if replacetags and replacestrs and len(replacetags) > 0 and len(replacetags) == len(replacestrs):
             for idx, replacetag in enumerate(replacetags):
                 replacestr = replacestrs[idx] # this is liquid, not python...
                 filecstr = filecstr.replace(replacetag, replacestr)
 
-        bytestosend = base64.b64encode(filecstr.encode())   
+        bytestosend = base64.b64encode(filecstr.encode())
         committer = {
             "name" : "OWASP Foundation",
             "email" : "owasp.foundation@owasp.org"
@@ -190,7 +189,7 @@ class OWASPGitHub:
         return False
 
     def FormatRepoName(self, repoName, rtype):
-        
+
         resName = ""
         if rtype == self.GH_REPOTYPE_PROJECT:
             resName = "www-project-"
@@ -200,7 +199,7 @@ class OWASPGitHub:
             resName = "www-revent-"
         else:
             resName = "www-committee-"
-    
+
         return resName + repoName.replace(" ", "-").lower()
 
 
@@ -208,25 +207,25 @@ class OWASPGitHub:
         headers = {"Authorization": "token " + self.apitoken,
             "Accept":"application/vnd.github.switcheroo-preview+json, application/vnd.github.mister-fantastic-preview+json, application/json, application/vnd.github.baptiste-preview+json"
         }
-        
+
         done = False
         pageno = 1
         pageend = -1
-        
+
         while not done:
             pagestr = "?page=%d" % pageno
             url = self.gh_endpoint + self.org_fragment + pagestr
             r = requests.get(url=url, headers = headers)
-            
+
             if self.TestResultCode(r.status_code):
                 repos = json.loads(r.text)
                 if pageend == -1:
                     endlink = r.links["last"]["url"]
                     pageend = int(endlink[endlink.find("?page=") + 6:])
-                
+
                 if pageno == pageend:
                     done = True
-                
+
                 pageno = pageno + 1
                 #repos = {"www--site-theme", "owasp.github.io", "www-project-zap"}
                 for repo in repos:
@@ -247,7 +246,7 @@ class OWASPGitHub:
         url = url.replace(":repo", repo)
         url = url.replace(":path", filepath)
 
-        bytestosend = base64.b64encode(contents.encode())   
+        bytestosend = base64.b64encode(contents.encode())
         committer = {
             "name" : "OWASP Foundation",
             "email" : "owasp.foundation@owasp.org"
@@ -279,13 +278,13 @@ class OWASPGitHub:
 
         if r.ok:
             result = json.loads(r.text)
-        
+
         return result
 
 
     def GetPublicRepositories(self, matching=""):
         headers = self.GetHeaders()
-        
+
         qurl = "org:owasp is:public"
         if matching:
             qurl = qurl + f" in:name {matching} "
@@ -297,7 +296,7 @@ class OWASPGitHub:
         done = False
         pageno = 1
         pageend = -1
-        
+
         results = []
         while not done:
             pagestr = "?page=%d" % pageno
@@ -317,10 +316,10 @@ class OWASPGitHub:
                     pageend = int(endlink[endlink.find('?page=') + 6:endlink.find('&')])
                 elif pageend == -1:
                     pageend = pageno
-                    
+
                 if pageno == pageend:
                     done = True
-                
+
                 pageno = pageno + 1
 
                 final_repos = []
@@ -328,12 +327,12 @@ class OWASPGitHub:
                 #for repo in repos:
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
-                    
+
                     if istemplate: #probably should change this in case a project/chapter/etc decides to make their repo a template for some odd reason but for now....
                         continue
 
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
-                        
+
                     # even if matching, we still only really want project, chapter, event, or committee repos here....
                     if not matching or (matching in repoName):
                         pages = None
@@ -342,7 +341,7 @@ class OWASPGitHub:
                             pages = self.GetPages(repoName)
                             if pages:
                                 repo['build'] = pages['status']
-                            
+
                         # going to change below to use repo['build'] instead
                         # if (not pages or pages['status'] == None) and not inactive:
                         #     continue
@@ -351,15 +350,15 @@ class OWASPGitHub:
                         final_repos.append(repo)
                     time.sleep(.5) # Github is timing out ... I can run this on my box without issue...not sure what is causing this.
 
-                for repo in final_repos: 
+                for repo in final_repos:
                     repoName = repo['name'].lower()
                     istemplate = repo['is_template']
                     haspages = repo['has_pages'] #false for Iran...maybe was never activated?
-                                                    
+
                     addrepo = {}
                     addrepo['name'] = repoName
                     addrepo['url'] = f"https://owasp.org/{ repoName }/"
-                
+
                     cdate = datetime.datetime.strptime(repo['created_at'], "%Y-%m-%dT%H:%M:%SZ")
                     udate = datetime.datetime.strptime(repo['pushed_at'], "%Y-%m-%dT%H:%M:%SZ")
                     addrepo['created'] = cdate.strftime('%c')
@@ -377,7 +376,7 @@ class OWASPGitHub:
                             addrepo['title'] = title.strip()
                         else:
                             addrepo['title'] = repoName
-                            
+
                         ndx = content.find('level:') + 6
                         eol = content.find("\n", ndx)
                         not_updated = (content.find("This is an example of a Project") >= 0)
@@ -385,21 +384,21 @@ class OWASPGitHub:
                             level = "-1"
                         else:
                             level = content[ndx:eol]
-                        addrepo['level'] = level.strip() 
+                        addrepo['level'] = level.strip()
                         ndx = content.find('type:') + 5
                         eol = content.find("\n", ndx)
                         gtype = content[ndx:eol]
                         addrepo['type'] = gtype.strip()
                         ndx = content.find('region:') + 7
-                        
+
                         if not_updated:
                             gtype = 'Needs Website Update'
                         elif ndx > 6: # -1 + 7
                             eol = content.find("\n", ndx)
                             gtype = content[ndx:eol]
-                        else: 
+                        else:
                             gtype = 'Unknown'
-                            
+
                         addrepo['region'] = gtype.strip()
 
                         ndx = content.find('pitch:') + 6
@@ -407,9 +406,9 @@ class OWASPGitHub:
                             eol = content.find('\n', ndx)
                             gtype = content[ndx:eol]
                         else:
-                            gtype = 'More info soon...' 
+                            gtype = 'More info soon...'
                         addrepo['pitch'] = gtype.strip()
-                        
+
                         ndx = content.find('meetup-group:')
                         if ndx > -1:
                             ndx += 13
@@ -418,12 +417,12 @@ class OWASPGitHub:
                             if len(mu.strip()) > 0:
                                 addrepo['meetup-group'] = mu.strip()
 
-                        if 'meetup-group' not in addrepo:        
+                        if 'meetup-group' not in addrepo:
                             ndx = content.find('meetup.com/')
                             if ndx > -1:
                                 ndx += 11
                                 eolfs = content.find('/', ndx)
-                                
+
                                 if eolfs - ndx <= 6:
                                     ndx = eolfs
                                     eolfs = content.find('/', ndx + 1)
@@ -450,7 +449,7 @@ class OWASPGitHub:
         rfiles = []
         url = self.gh_endpoint + self.content_fragment
         url = url.replace(":repo", repo)
-        url = url.replace(":path", path)   
+        url = url.replace(":path", path)
         headers = {"Authorization": "token " + self.apitoken}
         r = requests.get(url = url, headers=headers)
         if self.TestResultCode(r.status_code):
@@ -461,7 +460,7 @@ class OWASPGitHub:
                         rfiles.append(item['name'])
                     elif not matching:
                         rfiles.append(item['name'])
-    
+
         return r, rfiles
 
     def GetTeamRepos(self, team_name):
@@ -532,7 +531,7 @@ class OWASPGitHub:
         name = line[line.find('[') + 1:line.find(']')]
         email = line[line.find('(', ename) + 1:line.find(')', ename)]
         return name, email
-    
+
     def GetLeadersForRepo(self, repo):
         repo_leaders = []
         r = self.GetFile(repo, 'leaders.md')
@@ -546,10 +545,10 @@ class OWASPGitHub:
                 if in_leaders and '###' in testline:
                     in_leaders = False
                     break
-                
+
                 if in_leaders and not testline.startswith('*'):
                     continue
-                
+
                 if(testline.startswith('###') and 'leader' not in testline):
                     continue
                 elif(testline.startswith('###') and 'leader' in testline):
@@ -562,7 +561,7 @@ class OWASPGitHub:
                         leader = {}
                         leader['name'] = name
                         leader['email'] = email.replace('mailto://','').replace('mailto:','')
-                        
+
                         repo_leaders.append(leader)
 
         return repo_leaders
