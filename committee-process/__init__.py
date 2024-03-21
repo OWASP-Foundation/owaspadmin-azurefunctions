@@ -4,7 +4,7 @@ import azure.functions as func
 import json
 import requests
 from urllib.parse import unquote_plus
-from ..SharedCode import salesforce 
+from ..SharedCode import salesforce
 from ..SharedCode import github
 from ..SharedCode import copper
 from ..SharedCode import owaspym
@@ -24,7 +24,7 @@ def process_form(values, view_id, function_directory):
     leader_names = values["leadernames-id"]["leadernames-value"]["value"]
     leader_emails = values["emails-id"]["emails-value"]["value"]
     leader_githubs = values["github-id"]["github-value"]["value"]
-    
+
     CreateYourMembershipGroup(group_name)
 
     leaders = leader_names.splitlines()
@@ -40,7 +40,7 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding committee leader...")
 
             emaillinks.append(f'[{leader}](mailto:{email})')
-        
+
         logging.info("Creating github repository")
         resString = CreateGithubStructure(group_name, function_directory, emaillinks, githubs)
         # do copper integration here
@@ -51,10 +51,10 @@ def process_form(values, view_id, function_directory):
 
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "owaspadmin"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     resp += group_name
-    resp += ' ' 
+    resp += ' '
     resp += resString
-    resp += '"} }]} }' 
-    
+    resp += '"} }]} }'
+
     logging.info(resp)
     urldialog = "https://slack.com/api/views.update"
     headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
@@ -65,9 +65,9 @@ def CreateCopperObjects(committee_name, leaders, emails, gitusers):
     resString = 'Committee created.'
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
-    repo = gh.FormatRepoName(committee_name, gh.GH_REPOTYPE_COMMITTEE)
+    repo = gh.FormatRepoName(committee_name, gh.RepoType.COMMITTEE)
     committee_name = "Committee - OWASP " + committee_name
-    
+
     if cp.CreateProject(committee_name, leaders, emails, gitusers, copper.OWASPCopper.cp_project_type_option_committee, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo) == '':
         resString = "Failed to create Copper objects"
 
@@ -75,20 +75,20 @@ def CreateCopperObjects(committee_name, leaders, emails, gitusers):
 
 def CreateGithubStructure(project_name, func_dir, emaillinks, githubs):
     gh = github.OWASPGitHub()
-    r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_COMMITTEE)
+    r = gh.CreateRepository(project_name, gh.RepoType.COMMITTEE)
     resString = "Committee created."
     if not r.ok:
         resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
-    
+
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_COMMITTEE, basedir = func_dir)
+        r = gh.InitializeRepositoryPages(project_name, gh.RepoType.COMMITTEE, basedir = func_dir)
         if not r.ok:
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
     if resString.find("Failed") < 0:
-        repoName = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_COMMITTEE)
+        repoName = gh.FormatRepoName(project_name, gh.RepoType.COMMITTEE)
         r = gh.GetFile(repoName, 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)
@@ -101,13 +101,13 @@ def CreateGithubStructure(project_name, func_dir, emaillinks, githubs):
                 resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
-        r = gh.EnablePages(project_name, gh.GH_REPOTYPE_COMMITTEE)
+        r = gh.EnablePages(project_name, gh.RepoType.COMMITTEE)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to enable pages for {project_name}."
             logging.error(resString + " : " + r.text)
 
     if resString.find("Failed") < 0:
-        repo = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_COMMITTEE)
+        repo = gh.FormatRepoName(project_name, gh.RepoType.COMMITTEE)
         added = True
         rtext = ''
         for person in githubs:
@@ -141,7 +141,7 @@ def GetYMRegionType(region):
         region_type = owaspym.OWASPYM.GROUP_TYPE_OCEANIA_CHAPTERS
     elif region == 'South America':
         region_type = owaspym.OWASPYM.GROUP_TYPE_SOUTH_AMERICA_CHAPTERS
-    
+
     return region_type
 
 def CreateYourMembershipGroup(group_name):

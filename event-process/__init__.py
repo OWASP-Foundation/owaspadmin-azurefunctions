@@ -4,7 +4,7 @@ import azure.functions as func
 import json
 import requests
 from urllib.parse import unquote_plus
-from ..SharedCode import salesforce 
+from ..SharedCode import salesforce
 from ..SharedCode import github
 from ..SharedCode import copper
 
@@ -38,7 +38,7 @@ def process_form(values, view_id, function_directory):
             logging.info("Adding event leader...")
 
             emaillinks.append(f'[{leader}](mailto:{email})')
-        
+
         logging.info("Creating github repository")
         resString = CreateGithubStructure(group_name, function_directory, emaillinks, githubs, group_site)
         # do copper integration here
@@ -46,13 +46,13 @@ def process_form(values, view_id, function_directory):
             resString = CreateCopperObjects(group_name, leaders, emails, githubs)
     else:
         resString = "Failed due to non matching leader names with emails"
-    
+
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "owaspadmin"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     resp += group_name
-    resp += ' ' 
+    resp += ' '
     resp += resString
-    resp += '"} }]} }' 
-    
+    resp += '"} }]} }'
+
     logging.info(resp)
     urldialog = "https://slack.com/api/views.update"
     headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
@@ -63,9 +63,9 @@ def CreateCopperObjects(event_name, leaders, emails, gitusers):
     resString = 'Event created.'
     cp = copper.OWASPCopper()
     gh = github.OWASPGitHub()
-    repo = gh.FormatRepoName(event_name, gh.GH_REPOTYPE_EVENT)
+    repo = gh.FormatRepoName(event_name, gh.RepoType.EVENT)
     event_name = "Event - OWASP " + event_name
-    
+
     if cp.CreateProject(event_name, leaders, emails, gitusers, copper.OWASPCopper.cp_project_type_option_regional_event, copper.OWASPCopper.cp_project_chapter_status_option_active, repo = repo) == '':
         resString = "Failed to create Copper objects"
 
@@ -73,20 +73,20 @@ def CreateCopperObjects(event_name, leaders, emails, gitusers):
 
 def CreateGithubStructure(project_name, func_dir, emaillinks, githubs, groupsite):
     gh = github.OWASPGitHub()
-    r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_EVENT)
+    r = gh.CreateRepository(project_name, gh.RepoType.EVENT)
     resString = "Event created."
     if not r.ok:
         resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
-    
+
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_EVENT, basedir = func_dir, group_site=groupsite)
+        r = gh.InitializeRepositoryPages(project_name, gh.RepoType.EVENT, basedir = func_dir, group_site=groupsite)
         if not r.ok:
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
     if resString.find("Failed") < 0:
-        repoName = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_EVENT)
+        repoName = gh.FormatRepoName(project_name, gh.RepoType.EVENT)
         r = gh.GetFile(repoName, 'leaders.md')
         if r.ok:
             doc = json.loads(r.text)
@@ -99,13 +99,13 @@ def CreateGithubStructure(project_name, func_dir, emaillinks, githubs, groupsite
                 resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
-        r = gh.EnablePages(project_name, gh.GH_REPOTYPE_EVENT)
+        r = gh.EnablePages(project_name, gh.RepoType.EVENT)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to enable pages for {project_name}."
             logging.error(resString + " : " + r.text)
 
     if resString.find("Failed") < 0:
-        repo = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_EVENT)
+        repo = gh.FormatRepoName(project_name, gh.RepoType.EVENT)
         added = True
         rtext = ''
         for person in githubs:

@@ -15,7 +15,7 @@ from ..SharedCode.googleapi import OWASPGoogle
 def main(msg: func.QueueMessage, context: func.Context) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
                  msg.get_body().decode('utf-8'))
-    
+
     post_dict = json.loads(msg.get_body().decode("utf-8"))
 
     jira_id = post_dict.get('jira_id')
@@ -51,7 +51,7 @@ def add_to_project_levels(gh :OWASPGitHub, name, reponame):
             "level": 2 # incubator
         }
         plevels.append(project)
-        
+
 
         newcontents = json.dumps(plevels, indent=4)
         r = gh.UpdateFile('owasp.github.io', '_data/project_levels.json', newcontents, sha)
@@ -79,7 +79,7 @@ def project_create(jira_id, function_directory, response_url):
     resString = ""
     project_name = getattr(issue.fields, nameMap['Project Name'], None)
     project_name = project_name.replace('OWASP','').replace('Owasp','').replace('owasp','').strip()
-    
+
     project_type = getattr(issue.fields, nameMap['Project Type'], None)
     if project_type:
         project_type = project_type.value
@@ -91,7 +91,7 @@ def project_create(jira_id, function_directory, response_url):
     leader_emails = getattr(issue.fields, nameMap['Leader Emails'], None)
     if leader_emails == None:
         leader_emails = getattr(issue.fields, nameMap['Payee Email'], None)
-    
+
     leader_names = getattr(issue.fields, nameMap['Leader Names'], None)
     if leader_names == None:
         leader_names = getattr(issue.fields, nameMap['Payee Name'], None)
@@ -108,7 +108,7 @@ def project_create(jira_id, function_directory, response_url):
         project_description = getattr(issue.fields, nameMap['Generic Text Area 2'], None) # description
         project_roadmap = getattr(issue.fields, nameMap['Generic Text Area 3'], None) # roadmap
         project_comments = getattr(issue.fields, nameMap['Generic Text Area 4'], None) # usually a license not mentioned
-            
+
         leaders = leader_names.splitlines()
         emails = leader_emails.splitlines()
         gitusers = leader_gh.splitlines()
@@ -122,21 +122,21 @@ def project_create(jira_id, function_directory, response_url):
                 logging.info("Adding project leader...")
 
                 emaillinks.append(f'[{leader}](mailto:{email})')
-                
+
             logging.info("Creating github repository")
             proj_type = get_project_type(project_type)
             resString = CreateGithubStructure(project_name, function_directory, proj_type, emaillinks, gitusers, project_description, project_roadmap)
             # do copper integration here
             if not 'Failed' in resString:
                 resString = CreateCopperObjects(project_name, leaders, emails, gitusers, proj_type, license)
-            
+
         else:
             resString = "Failed due to non matching leader names with emails"
-    
+
     gh = OWASPGitHub()
-    reponame = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
-    if not 'Failed' in resString:                
-        # also need to add to project_levels.json file...        
+    reponame = gh.FormatRepoName(project_name, gh.RepoType.PROJECT)
+    if not 'Failed' in resString:
+        # also need to add to project_levels.json file...
         resString = add_to_project_levels(gh, project_name, reponame)
 
     if not 'Failed' in resString:
@@ -165,7 +165,7 @@ def project_create(jira_id, function_directory, response_url):
         "type": "section",
         "fields": fields
         })
-    
+
     logging.info(resp)
     requests.post(response_url, json=resp)
 
@@ -191,7 +191,7 @@ def CreateOWASPEmails(leaders :[str], emails :[str]):
                     for name in names[1:]:
                         last += name
                 owemail = ggl.CreateEmailAddress(email, first, last, True)
-                if 'already exists' in owemail:    
+                if 'already exists' in owemail:
                     preferred_email = first + "." + last + "@owasp.org"
                     possible_emails = ggl.GetPossibleEmailAddresses(preferred_email)
                     for pemail in possible_emails:
@@ -212,7 +212,7 @@ def CreateCopperObjects(project_name, leaders, emails, gitusers, type, license):
     resString = 'Project created.'
     cp = OWASPCopper()
     gh = OWASPGitHub()
-    repo = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
+    repo = gh.FormatRepoName(project_name, gh.RepoType.PROJECT)
     project_name = "Project - OWASP " + project_name
     project_type = OWASPCopper.cp_project_project_type_option_other
     if type == "documentation":
@@ -233,20 +233,20 @@ def CreateCopperObjects(project_name, leaders, emails, gitusers, type, license):
 
 def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gitusers, description, roadmap):
     gh = OWASPGitHub()
-    r = gh.CreateRepository(project_name, gh.GH_REPOTYPE_PROJECT)
+    r = gh.CreateRepository(project_name, gh.RepoType.PROJECT)
     resString = "Project created."
     if not gh.TestResultCode(r.status_code):
         resString = f"Failed to create repository for {project_name}."
         logging.error(resString + " : " + r.text)
-    
+
 
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(project_name, gh.GH_REPOTYPE_PROJECT, basedir = func_dir, proj_type=proj_type, description=description, roadmap=roadmap)
+        r = gh.InitializeRepositoryPages(project_name, gh.RepoType.PROJECT, basedir = func_dir, proj_type=proj_type, description=description, roadmap=roadmap)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {project_name}."
             logging.error(resString + " : " + r.text)
 
-    repoName = gh.FormatRepoName(project_name, gh.GH_REPOTYPE_PROJECT)
+    repoName = gh.FormatRepoName(project_name, gh.RepoType.PROJECT)
 
     if resString.find("Failed") < 0 and len(gitusers) > 0:
         for user in gitusers:
@@ -265,11 +265,9 @@ def CreateGithubStructure(project_name, func_dir, proj_type, emaillinks, gituser
                 resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
-        r = gh.EnablePages(project_name, gh.GH_REPOTYPE_PROJECT)
+        r = gh.EnablePages(project_name, gh.RepoType.PROJECT)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to enable pages for {project_name}."
             logging.error(resString + " : " + r.text)
 
     return resString
-
-

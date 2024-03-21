@@ -4,7 +4,7 @@ import azure.functions as func
 import json
 import requests
 from urllib.parse import unquote_plus
-from ..SharedCode import salesforce 
+from ..SharedCode import salesforce
 from ..SharedCode import github
 from ..SharedCode import copper
 from ..SharedCode import owaspym
@@ -29,7 +29,7 @@ def process_form(values, view_id, function_directory):
         git_users = values["github-id"]["github-value"]["value"]
     if git_users == None:
         git_users = ''
-        
+
     city = values["city-id"]["city-value"]["value"]
     country = values["country-id"]["country-value"]["value"]
     region = values["region-id"]["region-value"]["selected_option"]["value"]
@@ -53,7 +53,7 @@ def process_form(values, view_id, function_directory):
             region = 'Caribbean'
         else:
             region = 'Unknown'
-    
+
     CreateYourMembershipGroup(chapter_name, region)
 
     leaders = leader_names.splitlines()
@@ -61,7 +61,7 @@ def process_form(values, view_id, function_directory):
     gitusers = git_users.splitlines()
 
     emaillinks = []
-    
+
     if len(leaders) == len(emails):
         count = 0
         for leader in leaders:
@@ -78,13 +78,13 @@ def process_form(values, view_id, function_directory):
     else:
         resString = "Failed due to non matching leader names with emails"
 
-        
+
     resp = '{"view_id":"' + view_id + '", "view": { "type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"close": {"type": "plain_text","text": "OK","emoji": true}, "blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     resp += chapter_name
-    resp += ' ' 
+    resp += ' '
     resp += resString
-    resp += '"} }]} }' 
-    
+    resp += '"} }]} }'
+
     logging.info(resp)
     urldialog = "https://slack.com/api/views.update"
     headers = {'content-type':'application/json; charset=utf-8', 'Authorization':f'Bearer {os.environ["SL_ACCESS_TOKEN_GENERAL"]}' }
@@ -121,7 +121,7 @@ def CreateCopperObjects(chapter_name, leaders, emails, gitusers, region, country
     cp = copper.OWASPCopper()
     cp_region = GetCopperRegion(region)
     gh = github.OWASPGitHub()
-    repo = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+    repo = gh.FormatRepoName(chapter_name, gh.RepoType.CHAPTER)
     chapter_name = "Chapter - OWASP " + chapter_name
 
     if cp.CreateProject(chapter_name, leaders, emails, gitusers, copper.OWASPCopper.cp_project_type_option_chapter, copper.OWASPCopper.cp_project_chapter_status_option_active, cp_region, country=country, repo = repo) == '':
@@ -131,24 +131,24 @@ def CreateCopperObjects(chapter_name, leaders, emails, gitusers, region, country
 
 def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers, country):
     gh = github.OWASPGitHub()
-    r = gh.CreateRepository(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+    r = gh.CreateRepository(chapter_name, gh.RepoType.CHAPTER)
     resString = "Chapter created."
     if not gh.TestResultCode(r.status_code):
         resString = f"Failed to create repository for {chapter_name}. Does it already exist?"
         logging.error(resString + " : " + r.text)
-    
+
     if resString.find("Failed") < 0:
-        r = gh.InitializeRepositoryPages(chapter_name, gh.GH_REPOTYPE_CHAPTER, basedir = func_dir, region=region, country=country)
+        r = gh.InitializeRepositoryPages(chapter_name, gh.RepoType.CHAPTER, basedir = func_dir, region=region, country=country)
         if not gh.TestResultCode(r.status_code):
             resString = f"Failed to send initial files for {chapter_name}."
             logging.error(resString + " : " + r.text)
-    
-    repoName = gh.FormatRepoName(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+
+    repoName = gh.FormatRepoName(chapter_name, gh.RepoType.CHAPTER)
 
     if resString.find("Failed") < 0 and len(gitusers) > 0:
         for user in gitusers:
             gh.AddPersonToRepo(user, repoName)
-        
+
     if resString.find("Failed") < 0:
         r = gh.GetFile(repoName, 'leaders.md')
         if r.ok:
@@ -162,12 +162,12 @@ def CreateGithubStructure(chapter_name, func_dir, region, emaillinks, gitusers, 
                 resString = f'Failed to update leaders.md file: {r.text}'
 
     if resString.find("Failed") < 0:
-        r = gh.EnablePages(chapter_name, gh.GH_REPOTYPE_CHAPTER)
+        r = gh.EnablePages(chapter_name, gh.RepoType.CHAPTER)
         if not gh.TestResultCode(r.status_code):
             resString = f"Warning: Could not enable pages for {chapter_name}."
             logging.warn(f"{resString} - {r.text}")
-            
-    if not 'Failed' in resString:        
+
+    if not 'Failed' in resString:
         r = gh.AddRepoToTeam('chapter-administration', repoName)
         if not r.ok:
             logging.warn(f'Warning: Could not add team to repo: {r.text}')
@@ -192,7 +192,7 @@ def GetYMRegionType(region):
         region_type = owaspym.OWASPYM.GROUP_TYPE_OCEANIA_CHAPTERS
     elif region == 'South America':
         region_type = owaspym.OWASPYM.GROUP_TYPE_SOUTH_AMERICA_CHAPTERS
-    
+
     return region_type
 
 def CreateYourMembershipGroup(chapter_name, region):
