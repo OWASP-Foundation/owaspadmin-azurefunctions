@@ -1,5 +1,5 @@
 {
-  "azureFunctions.deploySubpath": "com.docker.devenvironments.code.zip",
+  "azureFunctions.deploySubpath": "owaspadmin-azurefunctions.zip",
   "azureFunctions.pythonVenv": ".venv",
   "azureFunctions.projectLanguage": "Python",
   "azureFunctions.projectRuntime": "~4",
@@ -8,4 +8,3 @@
   "python.pythonPath": "/usr/bin/python3",
   "azureAutomation.directory.basePath": "Users/hblankenship/Development/OWASP/Automations/"
 }
-    
