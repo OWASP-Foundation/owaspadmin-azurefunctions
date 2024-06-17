@@ -140,12 +140,12 @@ def project_create(jira_id, function_directory, response_url):
         resString = add_to_project_levels(gh, project_name, reponame)
 
     if not 'Failed' in resString:
-        comment = "Please find your OWASP web page for the project at [link]. You can edit your website page by going to 'Edit on GitHub' at the bottom of the page.\n"
+        comment = "Please find your OWASP project webpage at [link]. You can edit your website by going to 'Edit on GitHub' at the bottom of the page.\n"
         comment = comment.replace("[link]", f"https://owasp.org/{reponame}")
-        comment += "It is highly desirable that any source reside under a project repo (outside the above webpage repo) within the http://github.com/OWASP  organization. If it is not an undue burden, we would appreciate that any source outside the OWASP org get moved or mirrored within the OWASP org.\n\n"
+        comment += "All source related to your OWASP Project should be moved or at minimum mirrored to within the http://github.com/OWASP organization. This does not apply to the aforementioned Project webpage above.\n\n"
         comment += "Next Steps:\n\n"
         comment += "* Update the web pages for your project\n"
-        comment += "* Look for other people to help you lead and contribute to your project.Yay for you! Project created."
+        comment += "* Join the #leaders channel on Slack and explore the other channels on Slack for additional Project Contributors."
         jira.transition_issue(issue, "Resolve this issue", resolution={'id': '10000'}, comment=comment)
 
     resp = {

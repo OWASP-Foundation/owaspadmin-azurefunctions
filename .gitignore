@@ -138,3 +138,15 @@ deletedCustomers.txt
 stripe-customer-cleanup-last-processed.txt
 com.docker.devenvironments.code.zip
 packages-microsoft-prod.deb
+
+#Azurite components
+__blobstorage__
+__queuestorage__
+__azurite_db_blob__.json
+__azurite_db_blob_extent__.json
+__azurite_db_queue__.json
+__azurite_db_queue_extent__.json
+__azurite_db_table__.json
+
+#deployment testing
+deploy-owaspadmin.ps1
