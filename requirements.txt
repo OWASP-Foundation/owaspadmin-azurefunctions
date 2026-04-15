@@ -38,7 +38,7 @@ pyasn1-modules==0.2.8
 pycparser==2.21
 pylint==2.8.3
 PyJWT==2.4.0
-pyOpenSSL==22.0.0
+pyOpenSSL==26.0.0
 pyparsing==2.4.7
 python-dateutil==2.8.1
 python-http-client==3.3.7
