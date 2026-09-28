@@ -6,13 +6,16 @@ import json
 import base64
 from ..SharedCode import helperfuncs
 from ..SharedCode.googleapi import OWASPGoogle
-from ..SharedCode.github import OWASPGitHub
+from ..SharedCode.owasp_web import OWASPWeb
 import pathlib
 import urllib
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import From
 
+# Updated 28_SEPT_2026
+# This function is triggered by a message in the Azure Queue.
+# Now uses new website and takes the chapter name instead of the repo
 def main(msg: func.QueueMessage) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
                  msg.get_body().decode('utf-8'))
@@ -20,8 +23,8 @@ def main(msg: func.QueueMessage) -> None:
     #load data from json string
     data = json.loads(msg.get_body().decode('utf-8'))
     if 'provision-zoom' in data['command']:
-        group_url = data['text']
-        result = create_zoom_account(group_url)
+        group_name = data['text']
+        result = create_zoom_account(group_name)
 
         #notify slack that this was done...
         msgtext = f"Provision Zoom access for {group_url} result: {result}"
@@ -86,29 +89,32 @@ def IsAlreadyProvisioned(groupemail, zoomaccounts):
     
     return None
 
-def create_zoom_account(chapter_url):
+def create_zoom_account(group_name):
     #creating a zoom account requires
     #  1.) creating a [chapter-name]-leaders@owasp.org group account
     #  2.) adding leaders to group
     #  3.) determining which zoom group to put them in (currently 4 groups)
 
     #  4.) sending onetimesecret link with password to person who requested access
-    chapter_name = chapter_url.replace('www-projectchapter-','').replace('www-chapter-', '').replace('www-project-', '').replace('www-committee-','').replace('www-revent', '').replace(' ', '-')
+    chapter_name = group_name.replace('www-projectchapter-','').replace('www-chapter-', '').replace('www-project-', '').replace('www-committee-','').replace('www-revent', '').replace('OWASP', '').replace(' ', '-').lower()
     leadersemail = f"{chapter_name}-"
-    if 'www-committee-' in chapter_url:
+    if 'www-committee-' in chapter_name:
         leadersemail += "committee-"
     leadersemail += "leaders@owasp.org"
     
     zoom_accounts = json.loads(os.environ['SHARED_ZOOM_ACCOUNTS'])
     provision_account = IsAlreadyProvisioned(leadersemail, zoom_accounts)
     if provision_account:
-        logging.info(f"Account {provision_account} already provisioned for {chapter_url}")
+        logging.info(f"Account {provision_account} already provisioned for {group_name}")
         return f"Account {provision_account} Already Provisioned"
 
-    logging.info(f"Provisioning Zoom for {chapter_url}")
-    leaders = []
-    gh = OWASPGitHub()
-    leaders = gh.GetLeadersForRepo(chapter_url)
+    logging.info(f"Provisioning Zoom for {group_name}")
+    leaders = []    
+    ow = OWASPWeb()
+    details = ow.getChapterDetails(group_name)
+    if details and 'chapter' in details:
+        leaders = details['chapter'].get('leadership_team', [])
+
     leader_emails = []
     og = OWASPGoogle()
     result = og.FindGroup(leadersemail)
@@ -119,9 +125,9 @@ def create_zoom_account(chapter_url):
         #return f"Could not create or find group for {leadersemail}"
 
     for leader in leaders:
-        leader_emails.append(leader['email'])
+        leader_emails.append(leader['contact'])
         if not 'Failed' in result: # add leader to group if it exists   
-            og.AddMemberToGroup(leadersemail, leader['email'])
+            og.AddMemberToGroup(leadersemail, leader['contact'])
     
     if len(leaders) > 0 and len(leader_emails) > 0:
         
@@ -148,7 +154,7 @@ def create_zoom_account(chapter_url):
             # send email to each leader indicating group password
             send_zoompw_email(leader_emails, os.environ[zoom_account.replace('-', '_') + '_pass'])          
     else:
-        logging.error(f"No leaders found for {chapter_url}")
-        return f"No Leaders in {chapter_url}"
+        logging.error(f"No leaders found for {group_name}")
+        return f"No Leaders in {group_name}"
 
     return "Account Provisioned"
