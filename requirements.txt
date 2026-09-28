@@ -8,7 +8,7 @@ azure-functions-durable
 beautifulsoup4==4.9.3
 cachetools==4.2.2
 certifi==2024.7.4
-cffi==1.15.1
+cffi==2.0.0
 chardet==4.0.0
 cryptography==46.0.7
 google==3.0.0
@@ -33,8 +33,8 @@ oauth2client==4.1.3
 oauthlib==3.2.2
 packaging==20.9
 protobuf==5.29.6
-pyasn1==0.6.3
-pyasn1-modules==0.2.8
+pyasn1
+pyasn1-modules
 pycparser==2.21
 pylint==2.8.3
 PyJWT==2.12.0
