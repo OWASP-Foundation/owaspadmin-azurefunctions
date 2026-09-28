@@ -17,11 +17,6 @@ def main(req: func.HttpRequest,
     jsonstr = strbody[strbody.find('=') + 1 :]
     #logging.info(jsonstr)
 
-    # call event bot code if it is an interactive component related to events
-    # does not conflict with event-create which is for repo creation for event info pages
-    if is_event_action(jsonstr):
-        return event_bot(req, evtmsg)
-
     resp = '{"response_action": "update","view": {"type": "modal","title": {"type": "plain_text","text": "admin_af_app"},"blocks": [{"type": "section","text": {"type": "plain_text","text": "'
     #resp += strbody
     resp += 'Working on it, please wait..."} }]} }' 
@@ -40,22 +35,3 @@ def main(req: func.HttpRequest,
     
     return func.HttpResponse(resp, headers=headers)
 
-
-def is_event_action(jsonstr):
-    event_actions = [
-        'create_event',
-        'list_event',
-        'manage_event',
-        'add_product',
-        'create_product',
-        'delete_product',
-        'edit_product',
-        'list_products',
-        'create_discount_code',
-        'list_discount_codes',
-        'manage_product',
-        'manage_discount_code',
-        'delete_discount_code'
-    ]
-    
-    return [action_name for action_name in event_actions if (action_name in jsonstr)]
