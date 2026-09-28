@@ -89,7 +89,7 @@ class OWASPWeb:
         chapter_details = self.getChapterDetails(chapter_id)
         leadership_team = None
         if chapter_details and 'chapter' in chapter_details:
-            leadership_team = chapter_details['chapter']['leadership_team']            
+            leadership_team = chapter_details['chapter'].get('leadership_team', [])            
         
         return leadership_team
     

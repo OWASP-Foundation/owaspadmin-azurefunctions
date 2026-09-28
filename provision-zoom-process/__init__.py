@@ -113,7 +113,7 @@ def create_zoom_account(group_name):
     ow = OWASPWeb()
     details = ow.getChapterDetails(group_name)
     if details and 'chapter' in details:
-        leaders = ow.getLeaders(details['chapter']['id'])        
+        leaders = ow.getLeadershipTeam(details['chapter']['id'])        
 
     leader_emails = []
     og = OWASPGoogle()
