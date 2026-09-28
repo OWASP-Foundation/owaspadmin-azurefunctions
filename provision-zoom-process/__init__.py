@@ -111,9 +111,10 @@ def create_zoom_account(group_name):
     logging.info(f"Provisioning Zoom for {group_name}")
     leaders = []    
     ow = OWASPWeb()
-    details = ow.getChapterDetails(group_name)
-    if details and 'chapter' in details:
-        leaders = ow.getLeadershipTeam(details['chapter']['id'])        
+    chapter = ow.getChapterByName(group_name)
+    
+    if chapter:
+        leaders = ow.getLeadershipTeam(chapter['id'])        
 
     leader_emails = []
     og = OWASPGoogle()
