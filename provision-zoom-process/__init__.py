@@ -27,7 +27,7 @@ def main(msg: func.QueueMessage) -> None:
         result = create_zoom_account(group_name)
 
         #notify slack that this was done...
-        msgtext = f"Provision Zoom access for {group_url} result: {result}"
+        msgtext = f"Provision Zoom access for {group_name} result: {result}"
         response_url = data['response_url']
         headers = { 'Content-type':'application/json'}
         msgdata = {
