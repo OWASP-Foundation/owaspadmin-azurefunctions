@@ -98,7 +98,7 @@ def validate_call(req: func.HttpRequest) -> bool:
     if len(strbody) < 10 or strbody.find('&') < 0 or strbody.find('=') < 0:
         return False
     names = dict(x.split('=') for x in strbody.split('&'))
-    if not spotchk.spotchk().validate_query2(names)
+    if not spotchk.spotchk().validate_query2(names):
         return False
 
     if not 'command' in names or not 'provision-email' in names['command']:
