@@ -44,25 +44,22 @@ class OWASPGlueup:
         params = {
             "projection": [],
             "filter": [               
-                # Removing the filters for membershipType.id and membershipType.status.code to get all members regardless of type or status as per Glueup (though the numbers are still wrong)
-                # {
-                #     "projection": "membershipType.id",
-                #     "operator": "eq",
-                #     "values": ["28599","28688","28686","29743","29744","29843","28741","29134","28542","34087"],
-                # },
-                # {
-                #     "projection": "membershipType.status.code",
-                #     "operator": "eq",
-                #     "values": ["Active","GracePeriod"],
-                # },
+                {
+                    "projection": "showInDirectory",
+                    "operator": "eq",
+                    "values": [
+                    True,
+                    False
+                    ]
+                }
             ],
-            "search": {                
+            "search": {                                
             },
             "order": {
                 "name": "asc",
             },
             "offset": 0,
-            "limit": 7000,
+            "limit": 9000,
         }
         
         response = requests.post(url, headers=headers, data=json.dumps(params))
@@ -74,13 +71,43 @@ class OWASPGlueup:
             return None
 
     def getMemberByEmail(self, email :str, token :str = ''):
-        members = self.getMembers(token)
-        if members:
+        url = self.base_url + 'membershipDirectory/individualMemberships'
+        headers = self.getHeaders('POST', token)
+        params = {
+            "projection": [],
+            "filter": [                               
+                {
+                    "projection": "showInDirectory",
+                    "operator": "eq",
+                    "values": [
+                    True,
+                    False
+                    ]
+                }
+            ],
+            "search": {      
+                "fields": [
+                    "emailAddress",
+                    ],
+                    "value": f"{email}",            
+            },
+            "order": {
+                "name": "asc",
+            },
+            "offset": 0,
+            "limit": 9000,
+        }
+        
+        response = requests.post(url, headers=headers, data=json.dumps(params))
+        if response.status_code == 200:
+            members = response.json()
             for member in members.get('value', []):
                 emailValue = member.get('emailAddress')
-                if emailValue  and emailValue.get('value', '').lower() == email.lower():
+                if emailValue and emailValue.get('value', '').lower() == email.lower():
                     return member
-        return None
+        else:
+            self.logger.error(f"Failed to get members: {response.status_code} - {response.text}")
+            return None
     
     def userHasOWASPEmail(self, token :str = ''):
         members = self.getMembers(token)
