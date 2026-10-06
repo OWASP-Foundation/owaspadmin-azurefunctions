@@ -9,7 +9,6 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import From
 
-from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.googleapi import OWASPGoogle
 import datetime
 from datetime import datetime
@@ -19,11 +18,7 @@ import azure.functions as func
 import json
 import base64
 import os
-import stripe
-from ..SharedCode import copper
 
-stripe.api_key = os.environ["STRIPE_SECRET"]
-cp = copper.OWASPCopper()
 
 # This function will be run every day at 4 a.m. CST (9 a.m. UTC)
 # timer function to kick off the process which checks google emails and verifies that the person with the email is either:

@@ -1,7 +1,6 @@
 import os.path
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
-from httplib2 import http
 import json
 from datetime import datetime
 import random
@@ -16,14 +15,15 @@ class OWASPGoogle:
         self.admin = build('admin', 'directory_v1', credentials=creds, cache_discovery=False)
         self.groupSettings = build('groupssettings', 'v1', credentials=creds, cache_discovery=False)
 
-    def CreateSpecificEmailAddress(self, altemail, first, last, email_address, fail_if_exists=True):
+    def CreateSpecificEmailAddress(self, altemail, first, last, email_address, password, fail_if_exists=True):
         user = {
             "name": {
                 
             },
             "primaryEmail": email_address,
             "recoveryEmail": altemail,
-            "password": datetime.now().strftime('%m%d%Y'),
+            "password": password,
+            "changePasswordAtNextLogin": True,
             "emails": [{
                     "address": altemail,
                     "type": "home",
@@ -245,6 +245,9 @@ class OWASPGoogle:
 
     def UnsuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
         user = self.GetUser(email)
+        if not user:
+            return False
+
         if user:
             user['suspended'] = False
 

@@ -96,9 +96,9 @@ def create_zoom_account(group_name):
     #  3.) determining which zoom group to put them in (currently 4 groups)
 
     #  4.) sending onetimesecret link with password to person who requested access
-    chapter_name = group_name.replace('www-projectchapter-','').replace('www-chapter-', '').replace('www-project-', '').replace('www-committee-','').replace('www-revent', '').replace('OWASP', '').replace(' ', '-').lower()
-    leadersemail = f"{chapter_name}-"
-    if 'www-committee-' in chapter_name:
+    group_name = group_name.replace('OWASP', '').replace(' ', '-').lower()
+    leadersemail = f"{group_name}-"
+    if 'committee' in group_name:
         leadersemail += "committee-"
     leadersemail += "leaders@owasp.org"
     
@@ -111,16 +111,32 @@ def create_zoom_account(group_name):
     logging.info(f"Provisioning Zoom for {group_name}")
     leaders = []    
     ow = OWASPWeb()
-    chapter = ow.getChapterByName(group_name)
+    # This currently only works for chapters. Need to get projects and committees and working groups working as well.
+    if 'chapter' in group_name:
+        chapter = ow.getChapterByName(group_name)
+        if chapter:
+            leaders = ow.getChapterLeadershipTeam(chapter['id'])
+    elif 'committee' in group_name:
+        committee = ow.getCommitteeByName(group_name)
+        if committee:
+            leaders = ow.getCommitteeLeadershipTeam(committee['id'])
+    elif 'working-group' in group_name:
+        working_group = ow.getWorkingGroupByName(group_name)
+        if working_group:
+            leaders = ow.getWorkingGroupLeadershipTeam(working_group['id'])
+    elif 'project' in group_name:
+        project = ow.getProjectByName(group_name)
+        if project:
+            leaders = ow.getProjectLeadershipTeam(project['id'])
+    else:
+        logging.error(f"Could not find chapter, committee, working group, or project for {group_name}")
+        return f"Could not find chapter, committee, working group, or project for {group_name}" 
     
-    if chapter:
-        leaders = ow.getLeadershipTeam(chapter['id'])        
-
     leader_emails = []
     og = OWASPGoogle()
     result = og.FindGroup(leadersemail)
     if result == None:
-        result = og.CreateGroup(chapter_name, leadersemail)
+        result = og.CreateGroup(group_name, leadersemail)
     if 'Failed' in result:
         logging.error(f"Failed to find or create group for {leadersemail}.  Reason:{result}")
         #return f"Could not create or find group for {leadersemail}"

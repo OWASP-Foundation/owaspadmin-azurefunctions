@@ -71,7 +71,23 @@ class OWASPGlueup:
         else:
             self.logger.error(f"Failed to get members: {response.status_code} - {response.text}")
             return None
-        
+
+    def getMemberByEmail(self, email :str, token :str = ''):
+        members = self.getMembers(token)
+        if members:
+            for member in members.get('content', []):
+                if member.get('email', '').lower() == email.lower():
+                    return member
+        return None
+    
+    def userHasOWASPEmail(self, token :str = ''):
+        members = self.getMembers(token)
+        if members:
+            for member in members.get('content', []):
+                email = member.get('email', '')
+                if email.endswith('@owasp.org'): # close...so close....
+                    return True
+        return False
 
     def getEvents(self, token :str = ''):
         url = self.base_url + 'event/list'
