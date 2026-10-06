@@ -34,6 +34,7 @@ def main(msg: func.QueueMessage) -> None:
             'response_type':'ephemeral'
         }
         requests.post(response_url, data=json.dumps(msgdata), headers = headers)
+        logging.info(msgtext)
     else:
         logging.info(f"Request was not a provision-email command: {data}")
 
