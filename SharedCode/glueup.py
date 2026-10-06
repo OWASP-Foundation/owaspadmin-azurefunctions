@@ -69,7 +69,7 @@ class OWASPGlueup:
         if response.status_code == 200:
             return response.json()
         else:
-            self.logger.error(f"Failed to get members: {response.status_code} - {response.text}")
+            logging.error(f"Failed to get members: {response.status_code} - {response.text}")
             return None
 
     def getMemberByEmail(self, email :str, token :str = ''):
@@ -78,6 +78,9 @@ class OWASPGlueup:
             for member in members.get('content', []):
                 if member.get('email', '').lower() == email.lower():
                     return member
+        else:
+            logging.error(f"Failed to get members from GlueUp API.")
+
         return None
     
     def userHasOWASPEmail(self, token :str = ''):

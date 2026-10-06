@@ -41,6 +41,7 @@ def main(msg: func.QueueMessage) -> None:
 
 def provisionOWASPEmail(personal_email):
     gu = OWASPGlueup()
+    logging.info(f"Provisioning OWASP email for {personal_email}...")
     customer = gu.getMemberByEmail(personal_email)
 
     if not customer:
