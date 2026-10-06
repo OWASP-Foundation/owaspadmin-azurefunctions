@@ -47,7 +47,7 @@ def provisionOWASPEmail(personal_email):
     if not customer:
         return f"No member found with email address {personal_email}.  Unable to auto-provision email."
     
-    customer_name = customer.get('familyName', None) + ' ' + customer.get('givenName', None) if customer else None
+    customer_name = customer.get('givenName', None) + ' ' + customer.get('familyName', None) if customer else None
 
     if customer_name is None or customer_name.strip() is None:
         return "No first or last name.  Unable to auto-provision email."
