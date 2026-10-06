@@ -47,7 +47,7 @@ def provisionOWASPEmail(personal_email):
     if not customer:
         return f"No member found with email address {personal_email}.  Unable to auto-provision email."
     
-    customer_name = customer.get('lastname', None) + ' ' + customer.get('firstname', None) if customer else None
+    customer_name = customer.get('familyName', None) + ' ' + customer.get('givenName', None) if customer else None
 
     if customer_name is None or customer_name.strip() is None:
         return "No first or last name.  Unable to auto-provision email."
@@ -77,10 +77,10 @@ def provisionOWASPEmail(personal_email):
     email = first_name + '.' + last_name + '@owasp.org'
     addresses = og.GetPossibleEmailAddresses(email)
     if len(addresses) == 0:
-        return f"Failed to provision email address: {personal_email}.  Reason: Could not find a suitable alternate email."
+        return f"Failed to provision email address: {email}.  Reason: Could not find a suitable alternate email."
 
     email = addresses[0] # use the first one in the list of possible email addresses which will be the preferred email address if it is available.  If not, it will be an alternate email address that is available.
-    respb = True
+    
     password = generate_strong_password() # generate a temporary password for the new user.  They will be required to change it upon first login.
     response = og.CreateSpecificEmailAddress(primaryEmail, first_name.capitalize(), last_name.capitalize(), email, password, True)
         
