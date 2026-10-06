@@ -19,15 +19,19 @@ from ..SharedCode.glueup import OWASPGlueup
 from SharedCode import googleapi
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    request = req.get_json()
+    logging.info('provision email request.')  
 
     if not validate_call(req):
         return return_response('Call not valid (100)', False)
 
     # validation complete...let's do something...
-        
+    
+    body = req.get_body()
+    strbody = unquote_plus(body.decode("utf-8"))    
+    names = dict(x.split('=') for x in strbody.split('&'))
+    
     gu = OWASPGlueup()
-    customer = gu.getMemberByEmail(request.get('text'))
+    customer = gu.getMemberByEmail(names.get('text'))
 
     if not customer:
         errors = {
