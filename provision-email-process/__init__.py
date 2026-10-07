@@ -90,13 +90,13 @@ def provisionOWASPEmail(personal_email):
         # update the Glueup record with the new OWASP email address
         #customer['owaspemail'] = email
         #gu.updateMember(customer) # Yeah...thanks, Glueup, for nothing. Glueup's API does not allow updating a member record.  So, we will have to do this manually in Glueup.        
-        sendProvisionEmailNotification(primaryEmail, password)
+        sendProvisionEmailNotification(primaryEmail, email, password)
         response = f"Successfully provisioned email address: {email}."
 
     return response
 
-def sendProvisionEmailNotification(email, password):
-    hcontent = f"To access your owasp email account {email}, use <strong>{password}</strong><br>You will be required to change the password upon first login and please remember to set up 2fa.<br><br>Thank you,<br>OWASP Foundation"
+def sendProvisionEmailNotification(email, owaspEmail, password):
+    hcontent = f"To access your owasp email account {owaspEmail}, use <strong>{password}</strong><br>You will be required to change the password upon first login and please remember to set up 2fa.<br><br>Thank you,<br>OWASP Foundation"
         
     
     message = Mail(
