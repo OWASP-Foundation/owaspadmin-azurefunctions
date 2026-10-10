@@ -13,6 +13,9 @@ from ..SharedCode.github import OWASPGitHub
 from ..SharedCode.owaspmailchimp import OWASPMailchimp
 from ..SharedCode.copper import OWASPCopper
 from ..SharedCode.googleapi import OWASPGoogle
+from ..SharedCode.owasp_web import OWASPWeb
+from ..SharedCode.glueup import OWASPGlueup
+
 from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import Attachment
 from sendgrid.helpers.mail import FileContent
@@ -477,6 +480,34 @@ def send_notification(user_email, day):
         message = template.format(type(ex).__name__, ex.args)
         logging.exception(message)
         return False
+
+def membership_found(email): # check copper for membership data and then Stripe, for good measure
+    # if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true': # temporarily indicate all are members
+    #     return True
+
+    gu = OWASPGlueup.OWASPGlueup()
+    try:
+        member = gu.getMemberByEmail(email) # this includes active and grace period members
+
+        if member:
+            return True
+        
+        return False # no membership found
+    except Exception as ex:
+        logging.exception(f"An exception of type {type(ex).__name__} occurred while processing a customer: {ex}")
+        raise
+
+def is_leader(email):
+    ow = OWASPWeb()
+    return ow.isLeader(email) # all leaders should be members but, just in case, we will check the leaders list to see if they are a leader.  If they are, we will not disable their email.
+
+def is_ignore_email(email):
+    ignore_emails = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', [])
+    ignore_emails = ignore_emails.split(",")
+    if email in ignore_emails:
+        return True
+
+    return False
 
 class Leader:
     def __init__(self, name, email):

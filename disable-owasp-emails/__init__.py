@@ -73,79 +73,76 @@ import os
 
 def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.QueueMessage]) -> None:
 
-    return   
-    # utc_timestamp = datetime.utcnow().replace(
-    #     tzinfo=timezone.utc).isoformat()
+    utc_timestamp = datetime.now(datetime.timezone.utc).isoformat()
 
-    # if mytimer.past_due:
-    #     logging.info('The timer is past due!')
+    if mytimer.past_due:
+        logging.info('The timer is past due!')
 
-    # logging.info('Python timer trigger for disable-owasp-emails function ran at %s', utc_timestamp)
+    logging.info('Python timer trigger for disable-owasp-emails function ran at %s', utc_timestamp)
 
-    # # clean up metadata only
-    # setting = os.environ.get('Disable.OWASP.Emails.Cleanup.Stripe.Meta', None)
-    # if setting is not None and setting == 'true':
-    #     cleanup_customer_metadata()
-    #     return
+    # clean up metadata only
+    #setting = os.environ.get('Disable.OWASP.Emails.Cleanup.Stripe.Meta', None)
+    #if setting is not None and setting == 'true':
+    #    cleanup_customer_metadata()
+    #    return
 
-    # emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
+    emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
+    test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
 
-    # test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
-    # logging.info(f'Running with test_mode set to {test_mode}')
-    # test_users = os.environ.get('Disable.OWASP.Emails.TestUsers', None).replace(' ','').split(',')    
+    logging.info(f'Running with test_mode set to {test_mode}')
+    test_users = os.environ.get('Disable.OWASP.Emails.TestUsers', None).replace(' ','').split(',')    
 
-    # try:
-    #     og = OWASPGoogle()
-    #     next_page_token = None
-    #     errors_count = 0
-    #     msg_list = []
-    #     while True:
-    #         google_users = og.GetActiveUsers(next_page_token)
-    #         next_page_token = google_users.get('nextPageToken')
-    #         if test_mode == 'true':
-    #             logging.info('working on page...')
-    #         for user in google_users['users']:
-    #             try:
-    #                 user_email = user['primaryEmail'].lower()
+    try:
+        og = OWASPGoogle()
+        next_page_token = None
+        errors_count = 0
+        msg_list = []
+        while True:
+            google_users = og.GetActiveUsers(next_page_token)
+            next_page_token = google_users.get('nextPageToken')
+            if test_mode == 'true':
+                logging.info('working on page...')
+            for user in google_users['users']:
+                try:
+                    user_email = user['primaryEmail'].lower()
 
-    #                 #test logic
-    #                 if  test_mode == 'true' and user_email not in test_users:
-    #                     continue
+                    #test logic
+                    if  test_mode == 'true' and user_email not in test_users:
+                        continue
                     
-    #                 #skip emails that should be ignored
-    #                 if user_email in emails_to_ignore:
-    #                     continue
-    #                 created = datetime.strptime(user['creationTime'], '%Y-%m-%dT%H:%M:%S.%fZ')
-    #                 if test_mode == 'false' and ((datetime.today() - created).days < 7):
-    #                     continue
+                    #skip emails that should be ignored
+                    if user_email in emails_to_ignore:
+                        continue
+                    created = datetime.strptime(user['creationTime'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    if test_mode == 'false' and ((datetime.today() - created).days < 7):
+                        continue
     
-    #                 msg = {
-    #                     'customer_id': -1,
-    #                     'email': user_email,
-    #                     'fullName': user['name']['fullName']
-    #                 }
+                    msg = {                        
+                        'email': user_email,
+                        'fullName': user['name']['fullName']
+                    }
 
-    #                 logging.info(f'Adding {user_email} to message list')
-    #                 msg_list.append(json.dumps(msg))
+                    logging.info(f'Adding {user_email} to message list')
+                    msg_list.append(json.dumps(msg))
                     
 
-    #             except Exception as ex:
-    #                 template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-    #                 message = template.format(
-    #                     type(ex).__name__, ex.args)
-    #                 logging.error(message)
-    #                 errors_count = errors_count + 1
+                except Exception as ex:
+                    template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
+                    message = template.format(
+                        type(ex).__name__, ex.args)
+                    logging.error(message)
+                    errors_count = errors_count + 1
             
-    #         if not next_page_token:
-    #             break
+            if not next_page_token:
+                break
 
-    #     disableemailverifyqueue.set(msg_list)
+        disableemailverifyqueue.set(msg_list)
 
-    # except Exception as ex:
-    #     template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-    #     message = template.format(type(ex).__name__, ex.args)
-    #     logging.exception(message)
-    #     raise
+    except Exception as ex:
+        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        logging.exception(message)
+        raise
 
 # def cleanup_customer_metadata():
 #     customers = stripe.Customer.list(limit=100)

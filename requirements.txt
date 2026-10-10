@@ -1,8 +1,6 @@
 astroid==2.5.6
-azure-common
 azure-core
-azure-cosmosdb-table==1.0.6
-azure-nspkg
+azure-data-tables==12.7.0
 azure-functions
 azure-functions-durable
 beautifulsoup4==4.9.3

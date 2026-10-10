@@ -4,10 +4,8 @@ import azure.functions as func
 from datetime import datetime
 from ..SharedCode import helperfuncs
 from ..SharedCode import googleapi
-import stripe
-import os
+from ..SharedCode.azure_tables import get_email_notify_table_client
 
-stripe.api_key = os.environ["STRIPE_SECRET"]
 
 
 def main(msg: func.QueueMessage) -> None:
@@ -15,18 +13,13 @@ def main(msg: func.QueueMessage) -> None:
                  msg.get_body().decode('utf-8'))
 
     data = json.loads(msg.get_body().decode('utf-8'))
-    user_email = data.get('email', None)
-    customer_id = data.get('customer_id', None)
-
+    user_email = data.get('email', None)    
     og = googleapi.OWASPGoogle()
-    if og.SuspendUser(user_email):
-        logging.info(f"{user_email} was suspended")
-        # have not determined if we should log this metadata...last notification should be sufficient
-        # stripe.Customer.modify(customer_id, metadata={
-        #     "membership_notified": "true"},)
-        # stripe.Customer.modify(customer_id, metadata={
-        #     "membership_notified_date": datetime.utcnow().strftime('%Y-%m-%d')},)
-        # stripe.Customer.modify(customer_id, metadata={
-        #     "membership_last_notification": '0 day'},)
-    else:
-        logging.warn(f"Could not suspend {user_email}")
+    logging.info(f"Would have suspended user {user_email} at {datetime.now()}")
+    # not disabling users at this point, only verifying that the flow works.
+    # if og.SuspendUser(user_email):
+    #     logging.info(f"{user_email} was suspended")
+    #     table_client = get_email_notify_table_client()
+    #     table_client.delete_entity("email_notify", user_email)
+    # else:
+    #     logging.warn(f"Could not suspend {user_email}")

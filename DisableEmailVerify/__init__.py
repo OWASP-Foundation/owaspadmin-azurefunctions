@@ -3,15 +3,18 @@ import logging
 import azure.functions as func
 import json
 import base64
-import os
-import stripe
-from ..SharedCode import copper
+from ..SharedCode import OWASPGlueup
 
 from ..SharedCode.github import OWASPGitHub
+from ..SharedCode.owasp_web import OWASPWeb
 from ..SharedCode.googleapi import OWASPGoogle
-from datetime import datetime
+import SharedCode.helperfuncs as helperfuncs
 
-stripe.api_key = os.environ["STRIPE_SECRET"]
+from datetime import datetime, timezone
+
+from azure.core.exceptions import ResourceNotFoundError
+from ..SharedCode.azure_tables import get_email_notify_table_client
+
 
 # DisableEmailVerify does the following:
 # for each queue item:
@@ -33,22 +36,10 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
     user_email = data.get('email', None)
     fullname = data.get('fullName', None)
     if not user_email:
-        logging.warn("Email not found in queue message")
+        logging.warning("Email not found in queue message")
     
-    # check if they are in Copper
-    if (not membership_found(user_email)) and (not is_leader(user_email)):
-        # check if they are an active customer
-        # could be an issue if casing isn't fixed
-        customers = stripe.Customer.list(
-            email=user_email)
-        customer = None
-        if customers is None or len(customers) <= 0:
-                #add user to Stripe
-            customer = stripe.Customer.create(email=user_email.lower(), 
-                                                name=fullname)
-        else:
-            customer = customers.data[0]
-    
+    # check if the user has a membership or if the user is a leader (even though we know all leaders are supposed to be members)
+    if (not helperfuncs.membership_found(user_email)) and (not helperfuncs.is_leader(user_email)) and (not helperfuncs.is_ignore_email(user_email)):
         queues = {
             '15day': disableemail15daynoticequeue,
             '7day': disableemail7daynoticequeue,
@@ -56,122 +47,51 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
             '0day': disableowaspemailqueue
         }
 
-        add_to_appropriate_queue(customer, user_email, fullname, queues)
+        add_to_appropriate_queue(msg, user_email, fullname, queues)
     else:
-        logging.info(f'User {user_email} is a member or leader')
+        # this person is a member and maybe they became a member after being notified. Go ahead and delete any entry in the table for this user.        
+        table_client = get_email_notify_table_client()
+        try:      
+            table_client.delete_entity("email_notify", user_email)
+        except ResourceNotFoundError as exc:
+            if getattr(exc, "error_code", None) != "EntityNotFound":
+                raise
+            pass # really not important if it exists or not
         
-def add_to_appropriate_queue(customer, email, fullName, queues):
-    metadata = customer.get('metadata', None)
-    customer_id = customer['id']
-    msg = {
-        'customer_id': customer_id,
-        'email': email,
-        'fullName': fullName
-    }
+def add_to_appropriate_queue(msg, email, queues):
+    # here is where we need to pull data from azure storage table to determine if they have been notified and when.  If they have not been notified, we will add them to the 15 day notice queue.  If they have been notified, we will check the date and add them to the appropriate queue based on how long ago they were notified.
+    
+    table_client = get_email_notify_table_client()
 
-    if not metadata or not metadata.get('membership_notified', None): # case of user not notified
+    try:
+        entity = table_client.get_entity(
+            partition_key="email_notify",
+            row_key=email,
+        )
+    except ResourceNotFoundError as exc:
+        if getattr(exc, "error_code", None) != "EntityNotFound":
+            raise
+        entity = None
+
+    last_notification = entity.get('LastNotification') if entity else None
+    if not last_notification: # case of user not notified
         # add to DisableEmail15DayNoticeQueue
-        logging.info('adding {email} to 15 day notice queue')
+        logging.info(f'adding {email} to 15 day notice queue')
         queues['15day'].set(json.dumps(msg))
     else:        
-        membership_notified_date = metadata.get(
-            'membership_notified_date', None)
-        if membership_notified_date is None:
-            logging.exception(f'membership_notified_date is empty for customer {customer_id}')
-            return
+        
+        notified_date = datetime.fromisoformat(last_notification)
+        if notified_date.tzinfo is None:
+            notified_date = notified_date.replace(tzinfo=timezone.utc)
+        days_sent = datetime.now(timezone.utc) - notified_date
 
-        notified_date = datetime.strptime(membership_notified_date, "%Y-%m-%d")
-        days_sent = datetime.utcnow() - notified_date
-        last_notification = metadata.get(
-            'membership_last_notification', None)
-
-        if days_sent.days >= 1 and last_notification == '1 day':
-            logging.info(f'adding {email} to 0 day notice queue')
-            queues['0day'].set(json.dumps(msg))
-        elif days_sent.days >= 6 and last_notification == '7 day':
-            logging.info(f'adding {email} to 1 day notice queue')
-            queues['1day'].set(json.dumps(msg))
-        elif days_sent.days >= 8 and last_notification == '15 day':
+        if days_sent.days >= 8:
             logging.info(f'adding {email} to 7 day notice queue')
             queues['7day'].set(json.dumps(msg))
-        
-
-def membership_found(email): # check copper for membership data and then Stripe, for good measure
-    # if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true': # temporarily indicate all are members
-    #     return True
-
-    cp = copper.OWASPCopper()
-    try:
-        opp = cp.FindMemberOpportunity(email)
-        
-        if opp != None: # on error this will return something other than None, defaulting to valid member because we cannot determine otherwise...
-            return True
-        else:
-            customers = stripe.Customer.list(email=email)
-            if customers is not None and len(customers) > 0:
-                customer = customers.data[0]
-                metadata = customer['metadata']
-                membership_type = metadata.get('membership_type', None)
-
-                # keep email if customer has a lifetime membership
-                if membership_type != None and membership_type == 'lifetime':
-                    logging.warn(f"Customer found with Stripe membership but no Copper membership: {email}")
-                    return True
-
-                membership_end = metadata.get('membership_end', None)
-                memend_date = None
-                if membership_end != None:
-                    memend_date = datetime.strptime(membership_end, "%m/%d/%Y")
-
-                # membership not expired, keep
-                if memend_date != None and memend_date > datetime.utcnow():
-                    logging.warn(f"Customer found with Stripe membership but no Copper membership: {email}")
-                    return True            
-            
-            return False # no copper opp, no Stripe customer, this is not a member (that we can tell)
-    except Exception as ex:
-        logging.exception(f"An exception of type {type(ex).__name__} occurred while processing a customer: {ex}")
-        raise
-
-def is_leader(email):
-    leader_emails = get_leader_emails()
-    if not leader_emails or len(leader_emails) == 0:
-        logging.error(
-            "Did not load any emails for the leaders.  Aborting process.")
-        return True # default to true because we could not get leader emails....
-
-    return (email in leader_emails)
-
-def get_leader_emails():
-    if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true':
-        emails = os.environ.get('Disable.OWASP.Emails.Test.Leaders', None).replace(' ','').split(',')
-        return emails
-
-    try:
-        gh = OWASPGitHub()
-        gr = gh.GetFile('owasp.github.io', '_data/leaders.json')
-
-        if gr.ok:
-            doc = json.loads(gr.text)
-            content = base64.b64decode(doc['content']).decode()
-            data = json.loads(content)
-            with open('/tmp/github-leaders-data.json', 'w') as outfile:
-                json.dump(data, outfile)
-        else:
-            logging.error('Error retreiving leaders file from Github')
-            return []
-
-        # extract emails and cleanse
-        emails = []
-        for leader in data:
-            cleansed_email = leader['email'].replace('mailto://', '')
-            cleansed_email = cleansed_email.replace('mailto:', '')
-            cleansed_email = cleansed_email.lower()
-            emails.append(cleansed_email)
-        return emails
-    except Exception as ex:
-        template = "An exception of type {0} occurred while processing a customer. Arguments:\n{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        logging.exception(message)
-        raise
-
+        elif days_sent.days >= 6:
+            logging.info(f'adding {email} to 1 day notice queue')
+            queues['1day'].set(json.dumps(msg))
+        elif days_sent.days >= 1:
+            logging.info(f'adding {email} to 0 day notice queue')
+            queues['0day'].set(json.dumps(msg))
+                

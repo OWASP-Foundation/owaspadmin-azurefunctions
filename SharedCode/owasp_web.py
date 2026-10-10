@@ -233,3 +233,73 @@ class OWASPWeb:
             leadership_team = project_details['project'].get('project_leaders', [])
         
         return leadership_team
+
+
+    # Leadership
+    def isLeader(self, email):
+        if not email:
+            return False
+
+        email = email.strip()
+        if not email:
+            return False
+
+        self.getBearerToken()
+        headers = {
+            'Content-type': 'application/json;charset=UTF-8',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Authorization': f'Bearer {self.access_token}',
+        }
+
+        try:
+            user_access_url = (
+                self.base_url + 'admin/users/' + quote(email, safe='')
+            )
+            response = requests.get(
+                user_access_url, headers=headers, timeout=30
+            )
+            response.raise_for_status()
+            user_access = response.json()
+            if user_access.get('chapters') or user_access.get('projects'):
+                return True
+
+            page = 1
+            while True:
+                response = requests.get(
+                    self.base_url + 'admin/groups/list',
+                    headers=headers,
+                    params={'page': page, 'limit': 50},
+                    timeout=30,
+                )
+                response.raise_for_status()
+                group_data = response.json()
+
+                for group in group_data.get('groups', []):
+                    group_id = group.get('id')
+                    if not group_id:
+                        continue
+
+                    response = requests.get(
+                        self.base_url + f'admin/groups/{group_id}/members',
+                        headers=headers,
+                        timeout=30,
+                    )
+                    response.raise_for_status()
+                    members = response.json().get('members', [])
+                    if any(
+                        member.get('role') == 'admin'
+                        and member.get('status') == 'active'
+                        and member.get('email', '').casefold()
+                        == email.casefold()
+                        for member in members
+                    ):
+                        return True
+
+                if page >= group_data.get('totalPages', page):
+                    break
+                page += 1
+
+            return False
+        finally:
+            self.clearTokens()

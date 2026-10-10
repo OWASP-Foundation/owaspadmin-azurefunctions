@@ -1,28 +1,28 @@
 import logging
 import json
 import azure.functions as func
-from datetime import datetime
+from datetime import datetime, timezone
 from ..SharedCode import helperfuncs
-import stripe
-import os
-
-stripe.api_key = os.environ["STRIPE_SECRET"]
-
+from ..SharedCode.azure_tables import get_email_notify_table_client
+from azure.data.tables import UpdateMode
 
 def main(msg: func.QueueMessage) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
                  msg.get_body().decode('utf-8'))
-
+    
     data = json.loads(msg.get_body().decode('utf-8'))
     user_email = data.get('email', None)
-    customer_id = data.get('customer_id', None)
-    notification_sent = helperfuncs.send_notification(user_email, 1)
+    # do not notify during testing...
+    # notification_sent = helperfuncs.send_notification(user_email, 7)
+    notification_sent = True
     if notification_sent:
-        stripe.Customer.modify(customer_id, metadata={
-            "membership_notified": "true"},)
-        stripe.Customer.modify(customer_id, metadata={
-            "membership_notified_date": datetime.utcnow().strftime('%Y-%m-%d')},)
-        stripe.Customer.modify(customer_id, metadata={
-            "membership_last_notification": '1 day'},)
+        table_client = get_email_notify_table_client()
+        email_entry = {
+            'PartitionKey':'email_notify',
+            'RowKey': user_email,
+            'LastNotification': datetime.now(timezone.utc).isoformat(),
+        }        
+        table_client.upsert_entity(email_entry, mode=UpdateMode.REPLACE)
+        logging.info(f"Updated {user_email} to next notification date")
     else:
-        logging.warn(user_email + '- 1 day notification could not be sent' + "\n")
+        logging.warning(user_email + '- 1 day notification could not be sent' + "\n")
