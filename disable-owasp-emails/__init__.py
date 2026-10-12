@@ -73,7 +73,7 @@ import os
 
 def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.QueueMessage]) -> None:
 
-    utc_timestamp = datetime.now(datetime.timezone.utc).isoformat()
+    utc_timestamp = datetime.now(timezone.utc).isoformat()
 
     if mytimer.past_due:
         logging.info('The timer is past due!')
