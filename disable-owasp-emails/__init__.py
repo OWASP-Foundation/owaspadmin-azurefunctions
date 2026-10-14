@@ -1,14 +1,3 @@
-from sendgrid.helpers.mail import Mail
-from sendgrid.helpers.mail import Attachment
-from sendgrid.helpers.mail import FileContent
-from sendgrid.helpers.mail import FileName
-from sendgrid.helpers.mail import FileType
-from sendgrid.helpers.mail import Disposition
-
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-from sendgrid.helpers.mail import From
-
 from ..SharedCode.googleapi import OWASPGoogle
 import datetime
 from datetime import datetime
@@ -16,7 +5,6 @@ from datetime import timezone
 import logging
 import azure.functions as func
 import json
-import base64
 import os
 
 
@@ -80,12 +68,6 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
 
     logging.info('Python timer trigger for disable-owasp-emails function ran at %s', utc_timestamp)
 
-    # clean up metadata only
-    #setting = os.environ.get('Disable.OWASP.Emails.Cleanup.Stripe.Meta', None)
-    #if setting is not None and setting == 'true':
-    #    cleanup_customer_metadata()
-    #    return
-
     emails_to_ignore = os.environ.get('Disable.OWASP.Emails.Ignore.Emails', None).replace(' ','').split(',')
     test_mode = os.environ.get('Disable.OWASP.Emails.Test.Mode', 'true')
 
@@ -144,12 +126,4 @@ def main(mytimer: func.TimerRequest, disableemailverifyqueue: func.Out[func.Queu
         logging.exception(message)
         raise
 
-# def cleanup_customer_metadata():
-#     customers = stripe.Customer.list(limit=100)
-#     for customer in customers.auto_paging_iter():
-#         metadata = customer['metadata']
-#         membership_notified = metadata.get('membership_notified', None)
-#         if membership_notified is not None:
-#             stripe.Customer.modify(customer['id'], metadata={
-#                "membership_notified": "", "membership_notified_date": "", "membership_last_notification": ""},)
 

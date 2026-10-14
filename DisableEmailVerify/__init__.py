@@ -2,12 +2,6 @@ import logging
 
 import azure.functions as func
 import json
-import base64
-from ..SharedCode import OWASPGlueup
-
-from ..SharedCode.github import OWASPGitHub
-from ..SharedCode.owasp_web import OWASPWeb
-from ..SharedCode.googleapi import OWASPGoogle
 import SharedCode.helperfuncs as helperfuncs
 
 from datetime import datetime, timezone
