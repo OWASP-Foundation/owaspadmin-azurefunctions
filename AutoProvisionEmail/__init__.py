@@ -58,7 +58,7 @@ def getAllGoogleUsers():
     users = []
     while True:
         google_users = og.GetActiveUsers(next_page_token)
-        users.append(google_users)
+        users.extend(google_users.get('users'))
         next_page_token = google_users.get('nextPageToken')
         if next_page_token == None:
             break
@@ -68,9 +68,21 @@ def getAllGoogleUsers():
 def userInGoogleUsers(email, users):
     if not email or len(users) == 0:
         return False
-    
-    for user in users:
-        if email == user.get('primaryEmail', None) or email == user.get('recoveryEmail', None) or email in user.get('emails', []):
-            return True
+    email = email.lower()
 
-    return False
+    for user in users:
+        more_emails = user.get('emails')
+        addresses = []
+        for more_email in more_emails:
+            addresses.append(more_email.get('address','').lower())
+
+        primaryEmail = user.get('primaryEmail', None)
+        if primaryEmail:
+            primaryEmail = primaryEmail.lower()
+
+        recoveryEmail = user.get('recoveryEmail', None)
+        if recoveryEmail:
+            recoveryEmail = recoveryEmail.lower()
+
+        if email == primaryEmail or email == recoveryEmail or email in addresses:
+            return True
