@@ -67,7 +67,7 @@ def userInGoogleUsers(email, users):
         return False
     
     for user in users:
-        if email == user.get('primaryEmail', None) or email == user.get('recoveryEmail', None):
+        if email == user.get('primaryEmail', None) or email == user.get('recoveryEmail', None) or not email in user.get('emails', []):
             return True
 
     return False
