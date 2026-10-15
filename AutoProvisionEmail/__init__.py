@@ -24,6 +24,8 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
     # iterate through all members
     if members:
         members = members.get('value')
+
+    queue_list = []
     for member in members:
         user_email = member.get('emailAddress', None)
         fullname = member.get('givenName', '') + ' ' + member.get('familyName', '')
@@ -33,15 +35,15 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
             # check to see if a Google Workspace account exists with the membership email
             # while it is possible that the person's membership email is not on the account, we assume that it SHOULD be
             goo = OWASPGoogle()
-            # if the person doesn't exist in Google Workspace, add them to the AutoProvisionProcess queue
-            logging.info('User is a member and will be added to queue')
+            # if the person doesn't exist in Google Workspace, add them to the AutoProvisionProcess queue            
             if goo.GetUser(user_email) == None:
                 msg = {
                      'email' : user_email,
                      'fullName' : fullname
                  }
-                ape_queue.set(json.dumps(msg))
+                queue_list.append(msg)                
         else:
             logging.info(f"No user email found for member {fullname}")
             
-    
+        if len(queue_list) > 0:
+            ape_queue.set(json.dumps(msg))
