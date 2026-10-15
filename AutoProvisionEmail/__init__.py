@@ -20,11 +20,10 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
     logging.info('AutoProvisionEmail Python timer trigger function ran at %s', utc_timestamp)
 
     gu = OWASPGlueup()
-    members = gu.getMembers()
-
-    if members:
-        members = json.loads(members)
+    members = gu.getMembers()    
     # iterate through all members
+    if members:
+        members = members.get('value')
     for member in members:
         user_email = member.get('emailAddress', None)
         fullname = member.get('givenName', '') + ' ' + member.get('familyName', '')
