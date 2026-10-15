@@ -29,6 +29,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
     queue_list = []    
     for member in members:
         user_email = member.get('emailAddress', None)
+        user_email = user_email.get('value', None)
         fullname = member.get('givenName', '') + ' ' + member.get('familyName', '')
         
         if (user_email):
@@ -44,8 +45,8 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
         else:
             logging.info(f"No user email found for member {fullname}")
             
-        if len(queue_list) > 0:
-            ape_queue.set(json.dumps(msg))
+    if len(queue_list) > 0:
+        ape_queue.set(json.dumps(msg))
 
 
 def getAllGoogleUsers():
