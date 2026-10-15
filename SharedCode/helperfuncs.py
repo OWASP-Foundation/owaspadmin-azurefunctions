@@ -485,7 +485,7 @@ def membership_found(email): # check copper for membership data and then Stripe,
     # if os.environ.get('Disable.OWASP.Emails.Test.Mode', None) == 'true': # temporarily indicate all are members
     #     return True
 
-    gu = OWASPGlueup.OWASPGlueup()
+    gu = OWASPGlueup()
     try:
         member = gu.getMemberByEmail(email) # this includes active and grace period members
 
