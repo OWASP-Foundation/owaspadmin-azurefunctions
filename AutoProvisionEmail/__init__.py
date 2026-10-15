@@ -46,6 +46,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
             logging.info(f"No user email found for member {fullname}")
             
     if len(queue_list) > 0:
+        logging.info(f"Adding {len(queue_list)} users to the queue")
         ape_queue.set(json.dumps(queue_list))
 
 
