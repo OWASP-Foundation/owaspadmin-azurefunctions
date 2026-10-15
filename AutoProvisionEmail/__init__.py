@@ -4,9 +4,9 @@ import logging
 
 import azure.functions as func
 
-from SharedCode.helperfuncs import helperfuncs
-from SharedCode.googleapi import OWASPGoogle
-from SharedCode.glueup import OWASPGlueup
+from ..SharedCode import helperfuncs
+from ..SharedCode.googleapi import OWASPGoogle
+from ..SharedCode.glueup import OWASPGlueup
 # this function goes through all Members and, if they are not found in Google Workspace as well using their membership email
 # it queues the person for Email creation which is handled by AutoProvisionEmailProcess
 
