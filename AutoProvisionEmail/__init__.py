@@ -50,7 +50,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
 
 def getAllGoogleUsers():
     og = OWASPGoogle()
-    nextPageToken = None
+    next_page_token = None
     users = []
     while True:
         google_users = og.GetActiveUsers(next_page_token)
