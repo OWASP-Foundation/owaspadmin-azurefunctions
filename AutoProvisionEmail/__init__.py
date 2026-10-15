@@ -20,13 +20,13 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
     logging.info('AutoProvisionEmail Python timer trigger function ran at %s', utc_timestamp)
 
     gu = OWASPGlueup()
+    google_users = getAllGoogleUsers()
     members = gu.getMembers()    
     # iterate through all members
     if members:
         members = members.get('value')
 
-    queue_list = []
-    goo = OWASPGoogle()
+    queue_list = []    
     for member in members:
         user_email = member.get('emailAddress', None)
         fullname = member.get('givenName', '') + ' ' + member.get('familyName', '')
@@ -35,7 +35,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
             # check to see if a Google Workspace account exists with the membership email
             # while it is possible that the person's membership email is not on the account, we assume that it SHOULD be            
             # if the person doesn't exist in Google Workspace, add them to the AutoProvisionProcess queue            
-            if goo.GetUser(user_email) == None:
+            if not userInGoogleUsers(user_email, google_users):
                 msg = {
                      'email' : user_email,
                      'fullName' : fullname
@@ -46,3 +46,27 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
             
         if len(queue_list) > 0:
             ape_queue.set(json.dumps(msg))
+
+
+def getAllGoogleUsers():
+    og = OWASPGoogle()
+    nextPageToken = None
+    users = []
+    while True:
+        google_users = og.GetActiveUsers(next_page_token)
+        users.append(google_users)
+        next_page_token = google_users.get('nextPageToken')
+        if next_page_token == None:
+            break
+
+    return users
+
+def userInGoogleUsers(email, users):
+    if not email or len(users) == 0:
+        return False
+    
+    for user in users:
+        if email == user['primaryEmail'] or email == user['recoveryEmail']:
+            return True
+
+    return False
