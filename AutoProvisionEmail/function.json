@@ -1,0 +1,18 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "mytimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 0 2 * * *"
+    },
+    {
+      "name": "ape_queue",
+      "type": "queue",
+      "direction": "out",
+      "queueName": "auto-provision-email",
+      "connection": "AzureWebJobsStorage"
+    }
+  ]
+}
