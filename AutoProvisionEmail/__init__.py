@@ -34,6 +34,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
             # while it is possible that the person's membership email is not on the account, we assume that it SHOULD be
             goo = OWASPGoogle()
             # if the person doesn't exist in Google Workspace, add them to the AutoProvisionProcess queue
+            logging.info('User is a member and will be added to queue')
             if goo.GetUser(user_email) == None:
                 msg = {
                      'email' : user_email,
