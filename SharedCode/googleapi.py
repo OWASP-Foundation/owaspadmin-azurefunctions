@@ -1,6 +1,8 @@
 import os.path
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+import time
+from googleapiclient.errors import HttpError
 import json
 from datetime import datetime
 import random
@@ -224,7 +226,7 @@ class OWASPGoogle:
                     done = True
             except HttpError as e:
                 print('error waiting 8 to 10 seconds....')
-                done = (e.status_code != 503)
+                done = (e.resp.status != 503)
                 if not done:
                     dropoff = 4 + random.randint(1, 4)
                     time.sleep(dropoff * 1.25)
@@ -238,10 +240,12 @@ class OWASPGoogle:
             user = self.GetUser(email)
             if user:
                 user['suspended'] = True
+                results = self.admin.users().update(userKey=email, body=user[0]).execute()
 
-            results = self.admin.users().update(userKey=email, body=user[0]).execute()
+                return ('primaryEmail' in results)
 
-            return ('primaryEmail' in results)
+            return False
+
 
     def UnsuspendUser(self, email): #suspend the user with email retrieved possibly from GetUser, for instance
         user = self.GetUser(email)
