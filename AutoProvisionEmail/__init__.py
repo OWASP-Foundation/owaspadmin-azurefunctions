@@ -22,6 +22,8 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
     gu = OWASPGlueup()
     members = gu.getMembers()
 
+    if members:
+        members = json.loads(members)
     # iterate through all members
     for member in members:
         user_email = member.get('emailAddress', None)
