@@ -10,4 +10,4 @@ def main(msg: QueueMessage) -> None:
     users = json.loads(msg.get_body().decode('utf-8'))
 
     for user in users:
-        logging.info(f"Would have provisioned an email for {user}")
+        logging.info(f"Would have provisioned an email for {user.get('email')}")
