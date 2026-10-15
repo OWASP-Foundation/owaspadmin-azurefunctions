@@ -29,7 +29,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
         fullname = member.get('givenName', '') + ' ' + member.get('familyName', '')
 
         
-        if (user_email and helperfuncs.membership_found(user_email)):
+        if (user_email):
             # check to see if a Google Workspace account exists with the membership email
             # while it is possible that the person's membership email is not on the account, we assume that it SHOULD be
             goo = OWASPGoogle()
@@ -41,5 +41,7 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
                      'fullName' : fullname
                  }
                 ape_queue.set(json.dumps(msg))
+        else:
+            logging.info(f"No user email found for member {fullname}")
             
     
