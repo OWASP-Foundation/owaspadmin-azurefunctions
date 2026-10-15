@@ -46,8 +46,10 @@ def main(mytimer: func.TimerRequest, ape_queue: func.Out[func.QueueMessage]) -> 
             logging.info(f"No user email found for member {fullname}")
             
     if len(queue_list) > 0:
-        logging.info(f"Adding {len(queue_list)} users to the queue")
+        logging.info(f"Adding {len(queue_list)} users to the queue.")
         ape_queue.set(json.dumps(queue_list))
+    else:
+        logging.info("There were no users to add to the queue.")
 
 
 def getAllGoogleUsers():
@@ -68,7 +70,7 @@ def userInGoogleUsers(email, users):
         return False
     
     for user in users:
-        if email == user.get('primaryEmail', None) or email == user.get('recoveryEmail', None) or not email in user.get('emails', []):
+        if email == user.get('primaryEmail', None) or email == user.get('recoveryEmail', None) or email in user.get('emails', []):
             return True
 
     return False
