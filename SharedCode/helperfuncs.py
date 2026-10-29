@@ -9,12 +9,12 @@ import base64
 import os
 import requests
 import stripe
-from github import OWASPGitHub
-from owaspmailchimp import OWASPMailchimp
-from copper import OWASPCopper
-from googleapi import OWASPGoogle
-from owasp_web import OWASPWeb
-from glueup import OWASPGlueup
+from SharedCode.github import OWASPGitHub
+from SharedCode.owaspmailchimp import OWASPMailchimp
+from SharedCode.copper import OWASPCopper
+from SharedCode.googleapi import OWASPGoogle
+from SharedCode.owasp_web import OWASPWeb
+from SharedCode.glueup import OWASPGlueup
 
 from sendgrid.helpers.mail import Mail
 from sendgrid.helpers.mail import Attachment
