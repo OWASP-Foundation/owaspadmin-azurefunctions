@@ -3,6 +3,8 @@ import logging
 
 import requests
 
+from urllib.parse import quote
+
 class OWASPWeb:
     access_token = None
     refresh_token = None
