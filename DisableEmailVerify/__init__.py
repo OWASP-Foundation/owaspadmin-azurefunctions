@@ -40,7 +40,7 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
             '0day': disableowaspemailqueue
         }
 
-        add_to_appropriate_queue(msg, user_email, queues)
+        add_to_appropriate_queue(data, user_email, queues)
     else:
         # this person is a member and maybe they became a member after being notified. Go ahead and delete any entry in the table for this user.        
         table_client = get_email_notify_table_client()
@@ -51,7 +51,7 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
                 raise
             pass # really not important if it exists or not
         
-def add_to_appropriate_queue(msg, email, queues):
+def add_to_appropriate_queue(data, email, queues):
     # here is where we need to pull data from azure storage table to determine if they have been notified and when.  If they have not been notified, we will add them to the 15 day notice queue.  If they have been notified, we will check the date and add them to the appropriate queue based on how long ago they were notified.
     
     table_client = get_email_notify_table_client()
@@ -72,7 +72,7 @@ def add_to_appropriate_queue(msg, email, queues):
     if not last_notification: # case of user not notified
         # add to DisableEmail15DayNoticeQueue
         logging.info(f'adding {email} to 15 day notice queue')
-        queues['15day'].set(json.dumps(msg))
+        queues['15day'].set(json.dumps(data))
     else:        
         
         notified_date = datetime.fromisoformat(last_notification)
@@ -82,11 +82,11 @@ def add_to_appropriate_queue(msg, email, queues):
 
         if days_sent.days >= 8:
             logging.info(f'adding {email} to 7 day notice queue')
-            queues['7day'].set(json.dumps(msg))
+            queues['7day'].set(json.dumps(data))
         elif days_sent.days >= 6:
             logging.info(f'adding {email} to 1 day notice queue')
-            queues['1day'].set(json.dumps(msg))
+            queues['1day'].set(json.dumps(data))
         elif days_sent.days >= 1:
             logging.info(f'adding {email} to 0 day notice queue')
-            queues['0day'].set(json.dumps(msg))
+            queues['0day'].set(json.dumps(data))
                 
