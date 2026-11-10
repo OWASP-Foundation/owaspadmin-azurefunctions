@@ -63,6 +63,7 @@ def add_to_appropriate_queue(msg, email, queues):
         )
     except ResourceNotFoundError as exc:
         # Of course the entity is not found if it is a new entry...why raise the exception?
+        # Entries are added to the table in the various notification queues.
         #if getattr(exc, "error_code", None) != "EntityNotFound":
         #    raise
         entity = None
