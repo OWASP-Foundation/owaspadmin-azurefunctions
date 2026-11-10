@@ -28,7 +28,6 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
     
     data = json.loads(msg.get_body().decode('utf-8'))
     user_email = data.get('email', None)
-    fullname = data.get('fullName', None)
     if not user_email:
         logging.warning("Email not found in queue message")
     
@@ -41,7 +40,7 @@ def main(msg: func.QueueMessage, disableemail15daynoticequeue: func.Out[func.Que
             '0day': disableowaspemailqueue
         }
 
-        add_to_appropriate_queue(msg, user_email, fullname, queues)
+        add_to_appropriate_queue(msg, user_email, queues)
     else:
         # this person is a member and maybe they became a member after being notified. Go ahead and delete any entry in the table for this user.        
         table_client = get_email_notify_table_client()
